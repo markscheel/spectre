@@ -16,7 +16,8 @@ namespace StrahlkorperInitializers {
  *
  * \details Input file options are Lmax, Radius, and Center.
  */
-class Sphere : public StrahlkorperInitializer {
+template <typename Fr>
+class Sphere : public StrahlkorperInitializer<Fr> {
  public:
   struct Lmax {
     using type = size_t;
@@ -48,7 +49,7 @@ class Sphere : public StrahlkorperInitializer {
   Sphere& operator=(Sphere&& /*rhs*/) noexcept = default;
   ~Sphere() override = default;
 
-  Strahlkorper create_strahlkorper() const noexcept override;
+  Strahlkorper<Fr> create_strahlkorper() const noexcept override;
 
  private:
   size_t l_max_;

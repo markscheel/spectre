@@ -11,6 +11,7 @@
  * Holds StrahlkorperInitializers.
  */
 namespace StrahlkorperInitializers {
+template <typename Fr>
 class Sphere;
 }  // namespace StrahlkorperInitializers
 
@@ -18,9 +19,10 @@ class Sphere;
  *  \ingroup ApparentHorizons
  *  Encodes a function that creates a Strahlkorper.
  */
-class StrahlkorperInitializer : public Factory<StrahlkorperInitializer> {
+template <typename Fr>
+class StrahlkorperInitializer : public Factory<StrahlkorperInitializer<Fr>> {
  public:
-  using creatable_classes = typelist<StrahlkorperInitializers::Sphere>;
+  using creatable_classes = typelist<StrahlkorperInitializers::Sphere<Fr>>;
 
   StrahlkorperInitializer() = default;
   StrahlkorperInitializer(const StrahlkorperInitializer& /*rhs*/) = delete;
@@ -31,7 +33,7 @@ class StrahlkorperInitializer : public Factory<StrahlkorperInitializer> {
       StrahlkorperInitializer&& /*rhs*/) noexcept = default;
   virtual ~StrahlkorperInitializer() = default;
 
-  virtual Strahlkorper create_strahlkorper() const noexcept = 0;
+  virtual Strahlkorper<Fr> create_strahlkorper() const noexcept = 0;
 };
 
 #include "ApparentHorizons/StrahlkorperInitializerSphere.hpp"

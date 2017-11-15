@@ -2,7 +2,9 @@
 // See LICENSE.txt for details.
 
 #include "ApparentHorizons/Strahlkorper.hpp"
+
 #include "ApparentHorizons/SpherepackIterator.hpp"
+#include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 
 template <typename Fr>
@@ -64,7 +66,7 @@ void Strahlkorper<Fr>::pup(PUP::er& p) {
   p | m_max_;
   p | center_;
   p | strahlkorper_coefs_;
-  // All variables other than the above are cached quantities that
+  // All other member variables are cached quantities that
   // can be recomputed from the above.
 
   if (p.isUnpacking()) {
@@ -74,11 +76,9 @@ void Strahlkorper<Fr>::pup(PUP::er& p) {
 
 template <typename Fr>
 std::array<double, 3> Strahlkorper<Fr>::physical_center() const noexcept {
-  // For better accuracy, one should do an integral of
-  // x^i * AreaElement divided by Area.  The method here is an approximation
-  // using only the l=1 modes.
-  // See Eq. (37) of Hemberger et al, arXiv:1211.6079 for the form of the
-  // exact physical center that we approximate here.
+  // Uses Eqs. (38)-(40) in Hemberger et al, arXiv:1211.6079.  This is
+  // an approximation of Eq. (37) in the same paper, which gives the
+  // exact result.
   std::array<double, 3> result = center_;
   SpherepackIterator it(l_max_, m_max_);
   result[0] += strahlkorper_coefs_[it.set(1, 1)()] * sqrt(0.75);
@@ -109,7 +109,7 @@ bool Strahlkorper<Fr>::point_is_contained(const std::array<double, 3>& x) const
   }
 
   // Convert the point from Cartesian to spherical coordinates.
-  const double r = sqrt(square(xmc[0]) + square(xmc[1]) + square(xmc[2]));
+  const double r = magnitude(xmc);
   const double theta = acos(xmc[2] / r);
   double phi = atan2(xmc[1], xmc[0]);
   // Range of atan2 is [-pi,pi],
@@ -362,17 +362,18 @@ Strahlkorper<Fr>::surface_normal_one_form() const noexcept {
 template <typename Fr>
 DataVector Strahlkorper<Fr>::surface_normal_magnitude(
     const InverseMetric& inv_g) const noexcept {
-  const auto& s_i = surface_normal_one_form();
-  ASSERT(s_i.get(0).size() == inv_g.get(0, 0).size(),
-         "Size mismatch: " << s_i.get(0).size() << " vs "
-                           << inv_g.get(0, 0).size());
-  DataVector mag_squared(s_i.get(0).size(), 0.);
-  for (size_t m = 0; m < 3; ++m) {
-    for (size_t n = 0; n < 3; ++n) {
-      mag_squared += s_i.get(m) * s_i.get(n) * inv_g.get(m, n);
-    }
-  }
-  return sqrt(mag_squared);
+  return magnitude(surface_normal_one_form(), inv_g);
+  //-:  const auto& s_i = surface_normal_one_form();
+  //-:  ASSERT(s_i.get(0).size() == inv_g.get(0, 0).size(),
+  //-:         "Size mismatch: " << s_i.get(0).size() << " vs "
+  //-:                           << inv_g.get(0, 0).size());
+  //-:  DataVector mag_squared(s_i.get(0).size(), 0.);
+  //-:  for (size_t m = 0; m < 3; ++m) {
+  //-:    for (size_t n = 0; n < 3; ++n) {
+  //-:      mag_squared += s_i.get(m) * s_i.get(n) * inv_g.get(m, n);
+  //-:    }
+  //-:  }
+  //-:  return sqrt(mag_squared);
 }
 
 template <typename Fr>

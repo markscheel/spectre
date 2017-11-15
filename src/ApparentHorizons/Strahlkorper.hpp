@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "YlmSpherepack.hpp"
+#include "ApparentHorizons/YlmSpherepack.hpp"
 
 /// \brief A star-shaped surface expanded in spherical harmonics.
 template <class Fr>
@@ -25,7 +25,7 @@ class Strahlkorper {
   using SecondDeriv = tnsr::ii<DataVector, 3, Fr>;
   using InverseMetric = tnsr::II<DataVector, 3, Fr>;
 
-  /// Pup needs default constructor
+  // Pup needs default constructor
   Strahlkorper() = default;
 
   /// Construct a sphere of radius r with a given center.
@@ -61,8 +61,8 @@ class Strahlkorper {
    *  the \f$F^{lm}\f$ obey \f$F^{l-m} = (-1)^m (F^{lm})^\star\f$, so one
    *  does not need to store both real and imaginary parts.
    *  So:
-   *  mStrahlkorperCoefs(l,m) = \f$(-1)^m Q Re(F^{lm})\f$ for \f$m\ge 0\f$
-   *  mStrahlkorperCoefs(l,m) = \f$(-1)^m Q Im(F^{lm})\f$ for \f$m<   0\f$
+   *  strahlkorper_coefs_(l,m) = \f$(-1)^m Q Re(F^{lm})\f$ for \f$m\ge 0\f$
+   *  strahlkorper_coefs_(l,m) = \f$(-1)^m Q Im(F^{lm})\f$ for \f$m<   0\f$
    *  Where Q = sqrt(2.0/M_PI)
    */
   SPECTRE_ALWAYS_INLINE const DataVector& coefficients() const noexcept {
@@ -84,10 +84,10 @@ class Strahlkorper {
   /// Average radius of the surface (determined by l=0 Ylm coefficient)
   double average_radius() const noexcept;
 
-  /// Spherical Harmonic decomposition max size l_max
+  /// Maximum \f$l\f$ in \f$Y_{lm}\f$ decomposition.
   SPECTRE_ALWAYS_INLINE size_t l_max() const noexcept { return l_max_; }
 
-  /// Spherical Harmonic decomposition max size m_max
+  /// Maximum \f$m\f$ in \f$Y_{lm}\f$ decomposition.
   SPECTRE_ALWAYS_INLINE size_t m_max() const noexcept { return m_max_; }
 
   /// Radius at a particular angle \f$(\theta,\phi)\f$.

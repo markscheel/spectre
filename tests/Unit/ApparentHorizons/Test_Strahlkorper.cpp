@@ -15,13 +15,12 @@ namespace {
 void test_invert_spec_phys_transform() {
   const double avg_radius = 1.0;
   const double delta_radius = 0.1;
-  const size_t l_grid_init = 33;
-  const auto l_grid = static_cast<size_t>(l_grid_init * 1.5);
+  const size_t l_grid = 33;
+  const auto l_grid_high_res = static_cast<size_t>(l_grid * 1.5);
   const std::array<double, 3> center = {{0.1, 0.2, 0.3}};
 
   // Create radius as a function of angle
-  DataVector radius(YlmSpherepack::physical_size(l_grid_init, l_grid_init),
-                    avg_radius);
+  DataVector radius(YlmSpherepack::physical_size(l_grid, l_grid), avg_radius);
   {
     std::uniform_real_distribution<double> ran(0.0, 1.0);
     std::mt19937 gen;
@@ -30,40 +29,43 @@ void test_invert_spec_phys_transform() {
     }
   }
 
-  // Initialize a strahlkorper of l_max=l_grid_init
-  const Strahlkorper<Frame::Inertial> strahl_initial(radius, l_grid_init,
-                                                     l_grid_init, center);
+  // Initialize a strahlkorper of l_max=l_grid
+  const Strahlkorper<Frame::Inertial> sk(radius, l_grid, l_grid, center);
 
   // Put that Strahlkorper onto a larger grid
-  const Strahlkorper<Frame::Inertial> strahl_final(l_grid, l_grid,
-                                                   strahl_initial);
+  const Strahlkorper<Frame::Inertial> sk_high_res(l_grid_high_res,
+                                                  l_grid_high_res, sk);
 
   // Compare coefficients
-  SpherepackIterator iter_init(strahl_initial.l_max(), strahl_initial.m_max());
-  SpherepackIterator iter_final(strahl_final.l_max(), strahl_final.m_max());
-  const auto& init_coefs = strahl_initial.coefficients();
-  const auto& final_coefs = strahl_final.coefficients();
+  SpherepackIterator iter(sk.l_max(), sk.m_max());
+  SpherepackIterator iter_high_res(sk_high_res.l_max(), sk_high_res.m_max());
+  const auto& init_coefs = sk.coefficients();
+  const auto& final_coefs = sk_high_res.coefficients();
 
-  for (size_t l = 0; l <= strahl_initial.ylm_spherepack().l_max(); ++l) {
+  for (size_t l = 0; l <= sk.ylm_spherepack().l_max(); ++l) {
     for (int m = -static_cast<int>(l); m <= static_cast<int>(l); ++m) {
-      CHECK(init_coefs[iter_init.set(l, m)()] ==
-            approx(final_coefs[iter_final.set(l, m)()]));
+      CHECK(init_coefs[iter.set(l, m)()] ==
+            approx(final_coefs[iter_high_res.set(l, m)()]));
     }
   }
 
-  for (size_t l = strahl_initial.ylm_spherepack().l_max() + 1;
-       l <= strahl_final.ylm_spherepack().l_max(); ++l) {
+  for (size_t l = sk.ylm_spherepack().l_max() + 1;
+       l <= sk_high_res.ylm_spherepack().l_max(); ++l) {
     for (int m = -static_cast<int>(l); m <= static_cast<int>(l); ++m) {
-      CHECK(final_coefs[iter_final.set(l, m)()] == approx(0));
+      CHECK(final_coefs[iter_high_res.set(l, m)()] == approx(0));
     }
   }
 }
 
-void test_avg_radius() {
+void test_average_radius() {
   const std::array<double, 3> center = {{0.1, 0.2, 0.3}};
   const double r = 3.0;
   Strahlkorper<Frame::Inertial> s(4, 4, r, center);
   CHECK(s.average_radius() == approx(r));
+}
+
+void test_copy_and_move() {
+  Strahlkorper<Frame::Inertial> s(4, 4, 3.0, {{0.1, 0.2, 0.3}});
 
   test_copy_semantics(s);
   auto s_copy = s;
@@ -82,8 +84,9 @@ void test_physical_center() {
   for (size_t s = 0; s < r.size(); ++s) {
     const double theta = sk.theta_phi().get(0)[s];
     const double phi = sk.theta_phi().get(1)[s];
-    // Assuming surface is centered at physical_center, solve quadratic
-    // to obtain radius at each theta,phi point.
+    // Compute the distance (radius as a function of theta,phi) from
+    // the expansion_center to a spherical surface of radius `radius`
+    // centered at physical_center.
     const double a = 1.0;
     const double b = -2 * cos(phi) * sin(theta) * physical_center[0] -
                      2 * sin(phi) * sin(theta) * physical_center[1] -
@@ -94,8 +97,10 @@ void test_physical_center() {
     auto roots = real_roots(a, b, c);
     r[s] = std::max(roots[0], roots[1]);
   }
-  // Construct a new Strahlkorper with the radius computed above,
-  // so that its physical_center should be sk_test.physical_center().
+  // Construct a new Strahlkorper sk_test with the radius computed
+  // above, centered at expansion_center, so that
+  // sk_test.physical_center() should recover the physical center of
+  // this surface.
   Strahlkorper<Frame::Inertial> sk_test(r, l_max, l_max, expansion_center);
   for (size_t i = 0; i < 3; ++i) {
     CHECK(approx(gsl::at(physical_center, i)) ==
@@ -138,6 +143,14 @@ void test_constructor_with_different_coefs() {
 }
 
 void test_radius_and_derivs() {
+  // Create spherical Strahlkorper
+  {
+    const std::array<double, 3> center = {{0.1, 0.2, 0.3}};
+    const double r = 3.0;
+    Strahlkorper<Frame::Inertial> s(4, 4, r, center);
+    CHECK(s.average_radius() == approx(r));
+  }
+
   // Create a strahlkorper with a Im(Y11) dependence.
   const size_t l_max = 4, m_max = 4;
   const double radius = 2.0;
@@ -411,7 +424,8 @@ void test_normals() {
 SPECTRE_TEST_CASE("Unit.ApparentHorizons.Strahlkorper",
                   "[ApparentHorizons][Unit]") {
   test_invert_spec_phys_transform();
-  test_avg_radius();
+  test_copy_and_move();
+  test_average_radius();
   test_physical_center();
   test_point_is_contained();
   test_constructor_with_different_coefs();

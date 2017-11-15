@@ -4,7 +4,6 @@
 #include "ApparentHorizons/Strahlkorper.hpp"
 
 #include "ApparentHorizons/SpherepackIterator.hpp"
-#include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 
 template <typename Fr>
@@ -357,23 +356,6 @@ Strahlkorper<Fr>::surface_normal_one_form() const noexcept {
     }
   }
   return surface_normal_one_form_;
-}
-
-template <typename Fr>
-DataVector Strahlkorper<Fr>::surface_normal_magnitude(
-    const InverseMetric& inv_g) const noexcept {
-  return magnitude(surface_normal_one_form(), inv_g);
-  //-:  const auto& s_i = surface_normal_one_form();
-  //-:  ASSERT(s_i.get(0).size() == inv_g.get(0, 0).size(),
-  //-:         "Size mismatch: " << s_i.get(0).size() << " vs "
-  //-:                           << inv_g.get(0, 0).size());
-  //-:  DataVector mag_squared(s_i.get(0).size(), 0.);
-  //-:  for (size_t m = 0; m < 3; ++m) {
-  //-:    for (size_t n = 0; n < 3; ++n) {
-  //-:      mag_squared += s_i.get(m) * s_i.get(n) * inv_g.get(m, n);
-  //-:    }
-  //-:  }
-  //-:  return sqrt(mag_squared);
 }
 
 template <typename Fr>

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "ApparentHorizons/YlmSpherepack.hpp"
+#include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 
 /// \brief A star-shaped surface expanded in spherical harmonics.
 template <class Fr>
@@ -153,8 +154,10 @@ class Strahlkorper {
   /// This routine needs an upper 3-metric in cartesian coordinates.
   /// The normalized one-form to the surface is
   /// surface_normal_one_form(i)/surface_normal_magnitude
-  DataVector surface_normal_magnitude(const InverseMetric& inv_g) const
-      noexcept;
+  SPECTRE_ALWAYS_INLINE DataVector
+  surface_normal_magnitude(const InverseMetric& inv_g) const noexcept {
+    return magnitude(surface_normal_one_form(), inv_g);
+  }
 
  private:
   void initialize_mesh_quantities() const noexcept;

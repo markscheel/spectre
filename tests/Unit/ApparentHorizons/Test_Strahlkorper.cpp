@@ -297,11 +297,8 @@ void test_normals() {
 
   // Test surface_tangents
 
-  // Can test_surface_tangents be constructed in one line instead of three?
-  std::array<Strahlkorper<Frame::Inertial>::ThreeVector, 2>
-      test_surface_tangents;
-  test_surface_tangents[0] = Strahlkorper<Frame::Inertial>::ThreeVector(n_pts);
-  test_surface_tangents[1] = Strahlkorper<Frame::Inertial>::ThreeVector(n_pts);
+  auto test_surface_tangents =
+      make_array<2>(Strahlkorper<Frame::Inertial>::ThreeVector(n_pts));
   const double amp = -sqrt(3.0 / 8.0 / M_PI) * y11_amplitude;
 
   const auto theta = theta_phi.get(0);

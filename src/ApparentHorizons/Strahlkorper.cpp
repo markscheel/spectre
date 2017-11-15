@@ -130,7 +130,7 @@ void Strahlkorper<Fr>::initialize_jac_and_hess() const noexcept {
   }
   initialize_mesh_quantities();
 
-  const auto theta_phi = ylm_.theta_phi_points();
+  const auto& theta_phi = ylm_.theta_phi_points();
   const auto& theta = theta_phi[0];
   const auto& phi = theta_phi[1];
   const DataVector sin_phi = sin(phi);

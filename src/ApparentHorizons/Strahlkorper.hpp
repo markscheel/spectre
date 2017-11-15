@@ -13,6 +13,7 @@
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "Utilities/ForceInline.hpp"
 
+/// \ingroup SurfacesGroup
 /// \brief A star-shaped surface expanded in spherical harmonics.
 template <class Fr>
 class Strahlkorper {

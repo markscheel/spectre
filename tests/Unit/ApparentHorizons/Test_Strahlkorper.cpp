@@ -28,6 +28,7 @@ void test_invert_spec_phys_transform() {
       r += delta_radius * ran(gen);
     }
   }
+  CAPTURE_PRECISE(radius);
 
   // Initialize a strahlkorper of l_max=l_grid
   const Strahlkorper<Frame::Inertial> sk(radius, l_grid, l_grid, center);
@@ -301,12 +302,12 @@ void test_normals() {
       make_array<2>(Strahlkorper<Frame::Inertial>::ThreeVector(n_pts));
   const double amp = -sqrt(3.0 / 8.0 / M_PI) * y11_amplitude;
 
-  const auto theta = theta_phi.get(0);
-  const auto phi = theta_phi.get(1);
-  const auto cos_phi = cos(phi);
-  const auto sin_phi = sin(phi);
-  const auto cos_theta = cos(theta);
-  const auto sin_theta = sin(theta);
+  const auto& theta = theta_phi.get(0);
+  const auto& phi = theta_phi.get(1);
+  const DataVector cos_phi = cos(phi);
+  const DataVector sin_phi = sin(phi);
+  const DataVector cos_theta = cos(theta);
+  const DataVector sin_theta = sin(theta);
 
   test_surface_tangents[0].get(0) =
       cos_phi * cos_theta * (radius + 2. * amp * sin_phi * sin_theta);
@@ -351,8 +352,8 @@ void test_normals() {
   Strahlkorper<Frame::Inertial>::OneForm test_normal_one_form(n_pts);
   {
     const auto& r = strahlkorper.radius();
-    const auto temp = r + amp * sin_phi * sin_theta;
-    const auto one_over_r = 1.0 / r;
+    const DataVector temp = r + amp * sin_phi * sin_theta;
+    const DataVector one_over_r = 1.0 / r;
     test_normal_one_form.get(0) = cos_phi * sin_theta * temp * one_over_r;
     test_normal_one_form.get(1) =
         (sin_phi * sin_theta * temp - amp) * one_over_r;
@@ -368,19 +369,19 @@ void test_normals() {
 
   // Test surface_normal_magnitude.
   Strahlkorper<Frame::Inertial>::InverseMetric invg(n_pts);
-  DataVector test_normal_mag(n_pts);
+  invg.get(0, 0) = 1.0;
+  invg.get(1, 0) = 0.1;
+  invg.get(2, 0) = 0.2;
+  invg.get(1, 1) = 2.0;
+  invg.get(1, 2) = 0.3;
+  invg.get(2, 2) = 3.0;
 
+  DataVector test_normal_mag(n_pts);
   {
     const auto& r = strahlkorper.radius();
-    invg.get(0, 0) = 1.0;
-    invg.get(1, 0) = 0.1;
-    invg.get(2, 0) = 0.2;
-    invg.get(1, 1) = 2.0;
-    invg.get(1, 2) = 0.3;
-    invg.get(2, 2) = 3.0;
 
     // Nasty expression I computed in mathematica.
-    const auto normsquared =
+    const DataVector normsquared =
         (-0.30000000000000004 * cos_theta * (r + amp * sin_phi * sin_theta) *
              (1. * amp * square(cos_phi) +
               1. * amp * square(cos_theta) * square(sin_phi) -
@@ -411,9 +412,7 @@ void test_normals() {
     test_normal_mag = sqrt(normsquared);
   }
   const auto& normal_mag = strahlkorper.surface_normal_magnitude(invg);
-  for (size_t s = 0; s < n_pts; ++s) {
-    CHECK(test_normal_mag[s] == approx(normal_mag[s]));
-  }
+  CHECK_ITERABLE_APPROX(test_normal_mag, normal_mag);
 }
 
 }  // namespace

@@ -3,8 +3,15 @@
 
 #pragma once
 
+#include <array>
+#include <cstdint>
+
 #include "ApparentHorizons/YlmSpherepack.hpp"
+#include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
+#include "DataStructures/Tensor/Tensor.hpp"
+#include "DataStructures/Tensor/TypeAliases.hpp"
+#include "Utilities/ForceInline.hpp"
 
 /// \brief A star-shaped surface expanded in spherical harmonics.
 template <class Fr>

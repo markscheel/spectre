@@ -4,6 +4,8 @@
 #include "ApparentHorizons/Strahlkorper.hpp"
 
 #include "ApparentHorizons/SpherepackIterator.hpp"
+#include "ErrorHandling/Assert.hpp"
+#include "Parallel/PupStlCpp11.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 
 template <typename Fr>
@@ -52,7 +54,7 @@ Strahlkorper<Fr>::Strahlkorper(const DataVector& radius_at_collocation_points,
       m_max_(m_max),
       ylm_(l_max, m_max),
       // clang-tidy: do not std::move trivially constructable types
-      center_(center),  // NOLINT
+      center_(std::move(center)),  // NOLINT
       strahlkorper_coefs_(ylm_.phys_to_spec(radius_at_collocation_points)) {
   ASSERT(radius_at_collocation_points.size() == ylm_.physical_size(),
          "Bad size " << radius_at_collocation_points.size() << ", expected "
@@ -109,7 +111,7 @@ bool Strahlkorper<Fr>::point_is_contained(const std::array<double, 3>& x) const
 
   // Convert the point from Cartesian to spherical coordinates.
   const double r = magnitude(xmc);
-  const double theta = acos(xmc[2] / r);
+  const double theta = atan2(sqrt(square(xmc[0]) + square(xmc[1])), xmc[2]);
   double phi = atan2(xmc[1], xmc[0]);
   // Range of atan2 is [-pi,pi],
   // So adjust to get range [0,2pi]
@@ -131,10 +133,10 @@ void Strahlkorper<Fr>::initialize_jac_and_hess() const noexcept {
   const auto theta_phi = ylm_.theta_phi_points();
   const auto& theta = theta_phi[0];
   const auto& phi = theta_phi[1];
-  const auto sin_phi = sin(phi);
-  const auto cos_phi = cos(phi);
-  const auto sin_theta = sin(theta);
-  const auto cos_theta = cos(theta);
+  const DataVector sin_phi = sin(phi);
+  const DataVector cos_phi = cos(phi);
+  const DataVector sin_theta = sin(theta);
+  const DataVector cos_theta = cos(theta);
 
   jac_.get(0, 0) = cos_theta * cos_phi;          // 1/R dx/dth
   jac_.get(1, 0) = cos_theta * sin_phi;          // 1/R dy/dth
@@ -150,15 +152,15 @@ void Strahlkorper<Fr>::initialize_jac_and_hess() const noexcept {
   inv_jac_.get(1, 1) = cos_phi;                      // R sin(th) dph/dy
   inv_jac_.get(1, 2) = DataVector(phi.size(), 0.0);  // R sin(th) dph/dz
 
-  const auto sin_sq_theta = square(sin_theta);
-  const auto cos_sq_theta = square(cos_theta);
-  const auto sin_theta_cos_theta = sin_theta * cos_theta;
-  const auto sin_sq_phi = square(sin_phi);
-  const auto cos_sq_phi = square(cos_phi);
-  const auto sin_phicos_phi = sin_phi * cos_phi;
-  const auto csc_theta = 1.0 / sin_theta;
-  const auto f1 = 1.0 + 2.0 * sin_sq_theta;
-  const auto cot_theta = cos_theta * csc_theta;
+  const DataVector sin_sq_theta = square(sin_theta);
+  const DataVector cos_sq_theta = square(cos_theta);
+  const DataVector sin_theta_cos_theta = sin_theta * cos_theta;
+  const DataVector sin_sq_phi = square(sin_phi);
+  const DataVector cos_sq_phi = square(cos_phi);
+  const DataVector sin_phicos_phi = sin_phi * cos_phi;
+  const DataVector csc_theta = 1.0 / sin_theta;
+  const DataVector f1 = 1.0 + 2.0 * sin_sq_theta;
+  const DataVector cot_theta = cos_theta * csc_theta;
   // R^2 d^2 th/(dx^2)
   inv_hess_.get(0, 0, 0) = cot_theta * (1.0 - cos_sq_phi * f1);
   // R^2 d^2 th/(dxdy)
@@ -204,13 +206,12 @@ void Strahlkorper<Fr>::initialize_mesh_quantities() const noexcept {
   }
 
   auto theta_phi = ylm_.theta_phi_points();
-  const auto& theta = theta_phi[0];
-  const auto& phi = theta_phi[1];
-  theta_phi_.get(0) = theta;
-  theta_phi_.get(1) = phi;
+  theta_phi_.get(0) = std::move(theta_phi[0]);
+  theta_phi_.get(1) = std::move(theta_phi[1]);
+  const auto& theta = theta_phi_.get(0);
+  const auto& phi = theta_phi_.get(1);
 
-  const auto sin_theta = sin(theta);
-
+  const DataVector sin_theta = sin(theta);
   r_hat_.get(0) = sin_theta * cos(phi);
   r_hat_.get(1) = sin_theta * sin(phi);
   r_hat_.get(2) = cos(theta);
@@ -276,7 +277,7 @@ template <typename Fr>
 const typename Strahlkorper<Fr>::OneForm& Strahlkorper<Fr>::dx_radius() const
     noexcept {
   if (0 == dx_radius_.get(0).size()) {
-    const auto one_over_r = 1.0 / radius();
+    const DataVector one_over_r = 1.0 / radius();
     const auto dr = ylm_.gradient(radius());
     const auto& inv_jac = inv_jacobian();
 
@@ -295,7 +296,7 @@ template <typename Fr>
 const typename Strahlkorper<Fr>::SecondDeriv& Strahlkorper<Fr>::d2x_radius()
     const noexcept {
   if (0 == d2x_radius_.get(0, 0).size()) {
-    const auto one_over_r_squared = 1.0 / square(radius());
+    const DataVector one_over_r_squared = 1.0 / square(radius());
     const auto derivs = ylm_.first_and_second_derivative(radius());
     const auto& inv_jac = inv_jacobian();
     const auto& inv_hess = inv_hessian();

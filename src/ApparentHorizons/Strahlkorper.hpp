@@ -47,7 +47,7 @@ class Strahlkorper {
   /// Construct a Strahlkorper from another Strahlkorper,
   /// but explicitly specifying the coefficients.
   /// Here coefficients are in the same storage scheme
-  /// as the Coefficients() member function returns.
+  /// as the `coefficients` member function returns.
   Strahlkorper(const Strahlkorper& another_strahlkorper,
                DataVector coefs) noexcept;
   /// Construct a Strahlkorper from a DataVector containing the radius

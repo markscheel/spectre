@@ -6,7 +6,7 @@
 
 #include "ApparentHorizons/SpherepackIterator.hpp"
 #include "ApparentHorizons/Strahlkorper.hpp"
-#include "Numerical/RootFinding/QuadraticEquation.hpp"
+#include "NumericalAlgorithms/RootFinding/QuadraticEquation.hpp"
 #include "tests/Unit/ApparentHorizons/YlmTestFunctions.hpp"
 #include "tests/Unit/TestHelpers.hpp"
 

@@ -6,7 +6,7 @@
 
 #include "ApparentHorizons/SpherepackIterator.hpp"
 #include "ApparentHorizons/Strahlkorper.hpp"
-#include "ApparentHorizons/StrahlkorperComputeItems.hpp"
+#include "ApparentHorizons/StrahlkorperDataBox.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "NumericalAlgorithms/RootFinding/QuadraticEquation.hpp"
 #include "tests/Unit/ApparentHorizons/YlmTestFunctions.hpp"

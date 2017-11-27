@@ -8,7 +8,6 @@
 
 #include "ApparentHorizons/YlmSpherepack.hpp"
 #include "DataStructures/DataVector.hpp"
-#include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "Utilities/ForceInline.hpp"
@@ -114,90 +113,11 @@ class Strahlkorper {
     return ylm_;
   }
 
-  // The following 5 functions of coords don't depend on the actual shape
-  // of the surface, but only on l_max and m_max.
-
-  /// \f$(\theta,\phi)\f$ on the grid.
-  const ThetaPhiVector& theta_phi() const noexcept;
-  /// \f$x_i/r\f$
-  const OneForm& r_hat() const noexcept;
-  /// jacobian(i,j) is \f$\frac{1,r}\partial x^i/\partial\theta\f$,
-  /// \f$\frac{1,r\sin\theta}\partial x^i/\partial\phi\f$
-  const Jacobian& jacobian() const noexcept;
-  /// inv_jacobian(j,i) is \f$r\partial\theta/\partial x^i\f$,
-  ///    \f$r\sin\theta\partial\phi/\partial x^i\f$
-  const InvJacobian& inv_jacobian() const noexcept;
-  /// inv_hessian(k,i,j) is \f$\partial\f$ijac(k,j)\f$/partial x^i\f$,
-  /// where \f$ijac\f$ is the inverse Jacobian.
-  /// It is not symmetric because the Jacobians are Pfaffian.
-  const InvHessian& inv_hessian() const noexcept;
-
-  // The following 7 functions do depend on the shape of the surface.
-
-  /// (Euclidean) distance r of each grid point from center.
-  const DataVector& radius() const noexcept;
-  /// dx_radius(i) is \f$\partial r/\partial x^i\f$
-  const OneForm& dx_radius() const noexcept;
-  /// d2x_radius(i,j) is \f$\partial^2 r/\partial x^i\partial x^j\f$
-  const SecondDeriv& d2x_radius() const noexcept;
-  /// \f$\nabla^2 radius\f$
-  const DataVector& nabla_squared_radius() const noexcept;
-  /// \f$(x,y,z)\f$ of each point on the surface.
-  const ThreeVector& surface_cartesian_coords() const noexcept;
-  /// Cartesian components of (unnormalized) one-form defining the surface.
-  /// This is computed by \f$x_i/r-\partial r/\partial x^i\f$,
-  /// where \f$x_i/r\f$ is `r_hat` and
-  /// \f$\partial r/\partial x^i\f$ is `dx_radius`.
-  const OneForm& surface_normal_one_form() const noexcept;
-  /// surface_tangents[j](i) is \f$\partial x_{\rm surf}^i/\partial q^j\f$,
-  /// where \f$x_{\rm surf}^i\f$ are the Cartesian coordinates of the surface
-  /// (i.e. `surface_cartesian_coords`)
-  /// and are considered functions of \f$(\theta,\phi)\f$,
-  /// \f$\partial/\partial q^0\f$ means \f$\partial/\partial\theta\f$,
-  /// and \f$\partial/\partial q^1\f$ means
-  /// \f$\csc\theta\partial/\partial\phi\f$.
-  const std::array<ThreeVector, 2>& surface_tangents() const noexcept;
-
-  /// Magnitude of surface_normal_one_form.
-  /// This routine needs an upper 3-metric in cartesian coordinates.
-  /// The normalized one-form to the surface is
-  /// surface_normal_one_form(i)/surface_normal_magnitude
-  SPECTRE_ALWAYS_INLINE DataVector
-  surface_normal_magnitude(const InverseMetric& inv_g) const noexcept {
-    return magnitude(surface_normal_one_form(), inv_g);
-  }
-
  private:
-  void initialize_mesh_quantities() const noexcept;
-  void initialize_jac_and_hess() const noexcept;
-
   size_t l_max_{2}, m_max_{2};
   YlmSpherepack ylm_{2, 2};
   std::array<double, 3> center_{{0.0, 0.0, 0.0}};
   DataVector strahlkorper_coefs_ = DataVector(ylm_.physical_size(), 0.0);
-
-  // The following 5 variables are coordinate quantities on the 2D mesh,
-  // centered at the origin.  They don't depend on the actual shape of
-  // the surface, just on l_max_ and m_max_.
-  // They are mutable because sometimes they don't need to be computed at
-  // all, so they are computed once only when needed and then saved.
-
-  mutable ThetaPhiVector theta_phi_;
-  mutable OneForm r_hat_;
-  mutable Jacobian jac_;
-  mutable InvJacobian inv_jac_;
-  mutable InvHessian inv_hess_;
-
-  // The following variables do depend on the shape of the surface.
-  // They are computed only when needed, which is why they are mutable.
-
-  mutable DataVector radius_;
-  mutable ThreeVector global_coords_;
-  mutable OneForm dx_radius_;
-  mutable SecondDeriv d2x_radius_;
-  mutable DataVector nabla_squared_radius_;
-  mutable OneForm surface_normal_one_form_;
-  mutable std::array<ThreeVector, 2> surface_tangents_;
 };
 
 template <typename Fr>
@@ -205,8 +125,6 @@ bool operator==(const Strahlkorper<Fr>& lhs, const Strahlkorper<Fr>& rhs) {
   return lhs.l_max() == rhs.l_max() and lhs.m_max() == rhs.m_max() and
          lhs.center() == rhs.center() and
          lhs.coefficients() == rhs.coefficients();
-  // We don't care about any other member variables because they
-  // are completely determined by the ones we check above.
 }
 
 template <typename Fr>

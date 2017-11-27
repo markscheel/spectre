@@ -6,6 +6,8 @@
 
 #include "ApparentHorizons/SpherepackIterator.hpp"
 #include "ApparentHorizons/Strahlkorper.hpp"
+#include "ApparentHorizons/StrahlkorperComputeItems.hpp"
+#include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
 #include "NumericalAlgorithms/RootFinding/QuadraticEquation.hpp"
 #include "tests/Unit/ApparentHorizons/YlmTestFunctions.hpp"
 #include "tests/Unit/TestHelpers.hpp"
@@ -83,8 +85,8 @@ void test_physical_center() {
   DataVector r(sk.ylm_spherepack().physical_size(), 0.);
 
   for (size_t s = 0; s < r.size(); ++s) {
-    const double theta = sk.theta_phi().get(0)[s];
-    const double phi = sk.theta_phi().get(1)[s];
+    const double theta = sk.ylm_spherepack().theta_phi_points()[0][s];
+    const double phi = sk.ylm_spherepack().theta_phi_points()[1][s];
     // Compute the distance (radius as a function of theta,phi) from
     // the expansion_center to a spherical surface of radius `radius`
     // centered at physical_center.
@@ -144,8 +146,8 @@ void test_constructor_with_different_coefs() {
 }
 
 void test_radius_and_derivs() {
-  // Create spherical Strahlkorper
   {
+    // Create spherical Strahlkorper
     const std::array<double, 3> center = {{0.1, 0.2, 0.3}};
     const double r = 3.0;
     Strahlkorper<Frame::Inertial> s(4, 4, r, center);
@@ -168,10 +170,10 @@ void test_radius_and_derivs() {
   Strahlkorper<Frame::Inertial> strahlkorper(strahlkorper_sphere, coefs);
 
   // Now construct a Y00 + Im(Y11) surface by hand.
-  const auto& theta_phi = strahlkorper.theta_phi();
+  const auto& theta_phi = strahlkorper.ylm_spherepack().theta_phi_points();
   const auto& theta_points = strahlkorper.ylm_spherepack().theta_points();
   const auto& phi_points = strahlkorper.ylm_spherepack().phi_points();
-  const auto n_pts = theta_phi.get(0).size();
+  const auto n_pts = theta_phi[0].size();
   YlmTestFunctions::Y11 func;
   DataVector test_radius(n_pts);
   func.func(&test_radius, 1, 0, theta_points, phi_points);
@@ -180,8 +182,16 @@ void test_radius_and_derivs() {
     test_radius[s] += radius;
   }
 
+  // Create DataBox
+  auto box = db::create<
+      db::AddTags<StrahlkorperDataBoxTags::TagList<Frame::Inertial>::Tags>,
+      db::AddComputeItemsTags<
+          StrahlkorperDataBoxTags::TagList<Frame::Inertial>::ComputeItemsTags>>(
+      strahlkorper);
+
   // Test radius
-  const auto& strahlkorper_radius = strahlkorper.radius();
+  const auto& strahlkorper_radius =
+      db::get<StrahlkorperDataBoxTags::Radius<Frame::Inertial>>(box);
   for (size_t s = 0; s < n_pts; ++s) {
     CHECK(strahlkorper_radius[s] == approx(test_radius[s]));
   }
@@ -190,8 +200,8 @@ void test_radius_and_derivs() {
   Strahlkorper<Frame::Inertial>::OneForm test_dx_radius(n_pts);
   for (size_t s = 0; s < n_pts; ++s) {
     // Analytic solution I computed in Mathematica
-    const double theta = theta_phi.get(0)[s];
-    const double phi = theta_phi.get(1)[s];
+    const double theta = theta_phi[0][s];
+    const double phi = theta_phi[1][s];
     const double r = test_radius[s];
     const double sin_phi = sin(phi);
     const double cos_phi = cos(phi);
@@ -208,7 +218,8 @@ void test_radius_and_derivs() {
       a[s] *= amp;
     }
   }
-  const auto& strahlkorper_dx_radius = strahlkorper.dx_radius();
+  const auto& strahlkorper_dx_radius =
+      db::get<StrahlkorperDataBoxTags::DxRadius<Frame::Inertial>>(box);
   for (size_t i = 0; i < 3; ++i) {
     for (size_t s = 0; s < n_pts; ++s) {
       CHECK(strahlkorper_dx_radius.get(i)[s] ==
@@ -220,8 +231,8 @@ void test_radius_and_derivs() {
   Strahlkorper<Frame::Inertial>::SecondDeriv test_d2x_radius(n_pts);
   for (size_t s = 0; s < n_pts; ++s) {
     // Messy analytic solution I computed in Mathematica
-    const double theta = theta_phi.get(0)[s];
-    const double phi = theta_phi.get(1)[s];
+    const double theta = theta_phi[0][s];
+    const double phi = theta_phi[1][s];
     const double r = test_radius[s];
     const double sin_theta = sin(theta);
     const double cos_theta = cos(theta);
@@ -254,7 +265,8 @@ void test_radius_and_derivs() {
       a[s] *= amp;
     }
   }
-  const auto& strahlkorper_d2x_radius = strahlkorper.d2x_radius();
+  const auto& strahlkorper_d2x_radius =
+      db::get<StrahlkorperDataBoxTags::D2xRadius<Frame::Inertial>>(box);
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       for (size_t s = 0; s < n_pts; ++s) {
@@ -267,11 +279,13 @@ void test_radius_and_derivs() {
   // Test nabla squared
   DataVector test_nabla_squared(n_pts);
   for (size_t s = 0; s < n_pts; ++s) {
-    func.scalar_laplacian(&test_nabla_squared, 1, s, {theta_phi.get(0)[s]},
-                          {theta_phi.get(1)[s]});
+    func.scalar_laplacian(&test_nabla_squared, 1, s, {theta_phi[0][s]},
+                          {theta_phi[1][s]});
     test_nabla_squared[s] *= y11_amplitude;
   }
-  const auto& strahlkorper_nabla_squared = strahlkorper.nabla_squared_radius();
+  const auto& strahlkorper_nabla_squared =
+      db::get<StrahlkorperDataBoxTags::NablaSquaredRadius<Frame::Inertial>>(
+          box);
   for (size_t s = 0; s < n_pts; ++s) {
     CHECK(strahlkorper_nabla_squared[s] == approx(test_nabla_squared[s]));
   }
@@ -293,8 +307,8 @@ void test_normals() {
   coefs[it.set(1, -1)()] = y11_amplitude * sqrt(0.5 / M_PI);
   Strahlkorper<Frame::Inertial> strahlkorper(strahlkorper_sphere, coefs);
 
-  const auto& theta_phi = strahlkorper.theta_phi();
-  const auto n_pts = theta_phi.get(0).size();
+  const auto& theta_phi = strahlkorper.ylm_spherepack().theta_phi_points();
+  const auto n_pts = theta_phi[0].size();
 
   // Test surface_tangents
 
@@ -302,8 +316,8 @@ void test_normals() {
       make_array<2>(Strahlkorper<Frame::Inertial>::ThreeVector(n_pts));
   const double amp = -sqrt(3.0 / 8.0 / M_PI) * y11_amplitude;
 
-  const auto& theta = theta_phi.get(0);
-  const auto& phi = theta_phi.get(1);
+  const auto& theta = theta_phi[0];
+  const auto& phi = theta_phi[1];
   const DataVector cos_phi = cos(phi);
   const DataVector sin_phi = sin(phi);
   const DataVector cos_theta = cos(theta);
@@ -322,7 +336,15 @@ void test_normals() {
       cos_phi * (radius + 2. * amp * sin_phi * sin_theta);
   test_surface_tangents[1].get(2) = amp * cos_phi * cos_theta;
 
-  const auto& surface_tangents = strahlkorper.surface_tangents();
+  // Create DataBox
+  auto box = db::create<
+      db::AddTags<StrahlkorperDataBoxTags::TagList<Frame::Inertial>::Tags>,
+      db::AddComputeItemsTags<
+          StrahlkorperDataBoxTags::TagList<Frame::Inertial>::ComputeItemsTags>>(
+      strahlkorper);
+
+  const auto& surface_tangents =
+      db::get<StrahlkorperDataBoxTags::SurfaceTangents<Frame::Inertial>>(box);
   for (size_t i = 0; i < 2; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       for (size_t s = 0; s < n_pts; ++s) {
@@ -341,7 +363,9 @@ void test_normals() {
     test_cart_coords.get(1) = sin_phi * sin_theta * temp + center[1];
     test_cart_coords.get(2) = cos_theta * temp + center[2];
   }
-  const auto& cart_coords = strahlkorper.surface_cartesian_coords();
+  const auto& cart_coords =
+      db::get<StrahlkorperDataBoxTags::SurfaceCartesianCoords<Frame::Inertial>>(
+          box);
   for (size_t j = 0; j < 3; ++j) {
     for (size_t s = 0; s < n_pts; ++s) {
       CHECK(test_cart_coords.get(j)[s] == approx(cart_coords.get(j)[s]));
@@ -351,7 +375,8 @@ void test_normals() {
   // Test surface_normal_one_form
   Strahlkorper<Frame::Inertial>::OneForm test_normal_one_form(n_pts);
   {
-    const auto& r = strahlkorper.radius();
+    const auto& r =
+        db::get<StrahlkorperDataBoxTags::Radius<Frame::Inertial>>(box);
     const DataVector temp = r + amp * sin_phi * sin_theta;
     const DataVector one_over_r = 1.0 / r;
     test_normal_one_form.get(0) = cos_phi * sin_theta * temp * one_over_r;
@@ -359,7 +384,9 @@ void test_normals() {
         (sin_phi * sin_theta * temp - amp) * one_over_r;
     test_normal_one_form.get(2) = cos_theta * temp * one_over_r;
   }
-  const auto& normal_one_form = strahlkorper.surface_normal_one_form();
+  const auto& normal_one_form =
+      db::get<StrahlkorperDataBoxTags::SurfaceNormalOneForm<Frame::Inertial>>(
+          box);
   for (size_t j = 0; j < 3; ++j) {
     for (size_t s = 0; s < n_pts; ++s) {
       CHECK(test_normal_one_form.get(j)[s] ==
@@ -378,7 +405,8 @@ void test_normals() {
 
   DataVector test_normal_mag(n_pts);
   {
-    const auto& r = strahlkorper.radius();
+    const auto& r =
+        db::get<StrahlkorperDataBoxTags::Radius<Frame::Inertial>>(box);
 
     // Nasty expression I computed in mathematica.
     const DataVector normsquared =
@@ -411,7 +439,7 @@ void test_normals() {
         square(r);
     test_normal_mag = sqrt(normsquared);
   }
-  const auto& normal_mag = strahlkorper.surface_normal_magnitude(invg);
+  const auto& normal_mag = magnitude(normal_one_form, invg);
   CHECK_ITERABLE_APPROX(test_normal_mag, normal_mag);
 }
 

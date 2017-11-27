@@ -355,4 +355,4 @@ struct TagList {
                SurfaceNormalOneForm<Fr>, SurfaceTangents<Fr>>;
 };
 
-}  // StrahlkorperDataBoxTags
+}  // namespace StrahlkorperDataBoxTags

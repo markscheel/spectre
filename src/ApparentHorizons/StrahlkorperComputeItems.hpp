@@ -9,7 +9,7 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 
-namespace StrahlkorperDataBoxTags {
+namespace StrahlkorperDB {
 
 template <typename Frame>
 struct Strahlkorper : db::DataBoxTag {
@@ -196,8 +196,8 @@ struct Radius : db::ComputeItemTag {
 
 /// \f$(x,y,z)\f$ of each point on the surface.
 template <typename Frame>
-struct SurfaceCartesianCoords : db::ComputeItemTag {
-  static constexpr db::DataBoxString label = "SurfaceCartesianCoords";
+struct CartesianCoords : db::ComputeItemTag {
+  static constexpr db::DataBoxString label = "CartesianCoords";
   static auto compute(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
       const typename ::Strahlkorper<Frame>::OneForm& r_hat) noexcept {
@@ -306,8 +306,8 @@ struct NablaSquaredRadius : db::ComputeItemTag {
 /// where \f$x_i/r\f$ is `r_hat` and
 /// \f$\partial r/\partial x^i\f$ is `dx_radius`.
 template <typename Frame>
-struct SurfaceNormalOneForm : db::ComputeItemTag {
-  static constexpr db::DataBoxString label = "SurfaceNormalOneForm";
+struct NormalOneForm : db::ComputeItemTag {
+  static constexpr db::DataBoxString label = "NormalOneForm";
   static auto compute(
       const typename ::Strahlkorper<Frame>::OneForm& dx_radius,
       const typename ::Strahlkorper<Frame>::OneForm& r_hat) noexcept {
@@ -321,16 +321,16 @@ struct SurfaceNormalOneForm : db::ComputeItemTag {
   using argument_tags = typelist<DxRadius<Frame>, Rhat<Frame>>;
 };
 
-/// surface_tangents[j](i) is \f$\partial x_{\rm surf}^i/\partial q^j\f$,
+/// tangents[j](i) is \f$\partial x_{\rm surf}^i/\partial q^j\f$,
 /// where \f$x_{\rm surf}^i\f$ are the Cartesian coordinates of the surface
-/// (i.e. `surface_cartesian_coords`)
+/// (i.e. `cartesian_coords`)
 /// and are considered functions of \f$(\theta,\phi)\f$,
 /// \f$\partial/\partial q^0\f$ means \f$\partial/\partial\theta\f$,
 /// and \f$\partial/\partial q^1\f$ means
 /// \f$\csc\theta\partial/\partial\phi\f$.
 template <typename Frame>
-struct SurfaceTangents : db::ComputeItemTag {
-  static constexpr db::DataBoxString label = "SurfaceTangents";
+struct Tangents : db::ComputeItemTag {
+  static constexpr db::DataBoxString label = "Tangents";
   static auto compute(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
       const typename ::Strahlkorper<Frame>::OneForm& r_hat,
@@ -356,9 +356,9 @@ struct TagList {
   using ComputeItemsTags =
       typelist<ThetaPhi<Frame>, Rhat<Frame>, Jacobian<Frame>,
                InvJacobian<Frame>, InvHessian<Frame>, Radius<Frame>,
-               SurfaceCartesianCoords<Frame>, DxRadius<Frame>, D2xRadius<Frame>,
-               NablaSquaredRadius<Frame>, SurfaceNormalOneForm<Frame>,
-               SurfaceTangents<Frame>>;
+               CartesianCoords<Frame>, DxRadius<Frame>, D2xRadius<Frame>,
+               NablaSquaredRadius<Frame>, NormalOneForm<Frame>,
+               Tangents<Frame>>;
 };
 
-}  // namespace StrahlkorperDataBoxTags
+}  // namespace StrahlkorperDB

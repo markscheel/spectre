@@ -183,15 +183,14 @@ void test_radius_and_derivs() {
   }
 
   // Create DataBox
-  auto box = db::create<
-      db::AddTags<StrahlkorperDataBoxTags::TagList<Frame::Inertial>::Tags>,
-      db::AddComputeItemsTags<
-          StrahlkorperDataBoxTags::TagList<Frame::Inertial>::ComputeItemsTags>>(
-      strahlkorper);
+  auto box =
+      db::create<db::AddTags<StrahlkorperDB::TagList<Frame::Inertial>::Tags>,
+                 db::AddComputeItemsTags<StrahlkorperDB::TagList<
+                     Frame::Inertial>::ComputeItemsTags>>(strahlkorper);
 
   // Test radius
   const auto& strahlkorper_radius =
-      db::get<StrahlkorperDataBoxTags::Radius<Frame::Inertial>>(box);
+      db::get<StrahlkorperDB::Radius<Frame::Inertial>>(box);
   for (size_t s = 0; s < n_pts; ++s) {
     CHECK(strahlkorper_radius[s] == approx(test_radius[s]));
   }
@@ -219,7 +218,7 @@ void test_radius_and_derivs() {
     }
   }
   const auto& strahlkorper_dx_radius =
-      db::get<StrahlkorperDataBoxTags::DxRadius<Frame::Inertial>>(box);
+      db::get<StrahlkorperDB::DxRadius<Frame::Inertial>>(box);
   for (size_t i = 0; i < 3; ++i) {
     for (size_t s = 0; s < n_pts; ++s) {
       CHECK(strahlkorper_dx_radius.get(i)[s] ==
@@ -266,7 +265,7 @@ void test_radius_and_derivs() {
     }
   }
   const auto& strahlkorper_d2x_radius =
-      db::get<StrahlkorperDataBoxTags::D2xRadius<Frame::Inertial>>(box);
+      db::get<StrahlkorperDB::D2xRadius<Frame::Inertial>>(box);
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       for (size_t s = 0; s < n_pts; ++s) {
@@ -284,8 +283,7 @@ void test_radius_and_derivs() {
     test_nabla_squared[s] *= y11_amplitude;
   }
   const auto& strahlkorper_nabla_squared =
-      db::get<StrahlkorperDataBoxTags::NablaSquaredRadius<Frame::Inertial>>(
-          box);
+      db::get<StrahlkorperDB::NablaSquaredRadius<Frame::Inertial>>(box);
   for (size_t s = 0; s < n_pts; ++s) {
     CHECK(strahlkorper_nabla_squared[s] == approx(test_nabla_squared[s]));
   }
@@ -337,14 +335,13 @@ void test_normals() {
   test_surface_tangents[1].get(2) = amp * cos_phi * cos_theta;
 
   // Create DataBox
-  auto box = db::create<
-      db::AddTags<StrahlkorperDataBoxTags::TagList<Frame::Inertial>::Tags>,
-      db::AddComputeItemsTags<
-          StrahlkorperDataBoxTags::TagList<Frame::Inertial>::ComputeItemsTags>>(
-      strahlkorper);
+  auto box =
+      db::create<db::AddTags<StrahlkorperDB::TagList<Frame::Inertial>::Tags>,
+                 db::AddComputeItemsTags<StrahlkorperDB::TagList<
+                     Frame::Inertial>::ComputeItemsTags>>(strahlkorper);
 
   const auto& surface_tangents =
-      db::get<StrahlkorperDataBoxTags::SurfaceTangents<Frame::Inertial>>(box);
+      db::get<StrahlkorperDB::Tangents<Frame::Inertial>>(box);
   for (size_t i = 0; i < 2; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       for (size_t s = 0; s < n_pts; ++s) {
@@ -364,8 +361,7 @@ void test_normals() {
     test_cart_coords.get(2) = cos_theta * temp + center[2];
   }
   const auto& cart_coords =
-      db::get<StrahlkorperDataBoxTags::SurfaceCartesianCoords<Frame::Inertial>>(
-          box);
+      db::get<StrahlkorperDB::CartesianCoords<Frame::Inertial>>(box);
   for (size_t j = 0; j < 3; ++j) {
     for (size_t s = 0; s < n_pts; ++s) {
       CHECK(test_cart_coords.get(j)[s] == approx(cart_coords.get(j)[s]));
@@ -375,8 +371,7 @@ void test_normals() {
   // Test surface_normal_one_form
   Strahlkorper<Frame::Inertial>::OneForm test_normal_one_form(n_pts);
   {
-    const auto& r =
-        db::get<StrahlkorperDataBoxTags::Radius<Frame::Inertial>>(box);
+    const auto& r = db::get<StrahlkorperDB::Radius<Frame::Inertial>>(box);
     const DataVector temp = r + amp * sin_phi * sin_theta;
     const DataVector one_over_r = 1.0 / r;
     test_normal_one_form.get(0) = cos_phi * sin_theta * temp * one_over_r;
@@ -385,8 +380,7 @@ void test_normals() {
     test_normal_one_form.get(2) = cos_theta * temp * one_over_r;
   }
   const auto& normal_one_form =
-      db::get<StrahlkorperDataBoxTags::SurfaceNormalOneForm<Frame::Inertial>>(
-          box);
+      db::get<StrahlkorperDB::NormalOneForm<Frame::Inertial>>(box);
   for (size_t j = 0; j < 3; ++j) {
     for (size_t s = 0; s < n_pts; ++s) {
       CHECK(test_normal_one_form.get(j)[s] ==
@@ -405,8 +399,7 @@ void test_normals() {
 
   DataVector test_normal_mag(n_pts);
   {
-    const auto& r =
-        db::get<StrahlkorperDataBoxTags::Radius<Frame::Inertial>>(box);
+    const auto& r = db::get<StrahlkorperDB::Radius<Frame::Inertial>>(box);
 
     // Nasty expression I computed in mathematica.
     const DataVector normsquared =

@@ -196,7 +196,7 @@ void test_radius_and_derivs() {
   }
 
   // Test derivative of radius
-  Strahlkorper<Frame::Inertial>::OneForm test_dx_radius(n_pts);
+  StrahlkorperDB::types<Frame::Inertial>::OneForm test_dx_radius(n_pts);
   for (size_t s = 0; s < n_pts; ++s) {
     // Analytic solution I computed in Mathematica
     const double theta = theta_phi[0][s];
@@ -227,7 +227,7 @@ void test_radius_and_derivs() {
   }
 
   // Test second derivatives.
-  Strahlkorper<Frame::Inertial>::SecondDeriv test_d2x_radius(n_pts);
+  StrahlkorperDB::types<Frame::Inertial>::SecondDeriv test_d2x_radius(n_pts);
   for (size_t s = 0; s < n_pts; ++s) {
     // Messy analytic solution I computed in Mathematica
     const double theta = theta_phi[0][s];
@@ -311,7 +311,7 @@ void test_normals() {
   // Test surface_tangents
 
   auto test_surface_tangents =
-      make_array<2>(Strahlkorper<Frame::Inertial>::ThreeVector(n_pts));
+      make_array<2>(StrahlkorperDB::types<Frame::Inertial>::Vector(n_pts));
   const double amp = -sqrt(3.0 / 8.0 / M_PI) * y11_amplitude;
 
   const auto& theta = theta_phi[0];
@@ -352,7 +352,7 @@ void test_normals() {
   }
 
   // Test surface_cartesian_coordinates
-  Strahlkorper<Frame::Inertial>::ThreeVector test_cart_coords(n_pts);
+  StrahlkorperDB::types<Frame::Inertial>::Vector test_cart_coords(n_pts);
 
   {
     const auto temp = radius + amp * sin_phi * sin_theta;
@@ -369,7 +369,7 @@ void test_normals() {
   }
 
   // Test surface_normal_one_form
-  Strahlkorper<Frame::Inertial>::OneForm test_normal_one_form(n_pts);
+  StrahlkorperDB::types<Frame::Inertial>::OneForm test_normal_one_form(n_pts);
   {
     const auto& r = db::get<StrahlkorperDB::Radius<Frame::Inertial>>(box);
     const DataVector temp = r + amp * sin_phi * sin_theta;
@@ -389,7 +389,7 @@ void test_normals() {
   }
 
   // Test surface_normal_magnitude.
-  Strahlkorper<Frame::Inertial>::InverseMetric invg(n_pts);
+  tnsr::II<DataVector, 3, Frame::Inertial> invg(n_pts);
   invg.get(0, 0) = 1.0;
   invg.get(1, 0) = 0.1;
   invg.get(2, 0) = 0.2;

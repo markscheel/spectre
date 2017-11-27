@@ -9,7 +9,30 @@
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 
+/// Holds tags and ComputeItems associated with a Strahlkorper.
 namespace StrahlkorperDB {
+
+// This struct supplies shorter names for longer types used below.
+template <typename Frame>
+struct types {
+  using ThetaPhi = tnsr::i<DataVector, 2, ::Frame::Spherical<Frame>>;
+  using OneForm = tnsr::i<DataVector, 3, Frame>;
+  using Vector = tnsr::I<DataVector, 3, Frame>;
+  using Jacobian =
+      Tensor<DataVector, tmpl::integral_list<std::int32_t, 2, 1>,
+             index_list<SpatialIndex<3, UpLo::Up, Frame>,
+                        SpatialIndex<2, UpLo::Lo, ::Frame::Spherical<Frame>>>>;
+  using InvJacobian =
+      Tensor<DataVector, tmpl::integral_list<std::int32_t, 2, 1>,
+             index_list<SpatialIndex<2, UpLo::Up, ::Frame::Spherical<Frame>>,
+                        SpatialIndex<3, UpLo::Lo, Frame>>>;
+  using InvHessian =
+      Tensor<DataVector, tmpl::integral_list<std::int32_t, 3, 2, 1>,
+             index_list<SpatialIndex<2, UpLo::Up, ::Frame::Spherical<Frame>>,
+                        SpatialIndex<3, UpLo::Lo, Frame>,
+                        SpatialIndex<3, UpLo::Lo, Frame>>>;
+  using SecondDeriv = tnsr::ii<DataVector, 3, Frame>;
+};
 
 template <typename Frame>
 struct Strahlkorper : db::DataBoxTag {
@@ -21,9 +44,9 @@ struct Strahlkorper : db::DataBoxTag {
 template <typename Frame>
 struct ThetaPhi : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "ThetaPhi";
-  static typename ::Strahlkorper<Frame>::ThetaPhiVector compute(
+  static typename types<Frame>::ThetaPhi compute(
       const ::Strahlkorper<Frame>& strahlkorper) noexcept {
-    typename ::Strahlkorper<Frame>::ThetaPhiVector theta_phi;
+    typename types<Frame>::ThetaPhi theta_phi;
     auto temp = strahlkorper.ylm_spherepack().theta_phi_points();
     theta_phi.get(0) = std::move(temp[0]);
     theta_phi.get(1) = std::move(temp[1]);
@@ -37,10 +60,9 @@ struct ThetaPhi : db::ComputeItemTag {
 template <typename Frame>
 struct Rhat : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Rhat";
-  static typename ::Strahlkorper<Frame>::OneForm compute(
-      const typename ::Strahlkorper<Frame>::ThetaPhiVector&
-          theta_phi) noexcept {
-    typename ::Strahlkorper<Frame>::OneForm r_hat;
+  static typename types<Frame>::OneForm compute(
+      const typename types<Frame>::ThetaPhi& theta_phi) noexcept {
+    typename types<Frame>::OneForm r_hat;
 
     const auto& theta = theta_phi.get(0);
     const auto& phi = theta_phi.get(1);
@@ -60,8 +82,8 @@ struct Rhat : db::ComputeItemTag {
 template <typename Frame>
 struct Jacobian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Jacobian";
-  static auto compute(const typename ::Strahlkorper<Frame>::ThetaPhiVector&
-                          theta_phi) noexcept {
+  static auto compute(
+      const typename types<Frame>::ThetaPhi& theta_phi) noexcept {
     const auto& theta = theta_phi.get(0);
     const auto& phi = theta_phi.get(1);
     const DataVector sin_phi = sin(phi);
@@ -69,7 +91,7 @@ struct Jacobian : db::ComputeItemTag {
     const DataVector sin_theta = sin(theta);
     const DataVector cos_theta = cos(theta);
 
-    typename ::Strahlkorper<Frame>::Jacobian jac;
+    typename types<Frame>::Jacobian jac;
     jac.get(0, 0) = cos_theta * cos_phi;          // 1/R dx/dth
     jac.get(1, 0) = cos_theta * sin_phi;          // 1/R dy/dth
     jac.get(2, 0) = -sin_theta;                   // 1/R dz/dth
@@ -88,8 +110,8 @@ struct Jacobian : db::ComputeItemTag {
 template <typename Frame>
 struct InvJacobian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "InvJacobian";
-  static auto compute(const typename ::Strahlkorper<Frame>::ThetaPhiVector&
-                          theta_phi) noexcept {
+  static auto compute(
+      const typename types<Frame>::ThetaPhi& theta_phi) noexcept {
     const auto& theta = theta_phi.get(0);
     const auto& phi = theta_phi.get(1);
     const DataVector sin_phi = sin(phi);
@@ -97,7 +119,7 @@ struct InvJacobian : db::ComputeItemTag {
     const DataVector sin_theta = sin(theta);
     const DataVector cos_theta = cos(theta);
 
-    typename ::Strahlkorper<Frame>::InvJacobian inv_jac;
+    typename types<Frame>::InvJacobian inv_jac;
     inv_jac.get(0, 0) = cos_theta * cos_phi;          // R dth/dx
     inv_jac.get(0, 1) = cos_theta * sin_phi;          // R dth/dy
     inv_jac.get(0, 2) = -sin_theta;                   // R dth/dz
@@ -117,8 +139,8 @@ struct InvJacobian : db::ComputeItemTag {
 template <typename Frame>
 struct InvHessian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "InvHessian";
-  static auto compute(const typename ::Strahlkorper<Frame>::ThetaPhiVector&
-                          theta_phi) noexcept {
+  static auto compute(
+      const typename types<Frame>::ThetaPhi& theta_phi) noexcept {
     const auto& theta = theta_phi.get(0);
     const auto& phi = theta_phi.get(1);
     const DataVector sin_phi = sin(phi);
@@ -126,7 +148,7 @@ struct InvHessian : db::ComputeItemTag {
     const DataVector sin_theta = sin(theta);
     const DataVector cos_theta = cos(theta);
 
-    typename ::Strahlkorper<Frame>::InvHessian inv_hess;
+    typename types<Frame>::InvHessian inv_hess;
     const DataVector sin_sq_theta = square(sin_theta);
     const DataVector cos_sq_theta = square(cos_theta);
     const DataVector sin_theta_cos_theta = sin_theta * cos_theta;
@@ -198,10 +220,10 @@ struct Radius : db::ComputeItemTag {
 template <typename Frame>
 struct CartesianCoords : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "CartesianCoords";
-  static auto compute(
-      const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
-      const typename ::Strahlkorper<Frame>::OneForm& r_hat) noexcept {
-    typename ::Strahlkorper<Frame>::ThreeVector coords;
+  static auto compute(const ::Strahlkorper<Frame>& strahlkorper,
+                      const DataVector& radius,
+                      const typename types<Frame>::OneForm& r_hat) noexcept {
+    typename types<Frame>::Vector coords;
     for (size_t d = 0; d < 3; ++d) {
       coords.get(d) = gsl::at(strahlkorper.center(), d) + r_hat.get(d) * radius;
     }
@@ -218,8 +240,8 @@ struct DxRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "DxRadius";
   static auto compute(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
-      const typename ::Strahlkorper<Frame>::InvJacobian& inv_jac) noexcept {
-    typename ::Strahlkorper<Frame>::OneForm dx_radius;
+      const typename types<Frame>::InvJacobian& inv_jac) noexcept {
+    typename types<Frame>::OneForm dx_radius;
     const DataVector one_over_r = 1.0 / radius;
     const auto dr = strahlkorper.ylm_spherepack().gradient(radius);
     dx_radius.get(0) =
@@ -242,9 +264,9 @@ struct D2xRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "D2xRadius";
   static auto compute(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
-      const typename ::Strahlkorper<Frame>::InvJacobian& inv_jac,
-      const typename ::Strahlkorper<Frame>::InvHessian& inv_hess) noexcept {
-    typename ::Strahlkorper<Frame>::SecondDeriv d2x_radius;
+      const typename types<Frame>::InvJacobian& inv_jac,
+      const typename types<Frame>::InvHessian& inv_hess) noexcept {
+    typename types<Frame>::SecondDeriv d2x_radius;
     const DataVector one_over_r_squared = 1.0 / square(radius);
     const auto derivs =
         strahlkorper.ylm_spherepack().first_and_second_derivative(radius);
@@ -289,8 +311,7 @@ struct NablaSquaredRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "NablaSquaredRadius";
   static DataVector compute(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
-      const typename ::Strahlkorper<Frame>::ThetaPhiVector&
-          theta_phi) noexcept {
+      const typename types<Frame>::ThetaPhi& theta_phi) noexcept {
     const auto derivs =
         strahlkorper.ylm_spherepack().first_and_second_derivative(radius);
     return derivs.second.get(0, 0) + derivs.second.get(1, 1) +
@@ -308,10 +329,9 @@ struct NablaSquaredRadius : db::ComputeItemTag {
 template <typename Frame>
 struct NormalOneForm : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "NormalOneForm";
-  static auto compute(
-      const typename ::Strahlkorper<Frame>::OneForm& dx_radius,
-      const typename ::Strahlkorper<Frame>::OneForm& r_hat) noexcept {
-    typename ::Strahlkorper<Frame>::OneForm one_form;
+  static auto compute(const typename types<Frame>::OneForm& dx_radius,
+                      const typename types<Frame>::OneForm& r_hat) noexcept {
+    typename types<Frame>::OneForm one_form;
     for (size_t d = 0; d < 3; ++d) {
       one_form.get(d) = r_hat.get(d) - dx_radius.get(d);
     }
@@ -331,12 +351,12 @@ struct NormalOneForm : db::ComputeItemTag {
 template <typename Frame>
 struct Tangents : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Tangents";
-  static auto compute(
-      const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
-      const typename ::Strahlkorper<Frame>::OneForm& r_hat,
-      const typename ::Strahlkorper<Frame>::Jacobian& jac) noexcept {
+  static auto compute(const ::Strahlkorper<Frame>& strahlkorper,
+                      const DataVector& radius,
+                      const typename types<Frame>::OneForm& r_hat,
+                      const typename types<Frame>::Jacobian& jac) noexcept {
     const auto dr = strahlkorper.ylm_spherepack().gradient(radius);
-    std::array<typename ::Strahlkorper<Frame>::ThreeVector, 2> tangents;
+    std::array<typename types<Frame>::Vector, 2> tangents;
     for (size_t i = 0; i < 2; ++i) {
       for (size_t j = 0; j < 3; ++j) {
         gsl::at(tangents, i).get(j) =

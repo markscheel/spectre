@@ -8,10 +8,10 @@
 #include "Parallel/PupStlCpp11.hpp"
 #include "Utilities/ConstantExpressions.hpp"
 
-template <typename Fr>
-Strahlkorper<Fr>::Strahlkorper(const size_t l_max, const size_t m_max,
-                               const double radius,
-                               std::array<double, 3> center) noexcept
+template <typename Frame>
+Strahlkorper<Frame>::Strahlkorper(const size_t l_max, const size_t m_max,
+                                  const double radius,
+                                  std::array<double, 3> center) noexcept
     : l_max_(l_max),
       m_max_(m_max),
       ylm_(l_max, m_max),
@@ -21,8 +21,8 @@ Strahlkorper<Fr>::Strahlkorper(const size_t l_max, const size_t m_max,
   ylm_.add_constant(&strahlkorper_coefs_, radius);
 }
 
-template <typename Fr>
-Strahlkorper<Fr>::Strahlkorper(
+template <typename Frame>
+Strahlkorper<Frame>::Strahlkorper(
     const size_t l_max, const size_t m_max,
     const Strahlkorper& another_strahlkorper) noexcept
     : l_max_(l_max),
@@ -32,9 +32,9 @@ Strahlkorper<Fr>::Strahlkorper(
       strahlkorper_coefs_(another_strahlkorper.ylm_.prolong_or_restrict(
           another_strahlkorper.strahlkorper_coefs_, ylm_)) {}
 
-template <typename Fr>
-Strahlkorper<Fr>::Strahlkorper(const Strahlkorper& another_strahlkorper,
-                               DataVector coefs) noexcept
+template <typename Frame>
+Strahlkorper<Frame>::Strahlkorper(const Strahlkorper& another_strahlkorper,
+                                  DataVector coefs) noexcept
     : l_max_(another_strahlkorper.l_max_),
       m_max_(another_strahlkorper.m_max_),
       ylm_(another_strahlkorper.ylm_),
@@ -46,10 +46,10 @@ Strahlkorper<Fr>::Strahlkorper(const Strahlkorper& another_strahlkorper,
                   << another_strahlkorper.ylm_.spectral_size());
 }
 
-template <typename Fr>
-Strahlkorper<Fr>::Strahlkorper(const DataVector& radius_at_collocation_points,
-                               const size_t l_max, const size_t m_max,
-                               std::array<double, 3> center) noexcept
+template <typename Frame>
+Strahlkorper<Frame>::Strahlkorper(
+    const DataVector& radius_at_collocation_points, const size_t l_max,
+    const size_t m_max, std::array<double, 3> center) noexcept
     : l_max_(l_max),
       m_max_(m_max),
       ylm_(l_max, m_max),
@@ -61,8 +61,8 @@ Strahlkorper<Fr>::Strahlkorper(const DataVector& radius_at_collocation_points,
                      << ylm_.physical_size());
 }
 
-template <typename Fr>
-void Strahlkorper<Fr>::pup(PUP::er& p) {
+template <typename Frame>
+void Strahlkorper<Frame>::pup(PUP::er& p) {
   p | l_max_;
   p | m_max_;
   p | center_;
@@ -73,8 +73,8 @@ void Strahlkorper<Fr>::pup(PUP::er& p) {
   }
 }
 
-template <typename Fr>
-std::array<double, 3> Strahlkorper<Fr>::physical_center() const noexcept {
+template <typename Frame>
+std::array<double, 3> Strahlkorper<Frame>::physical_center() const noexcept {
   // Uses Eqs. (38)-(40) in Hemberger et al, arXiv:1211.6079.  This is
   // an approximation of Eq. (37) in the same paper, which gives the
   // exact result.
@@ -86,20 +86,20 @@ std::array<double, 3> Strahlkorper<Fr>::physical_center() const noexcept {
   return result;
 }
 
-template <typename Fr>
-double Strahlkorper<Fr>::average_radius() const noexcept {
+template <typename Frame>
+double Strahlkorper<Frame>::average_radius() const noexcept {
   return ylm_.average(coefficients());
 }
 
-template <typename Fr>
-double Strahlkorper<Fr>::radius(const double theta, const double phi) const
+template <typename Frame>
+double Strahlkorper<Frame>::radius(const double theta, const double phi) const
     noexcept {
   return ylm_.interpolate_from_coefs(strahlkorper_coefs_, {{{theta, phi}}})[0];
 }
 
-template <typename Fr>
-bool Strahlkorper<Fr>::point_is_contained(const std::array<double, 3>& x) const
-    noexcept {
+template <typename Frame>
+bool Strahlkorper<Frame>::point_is_contained(
+    const std::array<double, 3>& x) const noexcept {
   // The point is assumed to be in Cartesian coords in the Strahlkorper frame.
   // Make the point relative to the center of the Strahlkorper.
   auto xmc = x;

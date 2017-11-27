@@ -14,24 +14,26 @@
 
 /// \ingroup SurfacesGroup
 /// \brief A star-shaped surface expanded in spherical harmonics.
-template <class Fr>
+template <typename Frame>
 class Strahlkorper {
  public:
-  using ThetaPhiVector = tnsr::i<DataVector, 2, Fr>;
-  using OneForm = tnsr::i<DataVector, 3, Fr>;
-  using ThreeVector = tnsr::I<DataVector, 3, Fr>;
-  using Jacobian = Tensor<
-      DataVector, tmpl::integral_list<std::int32_t, 2, 1>,
-      index_list<SpatialIndex<3, UpLo::Up, Fr>, SpatialIndex<2, UpLo::Lo, Fr>>>;
-  using InvJacobian = Tensor<
-      DataVector, tmpl::integral_list<std::int32_t, 2, 1>,
-      index_list<SpatialIndex<2, UpLo::Up, Fr>, SpatialIndex<3, UpLo::Lo, Fr>>>;
-  using InvHessian = Tensor<
-      DataVector, tmpl::integral_list<std::int32_t, 3, 2, 1>,
-      index_list<SpatialIndex<2, UpLo::Up, Fr>, SpatialIndex<3, UpLo::Lo, Fr>,
-                 SpatialIndex<3, UpLo::Lo, Fr>>>;
-  using SecondDeriv = tnsr::ii<DataVector, 3, Fr>;
-  using InverseMetric = tnsr::II<DataVector, 3, Fr>;
+  using ThetaPhiVector = tnsr::i<DataVector, 2, Frame>;
+  using OneForm = tnsr::i<DataVector, 3, Frame>;
+  using ThreeVector = tnsr::I<DataVector, 3, Frame>;
+  using Jacobian = Tensor<DataVector, tmpl::integral_list<std::int32_t, 2, 1>,
+                          index_list<SpatialIndex<3, UpLo::Up, Frame>,
+                                     SpatialIndex<2, UpLo::Lo, Frame>>>;
+  using InvJacobian =
+      Tensor<DataVector, tmpl::integral_list<std::int32_t, 2, 1>,
+             index_list<SpatialIndex<2, UpLo::Up, Frame>,
+                        SpatialIndex<3, UpLo::Lo, Frame>>>;
+  using InvHessian =
+      Tensor<DataVector, tmpl::integral_list<std::int32_t, 3, 2, 1>,
+             index_list<SpatialIndex<2, UpLo::Up, Frame>,
+                        SpatialIndex<3, UpLo::Lo, Frame>,
+                        SpatialIndex<3, UpLo::Lo, Frame>>>;
+  using SecondDeriv = tnsr::ii<DataVector, 3, Frame>;
+  using InverseMetric = tnsr::II<DataVector, 3, Frame>;
 
   // Pup needs default constructor
   Strahlkorper() = default;
@@ -120,14 +122,16 @@ class Strahlkorper {
   DataVector strahlkorper_coefs_ = DataVector(ylm_.physical_size(), 0.0);
 };
 
-template <typename Fr>
-bool operator==(const Strahlkorper<Fr>& lhs, const Strahlkorper<Fr>& rhs) {
+template <typename Frame>
+bool operator==(const Strahlkorper<Frame>& lhs,
+                const Strahlkorper<Frame>& rhs) {
   return lhs.l_max() == rhs.l_max() and lhs.m_max() == rhs.m_max() and
          lhs.center() == rhs.center() and
          lhs.coefficients() == rhs.coefficients();
 }
 
-template <typename Fr>
-bool operator!=(const Strahlkorper<Fr>& lhs, const Strahlkorper<Fr>& rhs) {
+template <typename Frame>
+bool operator!=(const Strahlkorper<Frame>& lhs,
+                const Strahlkorper<Frame>& rhs) {
   return not(lhs == rhs);
 }

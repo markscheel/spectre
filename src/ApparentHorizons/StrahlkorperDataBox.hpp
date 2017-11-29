@@ -41,6 +41,7 @@ struct Strahlkorper : db::DataBoxTag {
 };
 
 /// \f$(\theta,\phi)\f$ on the grid.
+/// Doesn't depend on the shape of the surface.
 template <typename Frame>
 struct ThetaPhi : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "ThetaPhi";
@@ -49,7 +50,8 @@ struct ThetaPhi : db::ComputeItemTag {
   using argument_tags = typelist<Strahlkorper<Frame>>;
 };
 
-/// \f$x_i/r\f$
+/// \f$x_i/\sqrt{x^2+y^2+z^2}\f$ on the grid.
+/// Doesn't depend on the shape of the surface.
 template <typename Frame>
 struct Rhat : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Rhat";
@@ -59,7 +61,9 @@ struct Rhat : db::ComputeItemTag {
 };
 
 /// jacobian(i,j) is \f$\frac{1,r}\partial x^i/\partial\theta\f$,
-/// \f$\frac{1,r\sin\theta}\partial x^i/\partial\phi\f$
+/// \f$\frac{1,r\sin\theta}\partial x^i/\partial\phi\f$.
+/// Here \f$r\f$ means \f$\sqrt{x^2+y^2+z^2}\f$.
+/// `Jacobian` doesn't depend on the shape of the surface.
 template <typename Frame>
 struct Jacobian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Jacobian";
@@ -70,6 +74,8 @@ struct Jacobian : db::ComputeItemTag {
 
 /// inv_jacobian(j,i) is \f$r\partial\theta/\partial x^i\f$,
 ///    \f$r\sin\theta\partial\phi/\partial x^i\f$
+/// Here \f$r\f$ means \f$\sqrt{x^2+y^2+z^2}\f$.
+/// `InvJacobian` doesn't depend on the shape of the surface.
 template <typename Frame>
 struct InvJacobian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "InvJacobian";
@@ -81,6 +87,7 @@ struct InvJacobian : db::ComputeItemTag {
 /// inv_hessian(k,i,j) is \f$\partial\f$ijac(k,j)\f$/partial x^i\f$,
 /// where \f$ijac\f$ is the inverse Jacobian.
 /// It is not symmetric because the Jacobians are Pfaffian.
+/// `InvHessian` doesn't depend on the shape of the surface.
 template <typename Frame>
 struct InvHessian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "InvHessian";
@@ -89,7 +96,8 @@ struct InvHessian : db::ComputeItemTag {
   using argument_tags = typelist<ThetaPhi<Frame>>;
 };
 
-/// (Euclidean) distance r of each grid point from center.
+/// (Euclidean) distance \f$r(\theta,\phi)\f$ from the center to each
+/// point of the surface.
 template <typename Frame>
 struct Radius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Radius";
@@ -112,7 +120,10 @@ struct CartesianCoords : db::ComputeItemTag {
       typelist<Strahlkorper<Frame>, Radius<Frame>, Rhat<Frame>>;
 };
 
-/// dx_radius(i) is \f$\partial r/\partial x^i\f$
+/// dx_radius(i) is \f$\partial r/\partial x^i\f$.
+/// Here \f$r=r(\theta,\phi)\f$ is the surface, which is considered a
+/// function of Cartesian coordinates \f$r=r(\theta(x,y,z),\phi(x,y,z))\f$
+/// for this operation.
 template <typename Frame>
 struct DxRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "DxRadius";
@@ -123,7 +134,10 @@ struct DxRadius : db::ComputeItemTag {
       typelist<Strahlkorper<Frame>, Radius<Frame>, InvJacobian<Frame>>;
 };
 
-/// d2x_radius(i,j) is \f$\partial^2 r/\partial x^i\partial x^j\f$
+/// d2x_radius(i,j) is \f$\partial^2 r/\partial x^i\partial x^j\f$.
+/// Here \f$r=r(\theta,\phi)\f$ is the surface, which is considered a
+/// function of Cartesian coordinates \f$r=r(\theta(x,y,z),\phi(x,y,z))\f$
+/// for this operation.
 template <typename Frame>
 struct D2xRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "D2xRadius";
@@ -135,7 +149,9 @@ struct D2xRadius : db::ComputeItemTag {
                                  InvJacobian<Frame>, InvHessian<Frame>>;
 };
 
-/// \f$\nabla^2 radius\f$
+/// \f$\nabla^2 radius\f$, the flat Laplacian of the surface.
+/// This is \f$\eta^{ij}\partial^2 r/\partial x^i\partial x^j\f$,
+/// where \f$r=r(\theta(x,y,z),\phi(x,y,z))\f$.
 template <typename Frame>
 struct NablaSquaredRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "NablaSquaredRadius";
@@ -150,6 +166,7 @@ struct NablaSquaredRadius : db::ComputeItemTag {
 /// This is computed by \f$x_i/r-\partial r/\partial x^i\f$,
 /// where \f$x_i/r\f$ is `r_hat` and
 /// \f$\partial r/\partial x^i\f$ is `dx_radius`.
+/// See Eq. (8) of arXiv:gr-qc/9606010
 template <typename Frame>
 struct NormalOneForm : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "NormalOneForm";

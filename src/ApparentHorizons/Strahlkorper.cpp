@@ -101,8 +101,9 @@ template <typename Frame>
 bool Strahlkorper<Frame>::point_is_contained(
     const std::array<double, 3>& x) const noexcept {
   // The point `x` is assumed to be in Cartesian coords in the
-  // Strahlkorper frame.  Make the point relative to the center of the
-  // Strahlkorper.
+  // Strahlkorper frame.
+
+  // Make the point relative to the center of the Strahlkorper.
   auto xmc = x;
   for (size_t d = 0; d < 3; ++d) {
     gsl::at(xmc, d) -= gsl::at(center_, d);

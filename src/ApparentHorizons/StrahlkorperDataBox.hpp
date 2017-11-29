@@ -44,9 +44,8 @@ struct Strahlkorper : db::DataBoxTag {
 template <typename Frame>
 struct ThetaPhi : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "ThetaPhi";
-  static typename types<Frame>::ThetaPhi compute(
+  static typename types<Frame>::ThetaPhi function(
       const ::Strahlkorper<Frame>& strahlkorper) noexcept;
-  static constexpr auto function = compute;
   using argument_tags = typelist<Strahlkorper<Frame>>;
 };
 
@@ -54,9 +53,8 @@ struct ThetaPhi : db::ComputeItemTag {
 template <typename Frame>
 struct Rhat : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Rhat";
-  static typename types<Frame>::OneForm compute(
+  static typename types<Frame>::OneForm function(
       const typename types<Frame>::ThetaPhi& theta_phi) noexcept;
-  static constexpr auto function = compute;
   using argument_tags = typelist<ThetaPhi<Frame>>;
 };
 
@@ -65,9 +63,8 @@ struct Rhat : db::ComputeItemTag {
 template <typename Frame>
 struct Jacobian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Jacobian";
-  static typename types<Frame>::Jacobian compute(
+  static typename types<Frame>::Jacobian function(
       const typename types<Frame>::ThetaPhi& theta_phi) noexcept;
-  static constexpr auto function = compute;
   using argument_tags = typelist<ThetaPhi<Frame>>;
 };
 
@@ -76,9 +73,8 @@ struct Jacobian : db::ComputeItemTag {
 template <typename Frame>
 struct InvJacobian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "InvJacobian";
-  static typename types<Frame>::InvJacobian compute(
+  static typename types<Frame>::InvJacobian function(
       const typename types<Frame>::ThetaPhi& theta_phi) noexcept;
-  static constexpr auto function = compute;
   using argument_tags = typelist<ThetaPhi<Frame>>;
 };
 
@@ -88,9 +84,8 @@ struct InvJacobian : db::ComputeItemTag {
 template <typename Frame>
 struct InvHessian : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "InvHessian";
-  static typename types<Frame>::InvHessian compute(
+  static typename types<Frame>::InvHessian function(
       const typename types<Frame>::ThetaPhi& theta_phi) noexcept;
-  static constexpr auto function = compute;
   using argument_tags = typelist<ThetaPhi<Frame>>;
 };
 
@@ -98,12 +93,11 @@ struct InvHessian : db::ComputeItemTag {
 template <typename Frame>
 struct Radius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Radius";
-  SPECTRE_ALWAYS_INLINE static auto compute(
+  SPECTRE_ALWAYS_INLINE static auto function(
       const ::Strahlkorper<Frame>& strahlkorper) noexcept {
     return strahlkorper.ylm_spherepack().spec_to_phys(
         strahlkorper.coefficients());
   }
-  static constexpr auto function = compute;
   using argument_tags = typelist<Strahlkorper<Frame>>;
 };
 
@@ -111,10 +105,9 @@ struct Radius : db::ComputeItemTag {
 template <typename Frame>
 struct CartesianCoords : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "CartesianCoords";
-  static typename types<Frame>::Vector compute(
+  static typename types<Frame>::Vector function(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
       const typename types<Frame>::OneForm& r_hat) noexcept;
-  static constexpr auto function = compute;
   using argument_tags =
       typelist<Strahlkorper<Frame>, Radius<Frame>, Rhat<Frame>>;
 };
@@ -123,10 +116,9 @@ struct CartesianCoords : db::ComputeItemTag {
 template <typename Frame>
 struct DxRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "DxRadius";
-  static typename types<Frame>::OneForm compute(
+  static typename types<Frame>::OneForm function(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
       const typename types<Frame>::InvJacobian& inv_jac) noexcept;
-  static constexpr auto function = compute;
   using argument_tags =
       typelist<Strahlkorper<Frame>, Radius<Frame>, InvJacobian<Frame>>;
 };
@@ -135,11 +127,10 @@ struct DxRadius : db::ComputeItemTag {
 template <typename Frame>
 struct D2xRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "D2xRadius";
-  static typename types<Frame>::SecondDeriv compute(
+  static typename types<Frame>::SecondDeriv function(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
       const typename types<Frame>::InvJacobian& inv_jac,
       const typename types<Frame>::InvHessian& inv_hess) noexcept;
-  static constexpr auto function = compute;
   using argument_tags = typelist<Strahlkorper<Frame>, Radius<Frame>,
                                  InvJacobian<Frame>, InvHessian<Frame>>;
 };
@@ -148,10 +139,9 @@ struct D2xRadius : db::ComputeItemTag {
 template <typename Frame>
 struct NablaSquaredRadius : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "NablaSquaredRadius";
-  static DataVector compute(
+  static DataVector function(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
       const typename types<Frame>::ThetaPhi& theta_phi) noexcept;
-  static constexpr auto function = compute;
   using argument_tags =
       typelist<Strahlkorper<Frame>, Radius<Frame>, ThetaPhi<Frame>>;
 };
@@ -163,10 +153,9 @@ struct NablaSquaredRadius : db::ComputeItemTag {
 template <typename Frame>
 struct NormalOneForm : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "NormalOneForm";
-  static typename types<Frame>::OneForm compute(
+  static typename types<Frame>::OneForm function(
       const typename types<Frame>::OneForm& dx_radius,
       const typename types<Frame>::OneForm& r_hat) noexcept;
-  static constexpr auto function = compute;
   using argument_tags = typelist<DxRadius<Frame>, Rhat<Frame>>;
 };
 
@@ -180,11 +169,10 @@ struct NormalOneForm : db::ComputeItemTag {
 template <typename Frame>
 struct Tangents : db::ComputeItemTag {
   static constexpr db::DataBoxString label = "Tangents";
-  static std::array<typename types<Frame>::Vector, 2> compute(
+  static std::array<typename types<Frame>::Vector, 2> function(
       const ::Strahlkorper<Frame>& strahlkorper, const DataVector& radius,
       const typename types<Frame>::OneForm& r_hat,
       const typename types<Frame>::Jacobian& jac) noexcept;
-  static constexpr auto function = compute;
   using argument_tags = typelist<Strahlkorper<Frame>, Radius<Frame>,
                                  Rhat<Frame>, Jacobian<Frame>>;
 };

@@ -191,9 +191,7 @@ void test_radius_and_derivs() {
   // Test radius
   const auto& strahlkorper_radius =
       db::get<StrahlkorperDB::Radius<Frame::Inertial>>(box);
-  for (size_t s = 0; s < n_pts; ++s) {
-    CHECK(strahlkorper_radius[s] == approx(test_radius[s]));
-  }
+  CHECK_ITERABLE_APPROX(strahlkorper_radius, test_radius);
 
   // Test derivative of radius
   StrahlkorperDB::types<Frame::Inertial>::OneForm test_dx_radius(n_pts);
@@ -220,10 +218,7 @@ void test_radius_and_derivs() {
   const auto& strahlkorper_dx_radius =
       db::get<StrahlkorperDB::DxRadius<Frame::Inertial>>(box);
   for (size_t i = 0; i < 3; ++i) {
-    for (size_t s = 0; s < n_pts; ++s) {
-      CHECK(strahlkorper_dx_radius.get(i)[s] ==
-            approx(test_dx_radius.get(i)[s]));
-    }
+    CHECK_ITERABLE_APPROX(strahlkorper_dx_radius.get(i), test_dx_radius.get(i));
   }
 
   // Test second derivatives.
@@ -268,10 +263,8 @@ void test_radius_and_derivs() {
       db::get<StrahlkorperDB::D2xRadius<Frame::Inertial>>(box);
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
-      for (size_t s = 0; s < n_pts; ++s) {
-        CHECK(test_d2x_radius.get(i, j)[s] ==
-              approx(strahlkorper_d2x_radius.get(i, j)[s]));
-      }
+      CHECK_ITERABLE_APPROX(test_d2x_radius.get(i, j),
+                            strahlkorper_d2x_radius.get(i, j));
     }
   }
 
@@ -284,9 +277,7 @@ void test_radius_and_derivs() {
   }
   const auto& strahlkorper_nabla_squared =
       db::get<StrahlkorperDB::NablaSquaredRadius<Frame::Inertial>>(box);
-  for (size_t s = 0; s < n_pts; ++s) {
-    CHECK(strahlkorper_nabla_squared[s] == approx(test_nabla_squared[s]));
-  }
+  CHECK_ITERABLE_APPROX(strahlkorper_nabla_squared, test_nabla_squared);
 }
 
 void test_normals() {
@@ -344,10 +335,8 @@ void test_normals() {
       db::get<StrahlkorperDB::Tangents<Frame::Inertial>>(box);
   for (size_t i = 0; i < 2; ++i) {
     for (size_t j = 0; j < 3; ++j) {
-      for (size_t s = 0; s < n_pts; ++s) {
-        CHECK(gsl::at(surface_tangents, i).get(j)[s] ==
-              approx(gsl::at(test_surface_tangents, i).get(j)[s]));
-      }
+      CHECK_ITERABLE_APPROX(gsl::at(surface_tangents, i).get(j),
+                            gsl::at(test_surface_tangents, i).get(j));
     }
   }
 
@@ -363,9 +352,7 @@ void test_normals() {
   const auto& cart_coords =
       db::get<StrahlkorperDB::CartesianCoords<Frame::Inertial>>(box);
   for (size_t j = 0; j < 3; ++j) {
-    for (size_t s = 0; s < n_pts; ++s) {
-      CHECK(test_cart_coords.get(j)[s] == approx(cart_coords.get(j)[s]));
-    }
+    CHECK_ITERABLE_APPROX(test_cart_coords.get(j), cart_coords.get(j));
   }
 
   // Test surface_normal_one_form
@@ -382,10 +369,7 @@ void test_normals() {
   const auto& normal_one_form =
       db::get<StrahlkorperDB::NormalOneForm<Frame::Inertial>>(box);
   for (size_t j = 0; j < 3; ++j) {
-    for (size_t s = 0; s < n_pts; ++s) {
-      CHECK(test_normal_one_form.get(j)[s] ==
-            approx(normal_one_form.get(j)[s]));
-    }
+    CHECK_ITERABLE_APPROX(test_normal_one_form.get(j), normal_one_form.get(j));
   }
 
   // Test surface_normal_magnitude.
@@ -453,5 +437,5 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.Strahlkorper",
 SPECTRE_TEST_CASE("Unit.ApparentHorizons.Strahlkorper.Serialization",
                   "[ApparentHorizons][Unit]") {
   Strahlkorper<Frame::Inertial> s(4, 4, 2.0, {{1.0, 2.0, 3.0}});
-  CHECK(s == serialize_and_deserialize(s));
+  test_serialization(s);
 }

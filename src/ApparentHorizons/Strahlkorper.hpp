@@ -41,13 +41,13 @@ class Strahlkorper {
   void pup(PUP::er& p);  // NOLINT
 
   /*!
-   *  These coefficients are stored as Spherepack coefficients.
+   *  These coefficients are stored as SPHEREPACK coefficients.
    *  Suppose you represent a set of coefficients \f$F^{lm}\f$ in the expansion
    *  \f[
    *  f(\theta,\phi) =
-   *  \sum_{l=0}^{l_max} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta\phi)
+   *  \sum_{l=0}^{l_max} \sum_{m=-l}^{l} F^{lm} Y^{lm}(\theta,\phi)
    *  \f]
-   *  Here the \f$Y^{lm}(\theta\phi)\f$ are the usual complex-valued scalar
+   *  Here the \f$Y^{lm}(\theta,\phi)\f$ are the usual complex-valued scalar
    *  spherical harmonics, so \f$F^{lm}\f$ are also complex-valued.
    *  But here we assume that \f$f(\theta,\phi)\f$ is real, so therefore
    *  the \f$F^{lm}\f$ obey \f$F^{l-m} = (-1)^m (F^{lm})^\star\f$, so one

@@ -100,8 +100,9 @@ double Strahlkorper<Frame>::radius(const double theta, const double phi) const
 template <typename Frame>
 bool Strahlkorper<Frame>::point_is_contained(
     const std::array<double, 3>& x) const noexcept {
-  // The point is assumed to be in Cartesian coords in the Strahlkorper frame.
-  // Make the point relative to the center of the Strahlkorper.
+  // The point `x` is assumed to be in Cartesian coords in the
+  // Strahlkorper frame.  Make the point relative to the center of the
+  // Strahlkorper.
   auto xmc = x;
   for (size_t d = 0; d < 3; ++d) {
     gsl::at(xmc, d) -= gsl::at(center_, d);
@@ -120,7 +121,5 @@ bool Strahlkorper<Frame>::point_is_contained(
   // Is the point inside the surface?
   return r < radius(theta, phi);
 }
-
-// ================================================================
 
 template class Strahlkorper<Frame::Inertial>;

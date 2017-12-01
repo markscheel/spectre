@@ -4,14 +4,14 @@
 #pragma once
 
 #include "ApparentHorizons/Strahlkorper.hpp"
-#include "Options/Factory.hpp"
+#include "Options/Options.hpp"
 
 /*!
  * \ingroup ApparentHorizons
  * Holds StrahlkorperInitializers.
  */
 namespace StrahlkorperInitializers {
-template <typename Fr>
+template <typename Frame>
 class Sphere;
 }  // namespace StrahlkorperInitializers
 
@@ -19,10 +19,10 @@ class Sphere;
  *  \ingroup ApparentHorizons
  *  Encodes a function that creates a Strahlkorper.
  */
-template <typename Fr>
-class StrahlkorperInitializer : public Factory<StrahlkorperInitializer<Fr>> {
+template <typename Frame>
+class StrahlkorperInitializer {
  public:
-  using creatable_classes = typelist<StrahlkorperInitializers::Sphere<Fr>>;
+  using creatable_classes = typelist<StrahlkorperInitializers::Sphere<Frame>>;
 
   StrahlkorperInitializer() = default;
   StrahlkorperInitializer(const StrahlkorperInitializer& /*rhs*/) = delete;
@@ -33,7 +33,7 @@ class StrahlkorperInitializer : public Factory<StrahlkorperInitializer<Fr>> {
       StrahlkorperInitializer&& /*rhs*/) noexcept = default;
   virtual ~StrahlkorperInitializer() = default;
 
-  virtual Strahlkorper<Fr> create_strahlkorper() const noexcept = 0;
+  virtual Strahlkorper<Frame> create_strahlkorper() const noexcept = 0;
 };
 
 #include "ApparentHorizons/StrahlkorperInitializerSphere.hpp"

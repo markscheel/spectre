@@ -5,6 +5,7 @@
 
 #include "ApparentHorizons/Strahlkorper.hpp"
 #include "ApparentHorizons/StrahlkorperInitializer.hpp"
+#include "tests/Unit/TestFactoryCreation.hpp"
 #include "tests/Unit/TestHelpers.hpp"
 
 SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperInitializer",

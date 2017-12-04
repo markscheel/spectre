@@ -161,7 +161,7 @@ tnsr::A<DataType, SpatialDim, Frame> compute_spacetime_normal_vector(
 /*!
  * \ingroup GeneralRelativityGroup
  * \brief  Computes generalized harmonic gauge source function.
- * \details If \f$N, N^i\f, g_{ij}, \Gamma_{ijk}, K$ are the lapse, shift,
+ * \details If \f$N, N^i, g_{ij}, \Gamma_{ijk}, K\f$ are the lapse, shift,
  * spatial metric, spatial Christoffel symbols, and trace of the extrinsic
  * curvature, then we compute
  * \f{align}

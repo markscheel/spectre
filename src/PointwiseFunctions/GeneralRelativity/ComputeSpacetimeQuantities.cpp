@@ -43,14 +43,13 @@ tnsr::AA<DataType, Dim, Frame> compute_inverse_spacetime_metric(
     const tnsr::II<DataType, Dim, Frame>& inverse_spatial_metric) noexcept {
   tnsr::AA<DataType, Dim, Frame> inverse_spacetime_metric{};
 
-  get<0, 0>(inverse_spacetime_metric) =
-      -1.0 / (lapse.get() * lapse.get());
+  get<0, 0>(inverse_spacetime_metric) = -1.0 / (lapse.get() * lapse.get());
 
   const auto& minus_one_over_lapse_sqrd = get<0, 0>(inverse_spacetime_metric);
 
   for (size_t i = 0; i < Dim; ++i) {
-    inverse_spacetime_metric.get(0, i + 1) = -
-        shift.get(i) * minus_one_over_lapse_sqrd;
+    inverse_spacetime_metric.get(0, i + 1) =
+        -shift.get(i) * minus_one_over_lapse_sqrd;
   }
 
   for (size_t i = 0; i < Dim; ++i) {
@@ -227,6 +226,55 @@ tnsr::A<DataType, SpatialDim, Frame> compute_spacetime_normal_vector(
   return spacetime_normal_vector;
 }
 
+template <size_t SpatialDim, typename Frame, typename DataType>
+tnsr::a<DataType, SpatialDim, Frame> compute_gauge_source_function(
+    const Scalar<DataType>& lapse, const Scalar<DataType>& dt_lapse,
+    const tnsr::i<DataType, SpatialDim, Frame>& deriv_lapse,
+    const tnsr::I<DataType, SpatialDim, Frame>& shift,
+    const tnsr::I<DataType, SpatialDim, Frame>& dt_shift,
+    const tnsr::iJ<DataType, SpatialDim, Frame>& deriv_shift,
+    const tnsr::ii<DataType, SpatialDim, Frame>& spatial_metric,
+    const Scalar<DataType>& trace_extrinsic_curvature,
+    const tnsr::i<DataType, SpatialDim, Frame>&
+        trace_christoffel_last_indices) noexcept {
+  DataType one_over_lapse = 1.0 / get<>(lapse);
+  auto gauge_source_function =
+      make_with_value<tnsr::a<DataType, SpatialDim, Frame>>(lapse, 0.0);
+
+  // Temporary to avoid more nested loops.
+  auto temp0 = dt_shift;
+  for (size_t i = 0; i < SpatialDim; ++i) {
+    for (size_t k = 0; k < SpatialDim; ++k) {
+      temp0.get(i) -= shift.get(k) * deriv_shift.get(k, i);
+    }
+  }
+
+  for (size_t i = 0; i < SpatialDim; ++i) {
+    for (size_t k = 0; k < SpatialDim; ++k) {
+      gauge_source_function.get(i + 1) +=
+          spatial_metric.get(i, k) * temp0.get(k);
+    }
+    gauge_source_function.get(i + 1) *= square(one_over_lapse);
+  }
+
+  for (size_t i = 0; i < SpatialDim; ++i) {
+    gauge_source_function.get(i + 1) +=
+        one_over_lapse *
+        (deriv_lapse.get(i) - trace_christoffel_last_indices.get(i));
+  }
+
+  for (size_t i = 0; i < SpatialDim; ++i) {
+    get<0>(gauge_source_function) +=
+        shift.get(i) * (gauge_source_function.get(i + 1) +
+                        deriv_lapse.get(i) * one_over_lapse);
+  }
+  get<0>(gauge_source_function) -=
+      one_over_lapse * get<>(dt_lapse) +
+      get<>(lapse) * get<>(trace_extrinsic_curvature);
+
+  return gauge_source_function;
+}
+
 /// \cond
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DTYPE(data) BOOST_PP_TUPLE_ELEM(1, data)
@@ -277,7 +325,18 @@ tnsr::A<DataType, SpatialDim, Frame> compute_spacetime_normal_vector(
   template tnsr::A<DTYPE(data), DIM(data), FRAME(data)>                       \
   compute_spacetime_normal_vector(                                            \
       const Scalar<DTYPE(data)>& lapse,                                       \
-      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& shift) noexcept;
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& shift) noexcept;    \
+  template tnsr::a<DTYPE(data), DIM(data), FRAME(data)>                       \
+  compute_gauge_source_function(                                              \
+      const Scalar<DTYPE(data)>& lapse, const Scalar<DTYPE(data)>& dt_lapse,  \
+      const tnsr::i<DTYPE(data), DIM(data), FRAME(data)>& deriv_lapse,        \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& shift,              \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& dt_shift,           \
+      const tnsr::iJ<DTYPE(data), DIM(data), FRAME(data)>& deriv_shift,       \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>& spatial_metric,    \
+      const Scalar<DTYPE(data)>& trace_extrinsic_curvature,                   \
+      const tnsr::i<DTYPE(data), DIM(data), FRAME(data)>&                     \
+          trace_christoffel_last_indices) noexcept;
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (double, DataVector),
                         (Frame::Grid, Frame::Inertial))

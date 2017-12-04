@@ -157,3 +157,29 @@ template <size_t SpatialDim, typename Frame, typename DataType>
 tnsr::A<DataType, SpatialDim, Frame> compute_spacetime_normal_vector(
     const Scalar<DataType>& lapse,
     const tnsr::I<DataType, SpatialDim, Frame>& shift) noexcept;
+
+/*!
+ * \ingroup GeneralRelativityGroup
+ * \brief  Computes generalized harmonic gauge source function.
+ * \details If \f$N, N^i\f, g_{ij}, \Gamma_{ijk}, K$ are the lapse, shift,
+ * spatial metric, spatial Christoffel symbols, and trace of the extrinsic
+ * curvature, then we compute
+ * \f{align}
+ * H_l &=& N^{-2} g_{il}(\partial_t N^i - N^k \partial_k N^i)
+ * + N^{-1} \partial_l N - N^{-1} g^{km}\Gamma_{lkm} \\
+ * H_0 &=& -N^{-1} \partial_t N + N^{-1} N^k\partial_k N + N^k H_k - N K
+ * \f}
+ * See Eqs. 8 and 9 of [arXiv:gr-qc/0512093]
+ * (https://arxiv.org/abs/gr-qc/0512093)
+ */
+template <size_t SpatialDim, typename Frame, typename DataType>
+tnsr::a<DataType, SpatialDim, Frame> compute_gauge_source_function(
+    const Scalar<DataType>& lapse, const Scalar<DataType>& dt_lapse,
+    const tnsr::i<DataType, SpatialDim, Frame>& deriv_lapse,
+    const tnsr::I<DataType, SpatialDim, Frame>& shift,
+    const tnsr::I<DataType, SpatialDim, Frame>& dt_shift,
+    const tnsr::iJ<DataType, SpatialDim, Frame>& deriv_shift,
+    const tnsr::ii<DataType, SpatialDim, Frame>& spatial_metric,
+    const Scalar<DataType>& trace_extrinsic_curvature,
+    const tnsr::i<DataType, SpatialDim, Frame>&
+        trace_christoffel_last_indices) noexcept;

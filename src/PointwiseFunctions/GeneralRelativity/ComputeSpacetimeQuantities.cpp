@@ -43,14 +43,13 @@ tnsr::AA<DataType, Dim, Frame> compute_inverse_spacetime_metric(
     const tnsr::II<DataType, Dim, Frame>& inverse_spatial_metric) noexcept {
   tnsr::AA<DataType, Dim, Frame> inverse_spacetime_metric{};
 
-  get<0, 0>(inverse_spacetime_metric) =
-      -1.0 / (lapse.get() * lapse.get());
+  get<0, 0>(inverse_spacetime_metric) = -1.0 / (lapse.get() * lapse.get());
 
   const auto& minus_one_over_lapse_sqrd = get<0, 0>(inverse_spacetime_metric);
 
   for (size_t i = 0; i < Dim; ++i) {
-    inverse_spacetime_metric.get(0, i + 1) = -
-        shift.get(i) * minus_one_over_lapse_sqrd;
+    inverse_spacetime_metric.get(0, i + 1) =
+        -shift.get(i) * minus_one_over_lapse_sqrd;
   }
 
   for (size_t i = 0; i < Dim; ++i) {
@@ -227,6 +226,35 @@ tnsr::A<DataType, SpatialDim, Frame> compute_spacetime_normal_vector(
   return spacetime_normal_vector;
 }
 
+template <size_t SpatialDim, typename Frame, typename DataType>
+tnsr::ii<DataType, SpatialDim, Frame> compute_extrinsic_curvature(
+    const Scalar<DataType>& lapse,
+    const tnsr::I<DataType, SpatialDim, Frame>& shift,
+    const tnsr::iJ<DataType, SpatialDim, Frame>& deriv_shift,
+    const tnsr::ii<DataType, SpatialDim, Frame>& spatial_metric,
+    const tnsr::ii<DataType, SpatialDim, Frame>& dt_spatial_metric,
+    const tnsr::ijj<DataType, SpatialDim, Frame>&
+        deriv_spatial_metric) noexcept {
+  const DataType half_over_lapse = 0.5 / get<>(lapse);
+
+  auto extrinsic_curvature =
+      make_with_value<tnsr::ii<DataType, SpatialDim, Frame>>(lapse, 0.0);
+  for (size_t i = 0; i < SpatialDim; ++i) {
+    for (size_t j = i; j < SpatialDim; ++j) {  // Symmetry
+      for (size_t k = 0; k < SpatialDim; ++k) {
+        extrinsic_curvature.get(i, j) +=
+            shift.get(k) * deriv_spatial_metric.get(k, i, j) +
+            spatial_metric.get(k, i) * deriv_shift.get(j, k) +
+            spatial_metric.get(k, j) * deriv_shift.get(i, k);
+      }
+      extrinsic_curvature.get(i, j) -= dt_spatial_metric.get(i, j);
+      extrinsic_curvature.get(i, j) *= half_over_lapse;
+    }
+  }
+
+  return extrinsic_curvature;
+}
+
 /// \cond
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DTYPE(data) BOOST_PP_TUPLE_ELEM(1, data)
@@ -277,7 +305,16 @@ tnsr::A<DataType, SpatialDim, Frame> compute_spacetime_normal_vector(
   template tnsr::A<DTYPE(data), DIM(data), FRAME(data)>                       \
   compute_spacetime_normal_vector(                                            \
       const Scalar<DTYPE(data)>& lapse,                                       \
-      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& shift) noexcept;
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& shift) noexcept;    \
+  template tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>                      \
+  compute_extrinsic_curvature(                                                \
+      const Scalar<DTYPE(data)>& lapse,                                       \
+      const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& shift,              \
+      const tnsr::iJ<DTYPE(data), DIM(data), FRAME(data)>& deriv_shift,       \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>& spatial_metric,    \
+      const tnsr::ii<DTYPE(data), DIM(data), FRAME(data)>& dt_spatial_metric, \
+      const tnsr::ijj<DTYPE(data), DIM(data), FRAME(data)>&                   \
+          deriv_spatial_metric) noexcept;
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (double, DataVector),
                         (Frame::Grid, Frame::Inertial))

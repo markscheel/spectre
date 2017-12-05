@@ -156,10 +156,9 @@ tnsr::Abb<DataType, SpatialDim> make_spacetime_christoffel_second_kind(
   return christoffel;
 }
 
-
 template <size_t SpatialDim, typename DataType>
 tnsr::Ijj<DataType, SpatialDim> make_spatial_christoffel_second_kind(
-    const DataType& used_for_size){
+    const DataType& used_for_size) {
   tnsr::Ijj<DataType, SpatialDim> christoffel{};
   for (size_t i = 0; i < SpatialDim; i++) {
     for (size_t j = i; j < SpatialDim; j++) {
@@ -174,7 +173,7 @@ tnsr::Ijj<DataType, SpatialDim> make_spatial_christoffel_second_kind(
 
 template <size_t SpatialDim, typename DataType>
 tnsr::aa<DataType, SpatialDim> make_spacetime_metric(
-    const DataType& used_for_size){
+    const DataType& used_for_size) {
   tnsr::aa<DataType, SpatialDim> spacetime_metric{};
   for (size_t mu = 0; mu < SpatialDim + 1; ++mu) {
     for (size_t nu = mu; nu < SpatialDim + 1; ++nu) {
@@ -198,6 +197,22 @@ tnsr::AA<DataType, SpatialDim> make_inverse_spacetime_metric(
   return inverse_spacetime_metric;
 }
 
+template <typename DataType>
+Scalar<DataType> make_trace_extrinsic_curvature(const DataType& used_for_size) {
+  return Scalar<DataType>{make_with_value<DataType>(used_for_size, 5.)};
+}
+
+template <size_t SpatialDim, typename DataType>
+tnsr::i<DataType, SpatialDim> make_trace_spatial_christoffel(
+    const DataType& used_for_size) {
+  auto trace_christoffel =
+      make_with_value<tnsr::i<DataType, SpatialDim>>(used_for_size, 0.);
+  for (size_t i = 0; i < SpatialDim; ++i) {
+    trace_christoffel.get(i) =
+        make_with_value<DataType>(used_for_size, 3. * i - 2.);
+  }
+  return trace_christoffel;
+}
 
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define DTYPE(data) BOOST_PP_TUPLE_ELEM(1, data)
@@ -230,12 +245,18 @@ tnsr::AA<DataType, SpatialDim> make_inverse_spacetime_metric(
   template tnsr::aa<DTYPE(data), DIM(data)> make_spacetime_metric(           \
       const DTYPE(data) & used_for_size);                                    \
   template tnsr::AA<DTYPE(data), DIM(data)> make_inverse_spacetime_metric(   \
+      const DTYPE(data) & used_for_size);                                    \
+  template tnsr::i<DTYPE(data), DIM(data)> make_trace_spatial_christoffel(   \
       const DTYPE(data) & used_for_size);
 
 template Scalar<double> make_lapse(const double& used_for_size);
 template Scalar<DataVector> make_lapse(const DataVector& used_for_size);
 template Scalar<double> make_dt_lapse(const double& used_for_size);
 template Scalar<DataVector> make_dt_lapse(const DataVector& used_for_size);
+template Scalar<double> make_trace_extrinsic_curvature(
+    const double& used_for_size);
+template Scalar<DataVector> make_trace_extrinsic_curvature(
+    const DataVector& used_for_size);
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (double, DataVector))
 

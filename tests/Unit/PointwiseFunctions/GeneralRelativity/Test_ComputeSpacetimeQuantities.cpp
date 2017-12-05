@@ -410,7 +410,7 @@ void test_compute_3d_pi(const DataVector& used_for_size) {
                  make_dt_spatial_metric<dim>(0.),
                  make_spatial_deriv_spacetime_metric<dim>(0.));
 
-  CHECK(pi.get(0, 0) == approx(-1216./3.));
+  CHECK(pi.get(0, 0) == approx(-1216. / 3.));
   CHECK(pi.get(0, 1) == approx(2. / 3.));
   CHECK(pi.get(0, 2) == approx(-20. / 3.));
   CHECK(pi.get(0, 3) == approx(-14.0));
@@ -431,7 +431,7 @@ void test_compute_3d_pi(const DataVector& used_for_size) {
       pi);
 }
 
-template<size_t Dim>
+template <size_t Dim>
 void test_compute_spacetime_normal_one_form(const DataVector& used_for_size) {
   const auto spacetime_normal_one_form =
       compute_spacetime_normal_one_form<Dim, Frame::Inertial>(make_lapse(0.));
@@ -488,6 +488,77 @@ void test_compute_3d_spacetime_normal_vector(const DataVector& used_for_size) {
                                       make_shift<dim>(used_for_size)),
       spacetime_normal_vector);
 }
+
+void test_compute_1d_gauge_source_function(const DataVector& used_for_size) {
+  const size_t dim = 1;
+  const auto gauge_source_function = compute_gauge_source_function(
+      make_lapse(0.), make_dt_lapse(0.), make_deriv_lapse<dim>(0.),
+      make_shift<dim>(0.), make_dt_shift<dim>(0.), make_deriv_shift<dim>(0.),
+      make_spatial_metric<dim>(0.), make_trace_extrinsic_curvature(0.),
+      make_trace_spatial_christoffel<dim>(0.));
+
+  CHECK(gauge_source_function.get(0) == approx(-15.));
+  CHECK(gauge_source_function.get(1) == approx(5. / 6.));
+
+  check_tensor_doubles_equals_tensor_datavectors(
+      compute_gauge_source_function(
+          make_lapse(used_for_size), make_dt_lapse(used_for_size),
+          make_deriv_lapse<dim>(used_for_size), make_shift<dim>(used_for_size),
+          make_dt_shift<dim>(used_for_size),
+          make_deriv_shift<dim>(used_for_size),
+          make_spatial_metric<dim>(used_for_size),
+          make_trace_extrinsic_curvature(used_for_size),
+          make_trace_spatial_christoffel<dim>(used_for_size)),
+      gauge_source_function);
+}
+
+void test_compute_2d_gauge_source_function(const DataVector& used_for_size) {
+  const size_t dim = 2;
+  const auto gauge_source_function = compute_gauge_source_function(
+      make_lapse(0.), make_dt_lapse(0.), make_deriv_lapse<dim>(0.),
+      make_shift<dim>(0.), make_dt_shift<dim>(0.), make_deriv_shift<dim>(0.),
+      make_spatial_metric<dim>(0.), make_trace_extrinsic_curvature(0.),
+      make_trace_spatial_christoffel<dim>(0.));
+
+  CHECK(gauge_source_function.get(0) == approx(-400./9.));
+  CHECK(gauge_source_function.get(1) == approx(-515./90.));
+  CHECK(gauge_source_function.get(2) == approx(-118./9.));
+
+  check_tensor_doubles_equals_tensor_datavectors(
+      compute_gauge_source_function(
+          make_lapse(used_for_size), make_dt_lapse(used_for_size),
+          make_deriv_lapse<dim>(used_for_size), make_shift<dim>(used_for_size),
+          make_dt_shift<dim>(used_for_size),
+          make_deriv_shift<dim>(used_for_size),
+          make_spatial_metric<dim>(used_for_size),
+          make_trace_extrinsic_curvature(used_for_size),
+          make_trace_spatial_christoffel<dim>(used_for_size)),
+      gauge_source_function);
+}
+void test_compute_3d_gauge_source_function(const DataVector& used_for_size) {
+  const size_t dim = 3;
+  const auto gauge_source_function = compute_gauge_source_function(
+      make_lapse(0.), make_dt_lapse(0.), make_deriv_lapse<dim>(0.),
+      make_shift<dim>(0.), make_dt_shift<dim>(0.), make_deriv_shift<dim>(0.),
+      make_spatial_metric<dim>(0.), make_trace_extrinsic_curvature(0.),
+      make_trace_spatial_christoffel<dim>(0.));
+
+  CHECK(gauge_source_function.get(0) == approx(-1420./3.));
+  CHECK(gauge_source_function.get(1) == approx(-32.5));
+  CHECK(gauge_source_function.get(2) == approx(-200./3.));
+  CHECK(gauge_source_function.get(3) == approx(-605./6.));
+
+  check_tensor_doubles_equals_tensor_datavectors(
+      compute_gauge_source_function(
+          make_lapse(used_for_size), make_dt_lapse(used_for_size),
+          make_deriv_lapse<dim>(used_for_size), make_shift<dim>(used_for_size),
+          make_dt_shift<dim>(used_for_size),
+          make_deriv_shift<dim>(used_for_size),
+          make_spatial_metric<dim>(used_for_size),
+          make_trace_extrinsic_curvature(used_for_size),
+          make_trace_spatial_christoffel<dim>(used_for_size)),
+      gauge_source_function);
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.PointwiseFunctions.GeneralRelativity.SpacetimeDecomp",
@@ -514,4 +585,7 @@ SPECTRE_TEST_CASE("Unit.PointwiseFunctions.GeneralRelativity.SpacetimeDecomp",
   test_compute_1d_spacetime_normal_vector(dv);
   test_compute_2d_spacetime_normal_vector(dv);
   test_compute_3d_spacetime_normal_vector(dv);
+  test_compute_1d_gauge_source_function(dv);
+  test_compute_2d_gauge_source_function(dv);
+  test_compute_3d_gauge_source_function(dv);
 }

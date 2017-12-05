@@ -83,3 +83,11 @@ tnsr::aa<DataType, SpatialDim> make_spacetime_metric(
 template <size_t SpatialDim, typename DataType>
 tnsr::AA<DataType, SpatialDim> make_inverse_spacetime_metric(
     const DataType& used_for_size);
+
+template <typename DataType>
+Scalar<DataType> make_trace_extrinsic_curvature(
+    const DataType& used_for_size);
+
+template <size_t SpatialDim, typename DataType>
+tnsr::i<DataType, SpatialDim> make_trace_spatial_christoffel(
+    const DataType& used_for_size);

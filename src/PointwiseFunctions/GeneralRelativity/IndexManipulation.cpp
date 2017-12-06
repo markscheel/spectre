@@ -64,9 +64,8 @@ Scalar<DataType> compute_trace(
   const auto dimension = index_dim<0>(tensor);
   for (size_t i = 0; i < dimension; ++i) {
     for (size_t j = i + 1; j < dimension; ++j) {  // symmetry
-      get<>(trace) += tensor.get(i, j) * upper_metric.get(i, j);
+      get<>(trace) += 2.0 * tensor.get(i, j) * upper_metric.get(i, j);
     }
-    get<>(trace) *= 2.0;
     get<>(trace) += tensor.get(i, i) * upper_metric.get(i, i);
   }
   return trace;

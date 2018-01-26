@@ -1,0 +1,11 @@
+# Distributed under the MIT License.
+# See LICENSE.txt for details.
+# Executable: EvolveScalarWave3D
+# Check: execute
+DomainCreator:
+  Brick:
+    LowerBound: [0.0, 0.0, 0.0]
+    UpperBound: [6.283185307179586, 6.283185307179586, 6.283185307179586]
+    IsPeriodicIn: [true, true, true]
+    InitialRefinement: [1, 2, 1]
+    InitialGridPoints: [5, 5, 5]

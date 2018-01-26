@@ -20,3 +20,33 @@ add_test_library(
   "${LIBRARY_SOURCES}"
   "ApparentHorizons"
   )
+
+add_executable(
+  Test_HorizonManager
+  Test_HorizonManager.cpp
+)
+
+add_dependencies(
+  Test_HorizonManager
+  module_ConstGlobalCache
+  module_Main
+ )
+
+target_link_libraries(
+  Test_HorizonManager
+  DomainCreators
+  CoordinateMaps
+  ErrorHandling
+  Informer
+  Utilities
+  ${SPECTRE_LIBRARIES}
+)
+
+add_test(NAME "\"Integration.HorizonManager\""
+  COMMAND ${CMAKE_BINARY_DIR}/bin/Test_HorizonManager +p2 --input-file ${CMAKE_SOURCE_DIR}/tests/Unit/ApparentHorizons/Test_HorizonManager.input)
+
+set_tests_properties(
+  "\"Integration.HorizonManager\"" PROPERTIES
+  TIMEOUT 10
+  LABELS "integration"
+  ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")

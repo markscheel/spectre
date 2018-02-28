@@ -80,7 +80,7 @@ struct DgElementArray {
   static void execute_next_global_actions(
       const typename Metavariables::Phase next_phase,
       const Parallel::CProxy_ConstGlobalCache<Metavariables>& global_cache) {
-    if (next_phase == Metavariables::Phase::Setup) {
+    if (next_phase == Metavariables::Phase::CountElements) {
       auto& dg_element_array = Parallel::get_parallel_component<DgElementArray>(
           *(global_cache.ckLocalBranch()));
 
@@ -130,14 +130,14 @@ struct TestMetavariables {
 
   using domain_creator_tag = OptionTags::DomainCreator<3, Frame::Inertial>;
 
-  enum class Phase { Initialization, Setup, CheckAnswer, Exit };
+  enum class Phase { Initialization, CountElements, CheckAnswer, Exit };
   static Phase determine_next_phase(const Phase& current_phase,
                                     const Parallel::CProxy_ConstGlobalCache<
                                         TestMetavariables>& /*cache_proxy*/) {
     if (current_phase == Phase::Initialization) {
-      return Phase::Setup;
+      return Phase::CountElements;
     }
-    if (current_phase == Phase::Setup) {
+    if (current_phase == Phase::CountElements) {
       return Phase::CheckAnswer;
     }
     return Phase::Exit;

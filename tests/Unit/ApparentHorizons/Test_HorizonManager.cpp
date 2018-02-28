@@ -31,9 +31,9 @@ struct HorizonManagerComponent {
   using metavariables = Metavariables;
   using action_list = tmpl::list<>;
   using explicit_single_actions_list =
-      tmpl::list<Actions::PrintCountOfElementsAssociatedWithHorizonManager,
-                 Actions::ReceiveCountOfElementsAssociatedWithHorizonManager,
-                 Actions::InitCountOfElementsAssociatedWithHorizonManager>;
+      tmpl::list<Actions::HorizonManager::PrintNumElements,
+                 Actions::HorizonManager::ReceiveNumElements,
+                 Actions::HorizonManager::InitNumElements>;
   using initial_databox = db::DataBox<db::get_databox_list<
       typelist<typename Metavariables::number_of_elements_tag>>>;
   using options = typelist<>;
@@ -47,7 +47,7 @@ struct HorizonManagerComponent {
           HorizonManagerComponent<Metavariables>>(
           *(global_cache.ckLocalBranch()));
       my_proxy.template explicit_single_action<
-          Actions::PrintCountOfElementsAssociatedWithHorizonManager>();
+          Actions::HorizonManager::PrintNumElements>();
     }
   }
 };
@@ -58,7 +58,7 @@ void HorizonManagerComponent<Metavariables>::initialize(
   auto& my_proxy = Parallel::get_parallel_component<HorizonManagerComponent>(
       *(global_cache.ckLocalBranch()));
   my_proxy.template explicit_single_action<
-      Actions::InitCountOfElementsAssociatedWithHorizonManager>();
+      Actions::HorizonManager::InitNumElements>();
 }
 
 template <class Metavariables>
@@ -68,8 +68,8 @@ struct DgElementArray {
   using metavariables = Metavariables;
   using action_list = typelist<>;
   using array_index = ElementIndex<3>;
-  using explicit_single_actions_list = tmpl::list<
-      Actions::CallReceiveCountOfElementsAssociatedWithHorizonManager<
+  using explicit_single_actions_list =
+      tmpl::list<Actions::HorizonManager::SendNumElements<
           HorizonManagerComponent<Metavariables>>>;
   using initial_databox = db::DataBox<db::get_databox_list<typelist<>>>;
   using options = typelist<typename Metavariables::domain_creator_tag>;
@@ -85,7 +85,7 @@ struct DgElementArray {
           *(global_cache.ckLocalBranch()));
 
       dg_element_array.template explicit_single_action<
-          Actions::CallReceiveCountOfElementsAssociatedWithHorizonManager<
+          Actions::HorizonManager::SendNumElements<
               HorizonManagerComponent<Metavariables>>>();
     }
   }

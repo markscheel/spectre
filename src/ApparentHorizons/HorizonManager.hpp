@@ -18,7 +18,8 @@
 
 namespace Actions {
 
-struct PrintCountOfElementsAssociatedWithHorizonManager {
+namespace HorizonManager {
+struct PrintNumElements {
   using apply_args = tmpl::list<>;
 
   template <
@@ -41,7 +42,7 @@ struct PrintCountOfElementsAssociatedWithHorizonManager {
   }
 };
 
-struct ReceiveCountOfElementsAssociatedWithHorizonManager {
+struct ReceiveNumElements {
   using apply_args = tmpl::list<>;
 
   template <
@@ -64,7 +65,7 @@ struct ReceiveCountOfElementsAssociatedWithHorizonManager {
 };
 
 template <typename ParallelComponentOfReceiver>
-struct CallReceiveCountOfElementsAssociatedWithHorizonManager {
+struct SendNumElements {
   using apply_args = tmpl::list<>;
 
   template <typename DbTags, typename... InboxTags, typename Metavariables,
@@ -80,14 +81,13 @@ struct CallReceiveCountOfElementsAssociatedWithHorizonManager {
         Parallel::get_parallel_component<ParallelComponentOfReceiver>(cache);
 
     receiver_proxy.ckLocalBranch()
-        ->template explicit_single_action<
-            ReceiveCountOfElementsAssociatedWithHorizonManager>();
+        ->template explicit_single_action<ReceiveNumElements>();
 
     return std::forward_as_tuple(std::move(box));
   }
 };
 
-struct InitCountOfElementsAssociatedWithHorizonManager {
+struct InitNumElements {
   using apply_args = tmpl::list<>;
 
   template <typename DbTags, typename... InboxTags, typename Metavariables,
@@ -201,4 +201,5 @@ struct InitCountOfElementsAssociatedWithHorizonManager {
 //-:      return std::forward_as_tuple(std::move(box));
 //-:  };
 
+}  // namespace HorizonManager
 }  // namespace Actions

@@ -131,9 +131,10 @@ struct TestMetavariables {
   using domain_creator_tag = OptionTags::DomainCreator<3, Frame::Inertial>;
 
   enum class Phase { Initialization, CountElements, CheckAnswer, Exit };
-  static Phase determine_next_phase(const Phase& current_phase,
-                                    const Parallel::CProxy_ConstGlobalCache<
-                                        TestMetavariables>& /*cache_proxy*/) {
+  static Phase determine_next_phase(
+      const Phase& current_phase,
+      const Parallel::CProxy_ConstGlobalCache<
+          TestMetavariables>& /*cache_proxy*/) noexcept {
     if (current_phase == Phase::Initialization) {
       return Phase::CountElements;
     }

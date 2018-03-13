@@ -101,7 +101,8 @@ struct InitNumElements {
                     const ParallelComponent* const /*meta*/) noexcept {
     using number_of_elements_tag =
         typename Metavariables::number_of_elements_tag;
-    return std::make_tuple(db::create<typelist<number_of_elements_tag>>(0_st));
+    return std::make_tuple(
+        db::create<tmpl::list<number_of_elements_tag>>(0_st));
   }
 };
 

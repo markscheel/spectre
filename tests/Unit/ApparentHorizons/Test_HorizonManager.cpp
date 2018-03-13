@@ -35,8 +35,8 @@ struct HorizonManagerComponent {
                  Actions::HorizonManager::ReceiveNumElements,
                  Actions::HorizonManager::InitNumElements>;
   using initial_databox = db::DataBox<db::get_databox_list<
-      typelist<typename Metavariables::number_of_elements_tag>>>;
-  using options = typelist<>;
+      tmpl::list<typename Metavariables::number_of_elements_tag>>>;
+  using options = tmpl::list<>;
   static void initialize(
       Parallel::CProxy_ConstGlobalCache<Metavariables>& global_cache);
   static void execute_next_global_actions(
@@ -66,13 +66,13 @@ struct DgElementArray {
   using chare_type = Parallel::Algorithms::Array;
   using const_global_cache_tag_list = tmpl::list<>;
   using metavariables = Metavariables;
-  using action_list = typelist<>;
+  using action_list = tmpl::list<>;
   using array_index = ElementIndex<3>;
   using explicit_single_actions_list =
       tmpl::list<Actions::HorizonManager::SendNumElements<
           HorizonManagerComponent<Metavariables>>>;
-  using initial_databox = db::DataBox<db::get_databox_list<typelist<>>>;
-  using options = typelist<typename Metavariables::domain_creator_tag>;
+  using initial_databox = db::DataBox<db::get_databox_list<tmpl::list<>>>;
+  using options = tmpl::list<typename Metavariables::domain_creator_tag>;
   static void initialize(
       Parallel::CProxy_ConstGlobalCache<Metavariables>& global_cache,
       std::unique_ptr<DomainCreator<3, Frame::Inertial>>

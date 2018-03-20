@@ -20,15 +20,13 @@ namespace Actions {
 
 namespace HorizonManager {
 struct PrintNumElements {
-  using apply_args = tmpl::list<>;
-
   template <
       typename DbTags, typename... InboxTags, typename Metavariables,
       typename ArrayIndex, typename ActionList, typename ParallelComponent,
       Requires<tmpl::list_contains_v<
           DbTags, typename Metavariables::number_of_elements_tag>> = nullptr>
-  static void apply(db::DataBox<DbTags>& box,  // HorizonManager's box
-                    tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
+  static void apply(const db::DataBox<DbTags>& box,  // HorizonManager's box
+                    const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
                     const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,
                     const ArrayIndex& /*array_index*/,
                     const ActionList /*meta*/,
@@ -42,15 +40,13 @@ struct PrintNumElements {
 };
 
 struct ReceiveNumElements {
-  using apply_args = tmpl::list<>;
-
   template <
       typename DbTags, typename... InboxTags, typename Metavariables,
       typename ArrayIndex, typename ActionList, typename ParallelComponent,
       Requires<tmpl::list_contains_v<
           DbTags, typename Metavariables::number_of_elements_tag>> = nullptr>
   static void apply(db::DataBox<DbTags>& box,  // HorizonManager's box
-                    tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
+                    const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
                     const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,
                     const ArrayIndex& /*array_index*/,
                     const ActionList /*meta*/,
@@ -64,13 +60,11 @@ struct ReceiveNumElements {
 
 template <typename ParallelComponentOfReceiver>
 struct SendNumElements {
-  using apply_args = tmpl::list<>;
-
   template <typename DbTags, typename... InboxTags, typename Metavariables,
             typename ArrayIndex, typename ActionList,
             typename ParallelComponent>
-  static void apply(db::DataBox<DbTags>& /*box*/,
-                    tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
+  static void apply(const db::DataBox<DbTags>& /*box*/,
+                    const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
                     const Parallel::ConstGlobalCache<Metavariables>& cache,
                     const ArrayIndex& /*array_index*/,
                     const ActionList /*meta*/,
@@ -84,10 +78,10 @@ struct SendNumElements {
 };
 
 struct InitNumElements {
-  template <typename DbTags, typename... InboxTags, typename Metavariables,
+  template <typename... InboxTags, typename Metavariables,
             typename ArrayIndex, typename ActionList,
             typename ParallelComponent>
-  static auto apply(const db::DataBox<tmpl::list<>>& /*box*/,  // HorizonManager's box
+  static auto apply(const db::DataBox<tmpl::list<>>& /*box*/,
                     const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
                     const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,
                     const ArrayIndex& /*array_index*/,

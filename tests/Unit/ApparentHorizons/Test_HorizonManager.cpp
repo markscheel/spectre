@@ -19,6 +19,7 @@
 #include "Parallel/Main.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
+#include "tests/Unit/ApparentHorizons/HorizonManagerTestHelpers.hpp"
 
 #include "Domain/DomainCreators/RegisterDerivedWithCharm.cpp"
 
@@ -77,7 +78,7 @@ struct DgElementArray {
           *(global_cache.ckLocalBranch()));
 
       dg_element_array
-          .template simple_action<Actions::HorizonManager::SendNumElements<
+          .template simple_action<Actions::DgElementArray::SendNumElements<
               HorizonManagerComponent<Metavariables>>>();
     }
   }

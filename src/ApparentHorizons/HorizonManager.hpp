@@ -58,25 +58,6 @@ struct ReceiveNumElements {
   }
 };
 
-template <typename ParallelComponentOfReceiver>
-struct SendNumElements {
-  template <typename DbTags, typename... InboxTags, typename Metavariables,
-            typename ArrayIndex, typename ActionList,
-            typename ParallelComponent>
-  static void apply(const db::DataBox<DbTags>& /*box*/,
-                    const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
-                    const Parallel::ConstGlobalCache<Metavariables>& cache,
-                    const ArrayIndex& /*array_index*/,
-                    const ActionList /*meta*/,
-                    const ParallelComponent* const /*meta*/) noexcept {
-    auto& receiver_proxy =
-        Parallel::get_parallel_component<ParallelComponentOfReceiver>(cache);
-
-    receiver_proxy.ckLocalBranch()
-        ->template simple_action<ReceiveNumElements>();
-  }
-};
-
 struct InitNumElements {
   template <typename... InboxTags, typename Metavariables, typename ArrayIndex,
             typename ActionList, typename ParallelComponent>

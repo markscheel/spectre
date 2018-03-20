@@ -64,7 +64,8 @@ struct DgElementArray {
   using metavariables = Metavariables;
   using action_list = tmpl::list<>;
   using array_index = ElementIndex<3>;
-  using initial_databox = db::DataBox<db::get_databox_list<tmpl::list<>>>;
+  using initial_databox = db::DataBox<db::get_databox_list<
+      Actions::DgElementArray::InitializeElement::return_tag_list>>;
   using options = tmpl::list<typename Metavariables::domain_creator_tag>;
   static void initialize(
       Parallel::CProxy_ConstGlobalCache<Metavariables>& global_cache,
@@ -108,6 +109,11 @@ void DgElementArray<Metavariables>::initialize(
     }
   }
   dg_element_array.doneInserting();
+
+  dg_element_array
+      .template simple_action<Actions::DgElementArray::InitializeElement>(
+          std::make_tuple(domain_creator->initial_extents(),
+                          std::move(domain)));
 }
 
 struct TestMetavariables {
@@ -139,8 +145,9 @@ struct TestMetavariables {
 };
 
 static const std::vector<void (*)()> charm_init_node_funcs{
-    &setup_error_handling};
-static const std::vector<void (*)()> charm_init_proc_funcs{};
+    &setup_error_handling, &DomainCreators::register_derived_with_charm};
+static const std::vector<void (*)()> charm_init_proc_funcs{
+    &enable_floating_point_exceptions};
 
 using charmxx_main_component = Parallel::Main<TestMetavariables>;
 

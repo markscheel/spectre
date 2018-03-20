@@ -7,6 +7,8 @@
 #include <utility>
 
 #include "DataStructures/DataBox/DataBox.hpp"
+#include "Domain/CreateInitialElement.hpp"
+#include "Domain/Tags.hpp"
 #include "Parallel/Algorithm.hpp"
 #include "Parallel/ConstGlobalCache.hpp"
 #include "Parallel/Info.hpp"
@@ -18,6 +20,30 @@
 
 namespace Actions {
 namespace DgElementArray {
+
+struct InitializeElement {
+  using return_tag_list = tmpl::list<Tags::Extents<3>, Tags::Element<3>>;
+
+  template <typename... InboxTags, typename Metavariables, typename ArrayIndex,
+            typename ActionList, typename ParallelComponent>
+  static auto apply(const db::DataBox<tmpl::list<>>& /*box*/,
+                    const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
+                    const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,
+                    const ArrayIndex& array_index, const ActionList /*meta*/,
+                    const ParallelComponent* const /*meta*/,
+                    std::vector<std::array<size_t, 3>> initial_extents,
+                    Domain<3, Frame::Inertial> domain) noexcept {
+    ElementId<3> element_id{array_index};
+    const auto& my_block = domain.blocks()[element_id.block_id()];
+    Element<3> element = create_initial_element(element_id, my_block);
+    ::Index<3> mesh{initial_extents[element_id.block_id()]};
+
+    db::compute_databox_type<return_tag_list> outbox =
+        db::create<db::get_items<return_tag_list>>(std::move(mesh),
+                                                   std::move(element));
+    return std::make_tuple(std::move(outbox));
+  }
+};
 
 template <typename ParallelComponentOfReceiver>
 struct SendNumElements {

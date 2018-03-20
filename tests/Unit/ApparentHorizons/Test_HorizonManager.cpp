@@ -46,7 +46,7 @@ struct HorizonManagerComponent {
       auto& my_proxy = Parallel::get_parallel_component<
           HorizonManagerComponent<Metavariables>>(
           *(global_cache.ckLocalBranch()));
-      my_proxy.template explicit_single_action<
+      my_proxy.template simple_action<
           Actions::HorizonManager::PrintNumElements>();
     }
   }
@@ -57,7 +57,7 @@ void HorizonManagerComponent<Metavariables>::initialize(
     Parallel::CProxy_ConstGlobalCache<Metavariables>& global_cache) {
   auto& my_proxy = Parallel::get_parallel_component<HorizonManagerComponent>(
       *(global_cache.ckLocalBranch()));
-  my_proxy.template explicit_single_action<
+  my_proxy.template simple_action<
       Actions::HorizonManager::InitNumElements>();
 }
 
@@ -84,7 +84,7 @@ struct DgElementArray {
       auto& dg_element_array = Parallel::get_parallel_component<DgElementArray>(
           *(global_cache.ckLocalBranch()));
 
-      dg_element_array.template explicit_single_action<
+      dg_element_array.template simple_action<
           Actions::HorizonManager::SendNumElements<
               HorizonManagerComponent<Metavariables>>>();
     }
@@ -149,6 +149,6 @@ static const std::vector<void (*)()> charm_init_node_funcs{
     &setup_error_handling};
 static const std::vector<void (*)()> charm_init_proc_funcs{};
 
-using charm_metavariables = TestMetavariables;
+using charmxx_main_component = Parallel::Main<TestMetavariables>;
 
 #include "Parallel/CharmMain.cpp"

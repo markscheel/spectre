@@ -30,10 +30,6 @@ struct HorizonManagerComponent {
   using const_global_cache_tag_list = tmpl::list<>;
   using metavariables = Metavariables;
   using action_list = tmpl::list<>;
-  using explicit_single_actions_list =
-      tmpl::list<Actions::HorizonManager::PrintNumElements,
-                 Actions::HorizonManager::ReceiveNumElements,
-                 Actions::HorizonManager::InitNumElements>;
   using initial_databox = db::DataBox<db::get_databox_list<
       tmpl::list<typename Metavariables::number_of_elements_tag>>>;
   using options = tmpl::list<>;
@@ -67,9 +63,6 @@ struct DgElementArray {
   using metavariables = Metavariables;
   using action_list = tmpl::list<>;
   using array_index = ElementIndex<3>;
-  using explicit_single_actions_list =
-      tmpl::list<Actions::HorizonManager::SendNumElements<
-          HorizonManagerComponent<Metavariables>>>;
   using initial_databox = db::DataBox<db::get_databox_list<tmpl::list<>>>;
   using options = tmpl::list<typename Metavariables::domain_creator_tag>;
   static void initialize(

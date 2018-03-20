@@ -46,8 +46,8 @@ struct HorizonManagerComponent {
       auto& my_proxy = Parallel::get_parallel_component<
           HorizonManagerComponent<Metavariables>>(
           *(global_cache.ckLocalBranch()));
-      my_proxy.template simple_action<
-          Actions::HorizonManager::PrintNumElements>();
+      my_proxy
+          .template simple_action<Actions::HorizonManager::PrintNumElements>();
     }
   }
 };
@@ -57,8 +57,7 @@ void HorizonManagerComponent<Metavariables>::initialize(
     Parallel::CProxy_ConstGlobalCache<Metavariables>& global_cache) {
   auto& my_proxy = Parallel::get_parallel_component<HorizonManagerComponent>(
       *(global_cache.ckLocalBranch()));
-  my_proxy.template simple_action<
-      Actions::HorizonManager::InitNumElements>();
+  my_proxy.template simple_action<Actions::HorizonManager::InitNumElements>();
 }
 
 template <class Metavariables>
@@ -84,8 +83,8 @@ struct DgElementArray {
       auto& dg_element_array = Parallel::get_parallel_component<DgElementArray>(
           *(global_cache.ckLocalBranch()));
 
-      dg_element_array.template simple_action<
-          Actions::HorizonManager::SendNumElements<
+      dg_element_array
+          .template simple_action<Actions::HorizonManager::SendNumElements<
               HorizonManagerComponent<Metavariables>>>();
     }
   }

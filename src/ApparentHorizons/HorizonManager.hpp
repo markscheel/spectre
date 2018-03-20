@@ -78,9 +78,8 @@ struct SendNumElements {
 };
 
 struct InitNumElements {
-  template <typename... InboxTags, typename Metavariables,
-            typename ArrayIndex, typename ActionList,
-            typename ParallelComponent>
+  template <typename... InboxTags, typename Metavariables, typename ArrayIndex,
+            typename ActionList, typename ParallelComponent>
   static auto apply(const db::DataBox<tmpl::list<>>& /*box*/,
                     const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
                     const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,

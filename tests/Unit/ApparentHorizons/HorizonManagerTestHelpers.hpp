@@ -31,8 +31,8 @@ struct InitializeElement {
                     const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,
                     const ArrayIndex& array_index, const ActionList /*meta*/,
                     const ParallelComponent* const /*meta*/,
-                    std::vector<std::array<size_t, 3>> initial_extents,
-                    Domain<3, Frame::Inertial> domain) noexcept {
+                    const std::vector<std::array<size_t, 3>>& initial_extents,
+                    const Domain<3, Frame::Inertial>& domain) noexcept {
     ElementId<3> element_id{array_index};
     const auto& my_block = domain.blocks()[element_id.block_id()];
     Element<3> element = create_initial_element(element_id, my_block);

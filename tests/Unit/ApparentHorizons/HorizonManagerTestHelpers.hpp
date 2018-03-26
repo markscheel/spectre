@@ -29,8 +29,8 @@ namespace Actions {
 namespace DgElementArray {
 
 struct InitializeElement {
-  using return_tag_list = tmpl::list<Tags::Extents<3>, Tags::Element<3>>;
-  //                                     ::HorizonManager::InputVars>;
+  using return_tag_list = tmpl::list<Tags::Extents<3>, Tags::Element<3>,
+                                     ::HorizonManager::InputVars>;
 
   template <typename... InboxTags, typename Metavariables, typename ArrayIndex,
             typename ActionList, typename ParallelComponent>
@@ -86,8 +86,8 @@ struct InitializeElement {
 
     db::compute_databox_type<return_tag_list> outbox =
         db::create<db::get_items<return_tag_list>>(std::move(mesh),
-                                                   std::move(element));
-                                                // std::move(output_vars));
+                                                   std::move(element),
+                                                   std::move(output_vars));
     return std::make_tuple(std::move(outbox));
   }
 };

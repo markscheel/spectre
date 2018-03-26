@@ -7,6 +7,9 @@
 #include <utility>
 
 #include "DataStructures/DataBox/DataBox.hpp"
+#include "DataStructures/DataBox/DataBoxTag.hpp"
+#include "DataStructures/Tensor/TypeAliases.hpp"
+#include "DataStructures/Variables.hpp"
 #include "Parallel/Algorithm.hpp"
 #include "Parallel/ConstGlobalCache.hpp"
 #include "Parallel/Info.hpp"
@@ -15,6 +18,27 @@
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
+
+namespace HorizonManager {
+struct Psi : db::DataBoxTag {
+  using type = tnsr::aa<DataVector, 3, Frame::Inertial>;
+  static constexpr db::DataBoxString label = "Psi";
+};
+struct Pi : db::DataBoxTag {
+  using type = tnsr::aa<DataVector, 3, Frame::Inertial>;
+  static constexpr db::DataBoxString label = "Pi";
+};
+struct Phi : db::DataBoxTag {
+  using type = tnsr::iaa<DataVector, 3, Frame::Inertial>;
+  static constexpr db::DataBoxString label = "Phi";
+};
+using VariablesTags = tmpl::list<Psi, Pi, Phi>;
+
+struct InputVars : db::DataBoxTag {
+  using type = Variables<VariablesTags>;
+  static constexpr db::DataBoxString label = "Vars";
+};
+}  // namespace HorizonManager
 
 namespace Actions {
 
@@ -73,6 +97,31 @@ struct InitNumElements {
         db::create<tmpl::list<number_of_elements_tag>>(0_st));
   }
 };
+
+//-:struct HorizonDataOnEachElement {
+//-:  Element<3> element;
+//-:  Index<3> mesh;
+//-:};
+//-:
+//-:struct GetVolumeDataFromElement {
+//-:  template <
+//-:      typename DbTags, typename... InboxTags, typename Metavariables,
+//-:      typename ArrayIndex, typename ActionList, typename ParallelComponent,
+//-:      Requires<tmpl::list_contains_v<
+//-:          DbTags, typename Metavariables::number_of_elements_tag>> =
+//nullptr>
+//-:  static void apply(db::DataBox<DbTags>& box,
+//-:                    const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
+//-:                    const Parallel::ConstGlobalCache<Metavariables>&
+///*cache*/,
+//-:                    const ArrayIndex& /*array_index*/,
+//-:                    const ActionList /*meta*/,
+//-:                    const ParallelComponent* const /*meta*/,
+//-:                    Element<3> element,
+//-:                    Index<3> mesh) noexcept {
+//-:
+//-:  }
+//-:};
 
 }  // namespace HorizonManager
 }  // namespace Actions

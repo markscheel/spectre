@@ -14,9 +14,12 @@ add_dependencies(
 
 target_link_libraries(
   Test_HorizonManager
+  DataStructures
   DomainCreators
   CoordinateMaps
+  EinsteinSolutions
   ErrorHandling
+  GeneralRelativity
   Informer
   Utilities
   ${SPECTRE_LIBRARIES}
@@ -27,7 +30,7 @@ add_test(NAME "\"Integration.HorizonManager\""
 
 set_tests_properties(
   "\"Integration.HorizonManager\"" PROPERTIES
-  TIMEOUT 10
+  TIMEOUT 30
   LABELS "integration"
   ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 

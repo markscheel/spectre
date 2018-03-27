@@ -8,6 +8,8 @@
 
 #include "ApparentHorizons/HorizonManager.hpp"
 #include "DataStructures/DataBox/DataBox.hpp"
+#include "DataStructures/DataBox/DataBoxTag.hpp"
+#include "DataStructures/Variables.hpp"
 #include "Domain/CreateInitialElement.hpp"
 #include "Domain/ElementMap.hpp"
 #include "Domain/LogicalCoordinates.hpp"
@@ -25,12 +27,30 @@
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
 
+struct PsiHole : db::DataBoxTag {
+  using type = tnsr::aa<DataVector, 3, Frame::Inertial>;
+  static constexpr db::DataBoxString label = "Psi";
+};
+struct PiHole : db::DataBoxTag {
+  using type = tnsr::aa<DataVector, 3, Frame::Inertial>;
+  static constexpr db::DataBoxString label = "Pi";
+};
+struct PhiHole : db::DataBoxTag {
+  using type = tnsr::iaa<DataVector, 3, Frame::Inertial>;
+  static constexpr db::DataBoxString label = "Phi";
+};
+
+struct MyOwnVariablesTag : db::DataBoxTag {
+  using type = typename ::Variables<tmpl::list<PsiHole, PiHole, PhiHole>>;
+  static constexpr db::DataBoxString label = "Vars";
+};
+
 namespace Actions {
 namespace DgElementArray {
 
 struct InitializeElement {
-  using return_tag_list = tmpl::list<Tags::Extents<3>, Tags::Element<3>,
-                                     ::HorizonManager::InputVars>;
+  using return_tag_list = tmpl::list<  // Tags::Extents<3>, Tags::Element<3>,
+      typename MyOwnVariablesTag::type>;
 
   template <typename... InboxTags, typename Metavariables, typename ArrayIndex,
             typename ActionList, typename ParallelComponent>
@@ -75,19 +95,20 @@ struct InitializeElement {
         get<EinsteinSolutions::KerrSchild::deriv_spatial_metric<DataVector>>(
             input_vars);
 
-    Variables<::HorizonManager::VariablesTags> output_vars(mesh.product());
-    auto& psi = get<::HorizonManager::Psi>(output_vars);
-    auto& pi = get<::HorizonManager::Pi>(output_vars);
-    auto& phi = get<::HorizonManager::Phi>(output_vars);
+    typename MyOwnVariablesTag::type output_vars(mesh.product());
+    auto& psi = get<PsiHole>(output_vars);
+    auto& pi = get<PiHole>(output_vars);
+    auto& phi = get<PhiHole>(output_vars);
     psi = gr::spacetime_metric(lapse, shift, g);
     phi = GeneralizedHarmonic::phi(lapse, d_lapse, shift, d_shift, g, d_g);
     pi =
         GeneralizedHarmonic::pi(lapse, dt_lapse, shift, dt_shift, g, dt_g, phi);
 
     db::compute_databox_type<return_tag_list> outbox =
-        db::create<db::get_items<return_tag_list>>(std::move(mesh),
-                                                   std::move(element),
-                                                   std::move(output_vars));
+        db::create<db::get_items<return_tag_list>>(  // std::move(mesh),
+            // std::move(element),
+            MyOwnVariablesTag::type{});
+    // std::move(output_vars));
     return std::make_tuple(std::move(outbox));
   }
 };

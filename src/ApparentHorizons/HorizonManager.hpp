@@ -19,27 +19,6 @@
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
 
-namespace HorizonManager {
-struct Psi : db::DataBoxTag {
-  using type = tnsr::aa<DataVector, 3, Frame::Inertial>;
-  static constexpr db::DataBoxString label = "Psi";
-};
-struct Pi : db::DataBoxTag {
-  using type = tnsr::aa<DataVector, 3, Frame::Inertial>;
-  static constexpr db::DataBoxString label = "Pi";
-};
-struct Phi : db::DataBoxTag {
-  using type = tnsr::iaa<DataVector, 3, Frame::Inertial>;
-  static constexpr db::DataBoxString label = "Phi";
-};
-using VariablesTags = tmpl::list<Psi, Pi, Phi>;
-
-struct InputVars : db::DataBoxTag {
-  using type = Variables<VariablesTags>;
-  static constexpr db::DataBoxString label = "Vars";
-};
-}  // namespace HorizonManager
-
 namespace Actions {
 
 namespace HorizonManager {
@@ -109,7 +88,7 @@ struct InitNumElements {
 //-:      typename ArrayIndex, typename ActionList, typename ParallelComponent,
 //-:      Requires<tmpl::list_contains_v<
 //-:          DbTags, typename Metavariables::number_of_elements_tag>> =
-//nullptr>
+// nullptr>
 //-:  static void apply(db::DataBox<DbTags>& box,
 //-:                    const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
 //-:                    const Parallel::ConstGlobalCache<Metavariables>&

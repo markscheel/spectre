@@ -6,6 +6,7 @@
 #include "ApparentHorizons/HorizonManager.hpp"
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "DataStructures/DataVector.hpp"
+#include "DataStructures/Variables.hpp"
 #include "Domain/CoordinateMaps/Affine.hpp"
 #include "Domain/Domain.hpp"
 #include "Domain/DomainCreators/DomainCreator.hpp"
@@ -64,8 +65,8 @@ struct DgElementArray {
   using metavariables = Metavariables;
   using action_list = tmpl::list<>;
   using array_index = ElementIndex<3>;
-  using initial_databox = db::DataBox<db::get_databox_list<
-      Actions::DgElementArray::InitializeElement::return_tag_list>>;
+  using initial_databox = db::compute_databox_type<
+      typename Actions::DgElementArray::InitializeElement::return_tag_list>;
   using options = tmpl::list<typename Metavariables::domain_creator_tag>;
   static void initialize(
       Parallel::CProxy_ConstGlobalCache<Metavariables>& global_cache,

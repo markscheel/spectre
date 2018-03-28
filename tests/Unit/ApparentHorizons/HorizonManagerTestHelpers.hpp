@@ -40,27 +40,23 @@ struct PhiHole : db::DataBoxTag {
   static constexpr db::DataBoxString label = "Phi";
 };
 
-struct MyOwnVariablesTag : db::DataBoxTag {
-  using type = typename ::Variables<tmpl::list<PsiHole, PiHole, PhiHole>>;
-  static constexpr db::DataBoxString label = "Vars";
-};
-
 namespace Actions {
 namespace DgElementArray {
 
 struct InitializeElement {
   using return_tag_list = tmpl::list<  // Tags::Extents<3>, Tags::Element<3>,
-      typename MyOwnVariablesTag::type>;
+      Tags::Variables<tmpl::list<PsiHole, PiHole, PhiHole>>>;
 
   template <typename... InboxTags, typename Metavariables, typename ArrayIndex,
             typename ActionList, typename ParallelComponent>
-  static auto apply(const db::DataBox<tmpl::list<>>& /*box*/,
-                    const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
-                    const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,
-                    const ArrayIndex& array_index, const ActionList /*meta*/,
-                    const ParallelComponent* const /*meta*/,
-                    const std::vector<std::array<size_t, 3>>& initial_extents,
-                    const Domain<3, Frame::Inertial>& domain) noexcept {
+  static std::tuple<db::compute_databox_type<return_tag_list>> apply(
+      const db::DataBox<tmpl::list<>>& /*box*/,
+      const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
+      const Parallel::ConstGlobalCache<Metavariables>& /*cache*/,
+      const ArrayIndex& array_index, const ActionList /*meta*/,
+      const ParallelComponent* const /*meta*/,
+      const std::vector<std::array<size_t, 3>>& initial_extents,
+      const Domain<3, Frame::Inertial>& domain) noexcept {
     ElementId<3> element_id{array_index};
     const auto& my_block = domain.blocks()[element_id.block_id()];
     Element<3> element = create_initial_element(element_id, my_block);
@@ -95,7 +91,9 @@ struct InitializeElement {
         get<EinsteinSolutions::KerrSchild::deriv_spatial_metric<DataVector>>(
             input_vars);
 
-    typename MyOwnVariablesTag::type output_vars(mesh.product());
+    // DON'T DO THIS! NOT SUPPORTED ANYMORE!
+    typename Tags::Variables<tmpl::list<PsiHole, PiHole, PhiHole>>::type
+        output_vars(mesh.product());
     auto& psi = get<PsiHole>(output_vars);
     auto& pi = get<PiHole>(output_vars);
     auto& phi = get<PhiHole>(output_vars);
@@ -106,8 +104,8 @@ struct InitializeElement {
 
     db::compute_databox_type<return_tag_list> outbox =
         db::create<db::get_items<return_tag_list>>(  // std::move(mesh),
-            // std::move(element),
-            MyOwnVariablesTag::type{});
+                                                     // std::move(element),
+            Tags::Variables<tmpl::list<PsiHole, PiHole, PhiHole>>::type{});
     // std::move(output_vars));
     return std::make_tuple(std::move(outbox));
   }

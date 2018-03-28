@@ -143,7 +143,9 @@ void apply_visitor_helper(boost::variant<Variants...>& box,
                     cpp17::is_same_v<db::DataBox<tmpl::list<>>, ThisVariant>,
                 "A simple action must return either void or take an empty "
                 "DataBox and return the initial_databox set in the parallel "
-                "component.");
+                "component. If you are not returning void please make sure the "
+                "DataBox type matches initial_databox, because it currently "
+                "does not.");
           })(
           typename std::is_same<void, decltype(Invokable::apply(
                                           std::declval<ThisVariant&>(),

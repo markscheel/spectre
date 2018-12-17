@@ -72,10 +72,10 @@ template <template <typename...> class T, typename... Ts>
 struct reduction_data_tag_type<T<Ts...>> {
   // The first argument is for Time, the others are for
   // the list of scalars being integrated.
-  using type = tmpl::list<observers::Tags::ReductionData<
+  using type = observers::Tags::ReductionData<
       Parallel::ReductionDatum<double, funcl::AssertEqual<>>,
       Parallel::ReductionDatum<typename Ts::type::type::value_type,
-                               funcl::AssertEqual<>>...>>;
+                               funcl::AssertEqual<>>...>;
 };
 
 template <typename List, size_t... Is>

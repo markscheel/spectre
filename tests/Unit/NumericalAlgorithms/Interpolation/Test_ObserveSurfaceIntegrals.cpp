@@ -61,6 +61,8 @@
 #include "tests/Unit/ActionTesting.hpp"
 #include "tests/Unit/TestHelpers.hpp"
 
+#include "Utilities/TmplDebugging.hpp"
+
 // IWYU pragma: no_forward_declare Tensor
 
 namespace {
@@ -82,6 +84,19 @@ struct SquareComputeItem : Square, db::ComputeTag {
     return result;
   }
   using argument_tags = tmpl::list<TestSolution>;
+};
+struct Negate : db::SimpleTag {
+  static std::string name() noexcept { return "Negate"; }
+  using type = Scalar<DataVector>;
+};
+struct NegateComputeItem : Negate, db::ComputeTag {
+  static std::string name() noexcept { return "Negate"; }
+  static Scalar<DataVector> function(const Scalar<DataVector>& x) noexcept {
+    auto result = make_with_value<Scalar<DataVector>>(x, 0.0);
+    get(result) = -get(x);
+    return result;
+  }
+  using argument_tags = tmpl::list<Square>;
 };
 }  // namespace Tags
 
@@ -145,22 +160,38 @@ struct MockMetavariables {
     // This `type` is so this tag can be used to read options.
     using type = typename compute_target_points::options_type;
   };
+  struct SurfaceB {
+    using compute_items_on_source = tmpl::list<>;
+    using vars_to_interpolate_to_target =
+        tmpl::list<Tags::TestSolution,
+                   gr::Tags::SpatialMetric<3, Frame::Inertial>>;
+    using compute_items_on_target = tmpl::list<Tags::SquareComputeItem,
+                                               Tags::NegateComputeItem>;
+    using compute_target_points =
+        intrp::Actions::KerrHorizon<SurfaceB, ::Frame::Inertial>;
+    using post_interpolation_callback =
+        intrp::callbacks::ObserveSurfaceIntegrals<tmpl::list<Tags::Negate>,
+                                                  SurfaceB, Frame::Inertial>;
+    // This `type` is so this tag can be used to read options.
+    using type = typename compute_target_points::options_type;
+  };
 
   // HACK!
   using reduction_data_tags =
-      typename intrp::callbacks::detail::reduction_data_tag_type<
-          tmpl::list<Tags::Square>>::type;
+      tmpl::list<typename intrp::callbacks::detail::reduction_data_tag_type<
+          tmpl::list<Tags::Square>>::type>;
 
   using interpolator_source_vars =
       tmpl::list<Tags::TestSolution,
                  gr::Tags::SpatialMetric<3, Frame::Inertial>>;
-  using interpolation_target_tags = tmpl::list<SurfaceA>;
+  using interpolation_target_tags = tmpl::list<SurfaceA, SurfaceB>;
   using temporal_id = TimeId;
   using domain_frame = Frame::Inertial;
   static constexpr size_t domain_dim = 3;
   using component_list =
       tmpl::list<MockObserverWriter<MockMetavariables>,
                  MockInterpolationTarget<MockMetavariables, SurfaceA>,
+                 MockInterpolationTarget<MockMetavariables, SurfaceB>,
                  MockInterpolator<MockMetavariables>>;
   using const_global_cache_tag_list = tmpl::list<>;
   enum class Phase { Initialize, Exit };
@@ -168,6 +199,7 @@ struct MockMetavariables {
 
 SPECTRE_TEST_CASE(
     "Unit.NumericalAlgorithms.Interpolator.ObserveSurfaceIntegrals", "[Unit]") {
+
   using metavars = MockMetavariables;
   using MockRuntimeSystem = ActionTesting::MockRuntimeSystem<metavars>;
   using TupleOfMockDistributedObjects =
@@ -176,6 +208,9 @@ SPECTRE_TEST_CASE(
   using MockDistributedObjectsTagTargetA =
       typename MockRuntimeSystem::template MockDistributedObjectsTag<
           MockInterpolationTarget<metavars, metavars::SurfaceA>>;
+  using MockDistributedObjectsTagTargetB =
+      typename MockRuntimeSystem::template MockDistributedObjectsTag<
+          MockInterpolationTarget<metavars, metavars::SurfaceB>>;
   using MockDistributedObjectsTagInterpolator =
       typename MockRuntimeSystem::template MockDistributedObjectsTag<
           MockInterpolator<metavars>>;
@@ -185,6 +220,9 @@ SPECTRE_TEST_CASE(
   tuples::get<MockDistributedObjectsTagTargetA>(dist_objects)
       .emplace(0, ActionTesting::MockDistributedObject<
                       MockInterpolationTarget<metavars, metavars::SurfaceA>>{});
+  tuples::get<MockDistributedObjectsTagTargetB>(dist_objects)
+      .emplace(0, ActionTesting::MockDistributedObject<
+                      MockInterpolationTarget<metavars, metavars::SurfaceB>>{});
   tuples::get<MockDistributedObjectsTagInterpolator>(dist_objects)
       .emplace(
           0,
@@ -195,12 +233,14 @@ SPECTRE_TEST_CASE(
           ActionTesting::MockDistributedObject<MockObserverWriter<metavars>>{});
 
   // Options for all InterpolationTargets.
-  intrp::OptionHolders::KerrHorizon kerr_horizon_opts(10, {{0.0, 0.0, 0.0}},
-                                                      1.0, {{0.0, 0.0, 0.0}});
+  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_A(10, {{0.0, 0.0, 0.0}},
+                                                        1.0, {{0.0, 0.0, 0.0}});
+  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_B(10, {{0.0, 0.0, 0.0}},
+                                                        2.0, {{0.0, 0.0, 0.0}});
   std::string h5_file_prefix = "Test_ObserveSurfaceIntegrals";
   tuples::TaggedTuple<observers::OptionTags::ReductionFileName,
-                      metavars::SurfaceA>
-      tuple_of_opts(h5_file_prefix, kerr_horizon_opts);
+                      metavars::SurfaceA, metavars::SurfaceB>
+      tuple_of_opts(h5_file_prefix, kerr_horizon_opts_A, kerr_horizon_opts_B);
 
   MockRuntimeSystem runner{tuple_of_opts, std::move(dist_objects)};
 
@@ -210,6 +250,10 @@ SPECTRE_TEST_CASE(
   runner.simple_action<
       MockInterpolationTarget<metavars, metavars::SurfaceA>,
       ::intrp::Actions::InitializeInterpolationTarget<metavars::SurfaceA>>(
+      0, domain_creator.create_domain());
+  runner.simple_action<
+      MockInterpolationTarget<metavars, metavars::SurfaceB>,
+      ::intrp::Actions::InitializeInterpolationTarget<metavars::SurfaceB>>(
       0, domain_creator.create_domain());
   runner.simple_action<MockInterpolator<metavars>,
                        ::intrp::Actions::InitializeInterpolator>(0);
@@ -241,6 +285,10 @@ SPECTRE_TEST_CASE(
   runner.simple_action<
       MockInterpolationTarget<metavars, metavars::SurfaceA>,
       intrp::Actions::AddTemporalIdsToInterpolationTarget<metavars::SurfaceA>>(
+      0, std::vector<TimeId>{temporal_id});
+  runner.simple_action<
+      MockInterpolationTarget<metavars, metavars::SurfaceB>,
+      intrp::Actions::AddTemporalIdsToInterpolationTarget<metavars::SurfaceB>>(
       0, std::vector<TimeId>{temporal_id});
 
   // Create volume data and send it to the interpolator.
@@ -286,27 +334,42 @@ SPECTRE_TEST_CASE(
         metavars::component_list>(make_not_null(&runner), 0_st);
   }
 
-  // There should be one threaded action, so invoke it and check
+  // There should be two more threaded actions, so invoke them and check
   // that there are no more.
+  runner.invoke_queued_threaded_action<MockObserverWriter<metavars>>(0);
   runner.invoke_queued_threaded_action<MockObserverWriter<metavars>>(0);
   CHECK(runner.is_threaded_action_queue_empty<MockObserverWriter<metavars>>(0));
 
   // By hand compute integral(r^2 d(cos theta) dphi (2x+3y+5z)^2)
-  const double expected_integral = 2432.0 * M_PI / 3.0;
-  const std::vector<std::string> expected_legend{"Time", "Square"};
+  const double expected_integral_a = 2432.0 * M_PI / 3.0;
+  // SurfaceB has a larger radius by a factor of 2 than SurfaceA,
+  // but the same function.  This results in a factor of 4 increase
+  // (because the integrand scales like r^2), and an additional factor of
+  // 4 (from the area element), for a net factor of 16.  There is also a
+  // minus sign because of "Negate".
+  const double expected_integral_b = -16.0 * 2432.0 * M_PI / 3.0;
+  const std::vector<std::string> expected_legend_a{"Time", "Square"};
+  const std::vector<std::string> expected_legend_b{"Time", "Negate"};
 
   // Check that the H5 file was written correctly.
   const auto h5_file_name = h5_file_prefix + ".h5";
   const auto file = h5::H5File<h5::AccessType::ReadOnly>(h5_file_name);
-  const auto& dat_file = file.get<h5::Dat>("/SurfaceA_integrals");
-  const Matrix written_data = dat_file.get_data();
-  const auto& written_legend = dat_file.get_legend();
-  CHECK(written_legend == expected_legend);
-  CHECK(0.0 == written_data(0, 0));
-  // The interpolation is not perfect because I use too few grid points.
-  Approx custom_approx = Approx::custom().epsilon(1.e-4).scale(1.0);
-  CHECK(expected_integral == custom_approx(written_data(0, 1)));
-
+  auto check_file_contents = [&file](
+      double expected_integral, const std::vector<std::string>& expected_legend,
+      const std::string& group_name) noexcept {
+    const auto& dat_file = file.get<h5::Dat>(group_name);
+    const Matrix written_data = dat_file.get_data();
+    const auto& written_legend = dat_file.get_legend();
+    CHECK(written_legend == expected_legend);
+    CHECK(0.0 == written_data(0, 0));
+    // The interpolation is not perfect because I use too few grid points.
+    Approx custom_approx = Approx::custom().epsilon(1.e-4).scale(1.0);
+    CHECK(expected_integral == custom_approx(written_data(0, 1)));
+  };
+  check_file_contents(expected_integral_a, expected_legend_a,
+                      "/SurfaceA_integrals");
+  check_file_contents(expected_integral_b, expected_legend_b,
+                      "/SurfaceB_integrals");
   if (file_system::check_if_file_exists(h5_file_name)) {
     file_system::rm(h5_file_name, true);
   }

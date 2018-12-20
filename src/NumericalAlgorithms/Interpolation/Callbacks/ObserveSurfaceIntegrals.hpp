@@ -78,6 +78,27 @@ struct reduction_data_tag_type<T<Ts...>> {
                                funcl::AssertEqual<>>...>;
 };
 
+template <typename T>
+using reduction_data_tag_type_t = typename reduction_data_tag_type<T>::type;
+
+namespace reduction_tags_detail {
+template <class Observer, class = cpp17::void_t<>>
+struct get_reduction_data_tags_from_observer {
+  using type = tmpl::list<>;
+};
+
+template <class Observer>
+struct get_reduction_data_tags_from_observer<
+    Observer, cpp17::void_t<typename Observer::reduction_data_tags>> {
+  using type = typename Observer::reduction_data_tags;
+};
+}  // namespace reduction_tags_detail
+
+template <class List>
+using get_reduction_data_tags = tmpl::remove_duplicates<tmpl::transform<
+    List,
+    reduction_tags_detail::get_reduction_data_tags_from_observer<tmpl::_1>>>;
+
 template <typename List, size_t... Is>
 auto make_reduction_data(const std::array<double, sizeof...(Is)>& a,
                          std::index_sequence<Is...> /* meta */) noexcept {
@@ -107,6 +128,8 @@ auto make_reduction_data(const std::array<double, N>& a) noexcept {
 template <typename TagsToObserve, typename InterpolationTargetTag,
           typename Frame>
 struct ObserveSurfaceIntegrals {
+  using reduction_data_tags = detail::reduction_data_tag_type_t<TagsToObserve>;
+
   template <typename DbTags, typename Metavariables>
   static void apply(
       const db::DataBox<DbTags>& box,

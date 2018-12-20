@@ -165,8 +165,8 @@ struct MockMetavariables {
     using vars_to_interpolate_to_target =
         tmpl::list<Tags::TestSolution,
                    gr::Tags::SpatialMetric<3, Frame::Inertial>>;
-    using compute_items_on_target = tmpl::list<Tags::SquareComputeItem,
-                                               Tags::NegateComputeItem>;
+    using compute_items_on_target =
+        tmpl::list<Tags::SquareComputeItem, Tags::NegateComputeItem>;
     using compute_target_points =
         intrp::Actions::KerrHorizon<SurfaceB, ::Frame::Inertial>;
     using post_interpolation_callback =
@@ -180,8 +180,8 @@ struct MockMetavariables {
     using vars_to_interpolate_to_target =
         tmpl::list<Tags::TestSolution,
                    gr::Tags::SpatialMetric<3, Frame::Inertial>>;
-    using compute_items_on_target = tmpl::list<Tags::SquareComputeItem,
-                                               Tags::NegateComputeItem>;
+    using compute_items_on_target =
+        tmpl::list<Tags::SquareComputeItem, Tags::NegateComputeItem>;
     using compute_target_points =
         intrp::Actions::KerrHorizon<SurfaceC, ::Frame::Inertial>;
     using post_interpolation_callback =
@@ -191,12 +191,10 @@ struct MockMetavariables {
     using type = typename compute_target_points::options_type;
   };
 
-  // HACK!
-  using reduction_data_tags =
-      tmpl::list<typename intrp::callbacks::detail::reduction_data_tag_type<
-                     tmpl::list<Tags::Square>>::type,
-                 typename intrp::callbacks::detail::reduction_data_tag_type<
-                     tmpl::list<Tags::Square, Tags::Negate>>::type>;
+  using reduction_data_tags = intrp::callbacks::detail::get_reduction_data_tags<
+      tmpl::list<typename SurfaceA::post_interpolation_callback,
+                 typename SurfaceB::post_interpolation_callback,
+                 typename SurfaceC::post_interpolation_callback>>;
 
   using interpolator_source_vars =
       tmpl::list<Tags::TestSolution,
@@ -217,7 +215,6 @@ struct MockMetavariables {
 
 SPECTRE_TEST_CASE(
     "Unit.NumericalAlgorithms.Interpolator.ObserveSurfaceIntegrals", "[Unit]") {
-
   using metavars = MockMetavariables;
   using MockRuntimeSystem = ActionTesting::MockRuntimeSystem<metavars>;
   using TupleOfMockDistributedObjects =

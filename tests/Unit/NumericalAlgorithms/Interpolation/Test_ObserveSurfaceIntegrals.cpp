@@ -29,6 +29,7 @@
 #include "IO/H5/AccessType.hpp"
 #include "IO/H5/Dat.hpp"
 #include "IO/H5/File.hpp"
+#include "IO/Observer/Helpers.hpp"           // IWYU pragma: keep
 #include "IO/Observer/Initialize.hpp"
 #include "IO/Observer/ObserverComponent.hpp"
 #include "IO/Observer/ReductionActions.hpp"  // IWYU pragma: keep
@@ -60,8 +61,6 @@
 #include "Utilities/TaggedTuple.hpp"
 #include "tests/Unit/ActionTesting.hpp"
 #include "tests/Unit/TestHelpers.hpp"
-
-#include "Utilities/TmplDebugging.hpp"
 
 // IWYU pragma: no_forward_declare Tensor
 
@@ -191,7 +190,7 @@ struct MockMetavariables {
     using type = typename compute_target_points::options_type;
   };
 
-  using reduction_data_tags = intrp::callbacks::detail::get_reduction_data_tags<
+  using reduction_data_tags = observers::get_reduction_data_tags<
       tmpl::list<typename SurfaceA::post_interpolation_callback,
                  typename SurfaceB::post_interpolation_callback,
                  typename SurfaceC::post_interpolation_callback>>;

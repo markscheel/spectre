@@ -52,18 +52,6 @@ namespace callbacks {
 
 /// \cond
 namespace detail {
-template <typename T>
-struct reduction_data_type;
-
-template <template <typename...> class T, typename... Ts>
-struct reduction_data_type<T<Ts...>> {
-  // The first argument is for Time, the others are for
-  // the list of scalars being integrated.
-  using type = Parallel::ReductionData<
-      Parallel::ReductionDatum<double, funcl::AssertEqual<>>,
-      Parallel::ReductionDatum<typename Ts::type::type::value_type,
-                               funcl::AssertEqual<>>...>;
-};
 
 template <typename T>
 struct reduction_data_tag_type;
@@ -81,16 +69,25 @@ struct reduction_data_tag_type<T<Ts...>> {
 template <typename T>
 using reduction_data_tag_type_t = typename reduction_data_tag_type<T>::type;
 
-template <typename List, size_t... Is>
-auto make_reduction_data(const std::array<double, sizeof...(Is)>& a,
-                         std::index_sequence<Is...> /* meta */) noexcept {
-  return typename reduction_data_type<List>::type(gsl::at(a, Is)...);
+template <typename... Ts>
+auto make_legend(tmpl::list<Ts...> /* meta */) {
+  return std::vector<std::string>{"Time", Ts::name()...};
 }
 
-template <typename List, size_t N>
-auto make_reduction_data(const std::array<double, N>& a) noexcept {
-  return make_reduction_data<List>(a, std::make_index_sequence<N>{});
+template <typename DbTags, typename StrahlkorperType, typename AreaElement,
+          typename... Ts>
+auto make_reduction_data(const db::DataBox<DbTags>& box,
+                         const StrahlkorperType& strahlkorper,
+                         const AreaElement& area_element, double time,
+                         tmpl::list<Ts...> /* meta */) {
+  using reduction_data = Parallel::ReductionData<
+      Parallel::ReductionDatum<double, funcl::AssertEqual<>>,
+      Parallel::ReductionDatum<typename Ts::type::type::value_type,
+                               funcl::AssertEqual<>>...>;
+  return reduction_data(time, StrahlkorperGr::surface_integral_of_scalar(
+                                  area_element, get<Ts>(box), strahlkorper)...);
 }
+
 }  // namespace detail
 /// \endcond
 
@@ -117,7 +114,6 @@ struct ObserveSurfaceIntegrals {
       const db::DataBox<DbTags>& box,
       Parallel::ConstGlobalCache<Metavariables>& cache,
       const typename Metavariables::temporal_id& temporal_id) noexcept {
-    // Do the integrals and construct the legend.
     const auto& strahlkorper = get<StrahlkorperTags::Strahlkorper<Frame>>(box);
     const auto area_element = StrahlkorperGr::area_element(
         get<gr::Tags::SpatialMetric<3, Frame>>(box),
@@ -126,22 +122,6 @@ struct ObserveSurfaceIntegrals {
         get<StrahlkorperTags::Radius<Frame>>(box),
         get<StrahlkorperTags::Rhat<Frame>>(box));
 
-    std::vector<std::string> legend(tmpl::size<TagsToObserve>::value + 1);
-    std::array<double, tmpl::size<TagsToObserve>::value + 1>
-        time_and_integrals{};
-    time_and_integrals[0] = temporal_id.time().value();
-    legend[0] = "Time";
-    size_t s = 1;
-    tmpl::for_each<TagsToObserve>([&](auto tag) noexcept {
-      using Tag = typename decltype(tag)::type;
-      const auto& scalar = get<Tag>(box);
-      gsl::at(time_and_integrals, s) =
-          StrahlkorperGr::surface_integral_of_scalar(area_element, scalar,
-                                                     strahlkorper);
-      legend[s] = Tag::name();
-      ++s;
-    });
-
     auto& proxy = Parallel::get_parallel_component<
         observers::ObserverWriter<Metavariables>>(cache);
 
@@ -149,7 +129,10 @@ struct ObserveSurfaceIntegrals {
         proxy[0], observers::ObservationId(temporal_id.time()),
         std::string{"/" + pretty_type::short_name<InterpolationTargetTag>() +
                     "_integrals"},
-        legend, detail::make_reduction_data<TagsToObserve>(time_and_integrals));
+        detail::make_legend(TagsToObserve{}),
+        detail::make_reduction_data(box, strahlkorper, area_element,
+                                    temporal_id.time().value(),
+                                    TagsToObserve{}));
   }
 };
 }  // namespace callbacks

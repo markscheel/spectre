@@ -29,6 +29,13 @@
 namespace Frame {
 struct Inertial;
 }  // namespace Frame
+//-:namespace intrp {
+//-:template <typename Metavariables>
+//-:struct Interpolator;
+//-:namespace Actions {
+//-:struct RegisterElementWithInterpolator;
+//-:}  // namespace Actions
+//-:}  // namespace intrp
 /// \endcond
 
 template <typename PhaseDepAction>
@@ -78,6 +85,32 @@ struct DgElementArray {
     Parallel::get_parallel_component<DgElementArray>(local_cache)
         .start_phase(next_phase);
   }
+
+  template <typename ComponentList, typename PhaseType,
+            Requires<not tmpl::list_contains_v<
+                ComponentList, ::intrp::Interpolator<Metavariables>>> = nullptr>
+  static void try_register_with_interpolator(
+      const PhaseType /*next_phase*/, const ComponentList /*component_list*/,
+      Parallel::CProxy_ConstGlobalCache<
+          Metavariables>& /*global_cache*/) noexcept {}
+
+//-:  template <typename ComponentList, typename PhaseType,
+//-:            Requires<tmpl::list_contains_v<
+//-:                ComponentList, typename ::intrp::Interpolator<Metavariables>>> =
+//-:                nullptr>
+//-:  static void try_register_with_interpolator(
+//-:      const PhaseType next_phase, const ComponentList /*component_list*/,
+//-:      Parallel::CProxy_ConstGlobalCache<Metavariables>& global_cache) noexcept {
+//-:    if (next_phase == Metavariables::Phase::RegisterWithObserver) {
+//-:      auto& local_cache = *(global_cache.ckLocalBranch());
+//-:
+//-:      // Register this element with the Interpolator.
+//-:      // As with observers above, this will need to be modified
+//-:      // when we do load balancing.
+//-:      Parallel::simple_action<intrp::Actions::RegisterElementWithInterpolator>(
+//-:          Parallel::get_parallel_component<DgElementArray>(local_cache));
+//-:    }
+//-:  }
 };
 
 template <class Metavariables, class PhaseDepActionList,

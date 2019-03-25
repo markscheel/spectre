@@ -253,6 +253,43 @@ void test_area_element(const Solution& solution, const double& surface_radius,
   CHECK_ITERABLE_APPROX(get(area_element), expected(get(area_element).size()));
 }
 
+void test_euclidean_surface_integral_of_vector(
+    const Strahlkorper<Frame::Inertial>& strahlkorper) noexcept {
+
+  const auto box = db::create<
+      db::AddSimpleTags<StrahlkorperTags::items_tags<Frame::Inertial>>,
+      db::AddComputeTags<
+          StrahlkorperTags::compute_items_tags<Frame::Inertial>>>(strahlkorper);
+
+  const auto& normal_one_form =
+      db::get<StrahlkorperTags::NormalOneForm<Frame::Inertial>>(box);
+  const auto& r_hat = db::get<StrahlkorperTags::Rhat<Frame::Inertial>>(box);
+  const auto& radius = db::get<StrahlkorperTags::Radius<Frame::Inertial>>(box);
+  const auto& jacobian =
+      db::get<StrahlkorperTags::Jacobian<Frame::Inertial>>(box);
+
+  const auto euclidean_area_element = StrahlkorperGr::euclidean_area_element(
+      jacobian, normal_one_form, radius, r_hat);
+
+  // Create arbitrary vector
+  MAKE_GENERATOR(generator);
+  std::uniform_real_distribution<> dist(-1., 1.);
+  const auto test_vector = make_with_random_values<tnsr::I<DataVector, 3>>(
+      make_not_null(&generator), make_not_null(&dist), radius);
+
+  // Test against integrating this scalar.
+  const auto scalar = Scalar<DataVector>(
+      get(dot_product(test_vector, normal_one_form)) /
+      sqrt(get(dot_product(normal_one_form, normal_one_form))));
+
+  const auto integral_1 = StrahlkorperGr::surface_integral_of_scalar(
+      euclidean_area_element, scalar, strahlkorper);
+  const auto integral_2 = StrahlkorperGr::euclidean_surface_integral_of_vector(
+      euclidean_area_element, test_vector, normal_one_form, strahlkorper);
+
+  CHECK(integral_1 == approx(integral_2));
+}
+
 void test_euclidean_area_element(
     const Strahlkorper<Frame::Inertial>& strahlkorper) noexcept {
   const auto box = db::create<
@@ -794,6 +831,8 @@ SPECTRE_TEST_CASE("Unit.ApparentHorizons.StrahlkorperGr.AreaElement",
                                inside_kerr_horizon);
   test_integral_correspondence(gr::Solutions::KerrSchild{mass, spin, center},
                                outside_kerr_horizon);
+
+  test_euclidean_surface_integral_of_vector(kerr_horizon);
 }
 
 SPECTRE_TEST_CASE(

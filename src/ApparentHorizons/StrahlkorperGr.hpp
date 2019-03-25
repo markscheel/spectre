@@ -209,6 +209,24 @@ double surface_integral_of_scalar(
 
 /*!
  * \ingroup SurfacesGroup
+ * \brief Euclidean surface integral of a vector on a 2D `Strahlkorper`
+ *
+ * \details Computes the surface integral \f$\oint V^i s_i d^2S\f$ for a
+ * vector \f$V^i\f$ on a `Strahlkorper` with area element \f$d^2S\f$ and
+ * Euclidean normal one-form \f$s_i\f$ that is normalized according to
+ * \f$s_i s_j \delta^{ij}=1\f$. Note that the input `normal_one_form`
+ * is not assumed to be normalized. The area element can be
+ * computed via `StrahlkorperGr::euclidean_area_element()`.
+ */
+template <typename Frame>
+double euclidean_surface_integral_of_vector(
+    const Scalar<DataVector>& area_element,
+    const tnsr::I<DataVector, 3, Frame>& vector,
+    const tnsr::i<DataVector, 3, Frame>& normal_one_form,
+    const Strahlkorper<Frame>& strahlkorper) noexcept;
+
+/*!
+ * \ingroup SurfacesGroup
  * \brief Spin function of a 2D `Strahlkorper`.
  *
  * \details See Eqs. (2) and (10)

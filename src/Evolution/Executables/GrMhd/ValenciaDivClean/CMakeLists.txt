@@ -2,6 +2,7 @@
 # See LICENSE.txt for details.
 
 set(LIBS_TO_LINK
+  ApparentHorizons
   CoordinateMaps
   DiscontinuousGalerkin
   DomainCreators
@@ -11,6 +12,7 @@ set(LIBS_TO_LINK
   Hydro
   IO
   Informer
+  Interpolation
   Limiters
   LinearOperators
   MathFunctions
@@ -32,7 +34,7 @@ endfunction(add_grmhd_executable)
 
 add_grmhd_executable(
   FishboneMoncriefDisk
-  RelativisticEuler::Solutions::FishboneMoncriefDisk
+  RelativisticEuler::Solutions::FishboneMoncriefDisk,Horizon
   )
 
 add_grmhd_executable(

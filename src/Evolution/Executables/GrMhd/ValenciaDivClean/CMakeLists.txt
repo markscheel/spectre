@@ -2,6 +2,7 @@
 # See LICENSE.txt for details.
 
 set(LIBS_TO_LINK
+  ApparentHorizons
   CoordinateMaps
   DiscontinuousGalerkin
   DomainCreators
@@ -10,6 +11,7 @@ set(LIBS_TO_LINK
   Hydro
   IO
   Informer
+  Interpolation
   Limiters
   LinearOperators
   MathFunctions

@@ -71,3 +71,9 @@ EventsAndTriggers:
 Observers:
   VolumeFileName: "GrMhdVolume"
   ReductionFileName: "GrMhdReductions"
+
+Horizon:
+  Lmax: 10
+  Center: [0.0, 0.0, 0.0]
+  Mass: 1.0
+  DimensionlessSpin: [0.0, 0.0, 0.9375]

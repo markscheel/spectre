@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include "AlgorithmSingleton.hpp"
+#include "ApparentHorizons/Tags.hpp"
 #include "Domain/Creators/RegisterDerivedWithCharm.hpp"
 #include "Domain/Tags.hpp"
 #include "ErrorHandling/FloatingPointExceptions.hpp"
@@ -40,6 +42,20 @@
 #include "NumericalAlgorithms/DiscontinuousGalerkin/Actions/ImposeBoundaryConditions.hpp"  // IWYU pragma: keep
 #include "NumericalAlgorithms/DiscontinuousGalerkin/NumericalFluxes/LocalLaxFriedrichs.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/Tags.hpp"
+#include "NumericalAlgorithms/Interpolation/AddTemporalIdsToInterpolationTarget.hpp"
+#include "NumericalAlgorithms/Interpolation/Callbacks/ObserveTimeSeriesOnSurface.hpp"
+#include "NumericalAlgorithms/Interpolation/CleanUpInterpolator.hpp"
+#include "NumericalAlgorithms/Interpolation/InitializeInterpolationTarget.hpp"
+#include "NumericalAlgorithms/Interpolation/Interpolate.hpp"
+#include "NumericalAlgorithms/Interpolation/InterpolationTarget.hpp"
+#include "NumericalAlgorithms/Interpolation/InterpolationTargetKerrHorizon.hpp"
+#include "NumericalAlgorithms/Interpolation/InterpolationTargetReceiveVars.hpp"
+#include "NumericalAlgorithms/Interpolation/Interpolator.hpp"
+#include "NumericalAlgorithms/Interpolation/InterpolatorReceivePoints.hpp"
+#include "NumericalAlgorithms/Interpolation/InterpolatorReceiveVolumeData.hpp"
+#include "NumericalAlgorithms/Interpolation/InterpolatorRegisterElement.hpp"
+#include "NumericalAlgorithms/Interpolation/Tags.hpp"
+#include "NumericalAlgorithms/Interpolation/TryToInterpolate.hpp"
 #include "Options/Options.hpp"
 #include "Parallel/GotoAction.hpp"
 #include "Parallel/InitializationFunctions.hpp"
@@ -101,8 +117,18 @@ struct EvolutionMetavars {
                     grmhd::ValenciaDivClean::Tags::TildeS<Frame::Inertial>,
                     grmhd::ValenciaDivClean::Tags::TildeB<Frame::Inertial>>>>;
 
+  using domain_frame = Frame::Inertial;
+  static constexpr size_t domain_dim = 3;
+  using interpolator_source_vars = tmpl::list<
+      hydro::Tags::RestMassDensity<DataVector>,
+      hydro::Tags::SpatialVelocity<DataVector, domain_dim, domain_frame>,
+      hydro::Tags::LorentzFactor<DataVector>, gr::Tags::Lapse<DataVector>,
+      gr::Tags::SpatialMetric<domain_dim, domain_frame, DataVector>,
+      gr::Tags::Shift<domain_dim, domain_frame, DataVector>,
+      gr::Tags::SqrtDetSpatialMetric<DataVector>>;
+
   // public for use by the Charm++ registration code
-  using events = tmpl::list<
+  using observation_events = tmpl::list<
       dg::Events::Registrars::ObserveErrorNorms<3, analytic_variables_tags>,
       dg::Events::Registrars::ObserveFields<
           3,
@@ -110,6 +136,10 @@ struct EvolutionMetavars {
               db::get_variables_tags_list<system::variables_tag>,
               db::get_variables_tags_list<system::primitive_variables_tag>>,
           analytic_variables_tags>>;
+  using events = tmpl::push_back<
+      observation_events,
+      intrp::Events::Registrars::Interpolate<3, interpolator_source_vars>>;
+
   using triggers = Triggers::time_triggers;
 
   using step_choosers =
@@ -120,8 +150,29 @@ struct EvolutionMetavars {
       grmhd::ValenciaDivClean::PrimitiveRecoverySchemes::NewmanHamlin,
       grmhd::ValenciaDivClean::PrimitiveRecoverySchemes::PalenzuelaEtAl>;
 
-  using observed_reduction_data_tags =
-      observers::collect_reduction_data_tags<Event<events>::creatable_classes>;
+  struct Horizon {
+    using tags_to_observe = tmpl::list<StrahlkorperGr::Tags::SurfaceIntegral<
+        gr::Tags::Lapse<DataVector>, ::Frame::Inertial>>;
+    using compute_items_on_source = tmpl::list<>;
+    using vars_to_interpolate_to_target = interpolator_source_vars;
+    using compute_items_on_target = tmpl::append<
+        tmpl::list<StrahlkorperGr::Tags::AreaElement<::Frame::Inertial>>,
+        tags_to_observe>;
+    using compute_target_points =
+        intrp::Actions::KerrHorizon<Horizon, ::Frame::Inertial>;
+    using post_interpolation_callback =
+        intrp::callbacks::ObserveTimeSeriesOnSurface<tags_to_observe, Horizon,
+                                                     Horizon>;
+    // This `type` is so this tag can be used to read options.
+    using type = typename compute_target_points::options_type;
+    static constexpr OptionString help{
+        "Options for interpolation onto Horizon.\n\n"};
+  };
+  using interpolation_target_tags = tmpl::list<Horizon>;
+
+  using observed_reduction_data_tags = observers::collect_reduction_data_tags<
+      tmpl::push_back<Event<observation_events>::creatable_classes,
+                      typename Horizon::post_interpolation_callback>>;
 
   using compute_rhs = tmpl::flatten<tmpl::list<
       Actions::ComputeVolumeFluxes,
@@ -146,6 +197,8 @@ struct EvolutionMetavars {
   using component_list = tmpl::list<
       observers::Observer<EvolutionMetavars>,
       observers::ObserverWriter<EvolutionMetavars>,
+      intrp::Interpolator<EvolutionMetavars>,
+      intrp::InterpolationTarget<EvolutionMetavars, Horizon>,
       DgElementArray<
           EvolutionMetavars, grmhd::ValenciaDivClean::Actions::Initialize<3>,
           tmpl::flatten<tmpl::list<
@@ -206,7 +259,8 @@ struct EvolutionMetavars {
 };
 
 static const std::vector<void (*)()> charm_init_node_funcs{
-    &setup_error_handling, &domain::creators::register_derived_with_charm,
+    &setup_error_handling,
+    &domain::creators::register_derived_with_charm,
     &Parallel::register_derived_classes_with_charm<
         Event<metavariables::events>>,
     &Parallel::register_derived_classes_with_charm<

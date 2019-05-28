@@ -239,6 +239,22 @@ struct EuclideanSurfaceIntegral : db::ComputeTag {
                                    StrahlkorperTags::Strahlkorper<Frame>>;
 };
 
+/// Computes the Euclidean-space integral of a vector over a Strahlkorper,
+/// \f$\oint V^i s_i d^2 S\f$, where \f$s_i\f$ is the Strahlkorper surface
+/// unit normal, normalized according to the Euclidean norm
+/// \f$s_i s_j \delta^{ij}=1\f$.
+template <typename IntegrandTag, typename Frame>
+struct EuclideanSurfaceIntegralVector : db::ComputeTag {
+  static std::string name() noexcept {
+    return "EuclideanSurfaceIntegralVector(" + IntegrandTag::name() + ")";
+  }
+  static constexpr auto function =
+      ::StrahlkorperGr::euclidean_surface_integral_of_vector<Frame>;
+  using argument_tags = tmpl::list<EuclideanAreaElement<Frame>, IntegrandTag,
+                                   StrahlkorperTags::NormalOneForm<Frame>,
+                                   StrahlkorperTags::Strahlkorper<Frame>>;
+};
+
 template <typename Frame>
 using items_tags = tmpl::list<Strahlkorper<Frame>>;
 

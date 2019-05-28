@@ -63,6 +63,7 @@
 #include "PointwiseFunctions/AnalyticSolutions/GrMhd/SmoothFlow.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/RelativisticEuler/FishboneMoncriefDisk.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/Tags.hpp"
+#include "PointwiseFunctions/Hydro/MassFluxVector.hpp"
 #include "PointwiseFunctions/Hydro/Tags.hpp"
 #include "Time/Actions/AdvanceTime.hpp"
 #include "Time/Actions/ChangeStepSize.hpp"
@@ -151,15 +152,16 @@ struct EvolutionMetavars {
 
   struct Horizon {
     using tags_to_observe =
-        tmpl::list<StrahlkorperGr::Tags::EuclideanSurfaceIntegralVector<
+        tmpl::list<StrahlkorperTags::EuclideanSurfaceIntegralVector<
             hydro::Tags::MassFluxVector<DataVector, 3, ::Frame::Inertial>,
             ::Frame::Inertial>>;
     using compute_items_on_source = tmpl::list<>;
     using vars_to_interpolate_to_target = interpolator_source_vars;
-    using compute_items_on_target =
-        tmpl::append<tmpl::list<StrahlkorperGr::Tags::EuclideanAreaElement<
-                         ::Frame::Inertial>>,
-                     tags_to_observe>;
+    using compute_items_on_target = tmpl::append<
+        tmpl::list<StrahlkorperTags::EuclideanAreaElement<::Frame::Inertial>,
+                   hydro::Tags::MassFluxVectorCompute<DataVector, 3,
+                                                      ::Frame::Inertial>>,
+        tags_to_observe>;
     using compute_target_points =
         intrp::Actions::KerrHorizon<Horizon, ::Frame::Inertial>;
     using post_interpolation_callback =

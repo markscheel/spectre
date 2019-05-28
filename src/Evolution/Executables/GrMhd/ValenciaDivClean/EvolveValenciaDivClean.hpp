@@ -123,7 +123,6 @@ struct EvolutionMetavars {
       hydro::Tags::RestMassDensity<DataVector>,
       hydro::Tags::SpatialVelocity<DataVector, domain_dim, domain_frame>,
       hydro::Tags::LorentzFactor<DataVector>, gr::Tags::Lapse<DataVector>,
-      gr::Tags::SpatialMetric<domain_dim, domain_frame, DataVector>,
       gr::Tags::Shift<domain_dim, domain_frame, DataVector>,
       gr::Tags::SqrtDetSpatialMetric<DataVector>>;
 
@@ -151,13 +150,16 @@ struct EvolutionMetavars {
       grmhd::ValenciaDivClean::PrimitiveRecoverySchemes::PalenzuelaEtAl>;
 
   struct Horizon {
-    using tags_to_observe = tmpl::list<StrahlkorperGr::Tags::SurfaceIntegral<
-        gr::Tags::Lapse<DataVector>, ::Frame::Inertial>>;
+    using tags_to_observe =
+        tmpl::list<StrahlkorperGr::Tags::EuclideanSurfaceIntegralVector<
+            hydro::Tags::MassFluxVector<DataVector, 3, ::Frame::Inertial>,
+            ::Frame::Inertial>>;
     using compute_items_on_source = tmpl::list<>;
     using vars_to_interpolate_to_target = interpolator_source_vars;
-    using compute_items_on_target = tmpl::append<
-        tmpl::list<StrahlkorperGr::Tags::AreaElement<::Frame::Inertial>>,
-        tags_to_observe>;
+    using compute_items_on_target =
+        tmpl::append<tmpl::list<StrahlkorperGr::Tags::EuclideanAreaElement<
+                         ::Frame::Inertial>>,
+                     tags_to_observe>;
     using compute_target_points =
         intrp::Actions::KerrHorizon<Horizon, ::Frame::Inertial>;
     using post_interpolation_callback =

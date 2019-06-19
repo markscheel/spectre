@@ -86,14 +86,14 @@ struct DgElementArray {
         .start_phase(next_phase);
   }
 
-  template <typename ComponentList, typename PhaseType,
-            Requires<not tmpl::list_contains_v<
-                ComponentList, ::intrp::Interpolator<Metavariables>>> = nullptr>
-  static void try_register_with_interpolator(
-      const PhaseType /*next_phase*/, const ComponentList /*component_list*/,
-      Parallel::CProxy_ConstGlobalCache<
-          Metavariables>& /*global_cache*/) noexcept {}
-
+//-:  template <typename ComponentList, typename PhaseType,
+//-:            Requires<not tmpl::list_contains_v<
+//-:                ComponentList, ::intrp::Interpolator<Metavariables>>> = nullptr>
+//-:  static void try_register_with_interpolator(
+//-:      const PhaseType /*next_phase*/, const ComponentList /*component_list*/,
+//-:      Parallel::CProxy_ConstGlobalCache<
+//-:          Metavariables>& /*global_cache*/) noexcept {}
+//-:
 //-:  template <typename ComponentList, typename PhaseType,
 //-:            Requires<tmpl::list_contains_v<
 //-:                ComponentList, typename ::intrp::Interpolator<Metavariables>>> =

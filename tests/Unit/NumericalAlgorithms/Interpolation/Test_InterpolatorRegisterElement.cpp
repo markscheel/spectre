@@ -42,14 +42,19 @@ struct mock_interpolator {
           tmpl::list<intrp::Actions::InitializeInterpolator>>,
       Parallel::PhaseActions<typename Metavariables::Phase,
                              Metavariables::Phase::Registration, tmpl::list<>>>;
+  using initial_databox = db::compute_databox_type<
+      typename ::intrp::Actions::InitializeInterpolator::
+          template return_tag_list<Metavariables>>;
   using component_being_mocked = intrp::Interpolator<Metavariables>;
-
+};
+  
 template <typename Metavariables>
 struct mock_element {
   using metavariables = Metavariables;
   using chare_type = ActionTesting::MockArrayChare;
   using array_index = size_t;
   using const_global_cache_tag_list = tmpl::list<>;
+  using add_options_to_databox = Parallel::AddNoOptionsToDataBox;
   using phase_dependent_action_list = tmpl::list<
       Parallel::PhaseActions<typename Metavariables::Phase,
                              Metavariables::Phase::Initialization,

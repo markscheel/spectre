@@ -21,6 +21,8 @@
 #include "NumericalAlgorithms/Interpolation/InterpolatedVars.hpp"  // IWYU pragma: keep
 #include "NumericalAlgorithms/Interpolation/InterpolatorRegisterElement.hpp"  // IWYU pragma: keep
 #include "NumericalAlgorithms/Spectral/Spectral.hpp"
+#include "Parallel/AddOptionsToDataBox.hpp"
+#include "Parallel/PhaseDependentActionList.hpp"  // IWYU pragma: keep
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Time/Slab.hpp"
 #include "Time/Tags.hpp"
@@ -99,7 +101,10 @@ struct mock_interpolator {
   using chare_type = ActionTesting::MockArrayChare;
   using array_index = size_t;
   using const_global_cache_tag_list = tmpl::list<>;
-  using action_list = tmpl::list<>;
+  using add_options_to_databox = Parallel::AddNoOptionsToDataBox;
+  using phase_dependent_action_list = tmpl::list<Parallel::PhaseActions<
+      typename Metavariables::Phase, Metavariables::Phase::Initialization,
+      tmpl::list<intrp::Actions::InitializeInterpolator>>>;
   using initial_databox = db::compute_databox_type<
       typename ::intrp::Actions::InitializeInterpolator::
           template return_tag_list<Metavariables>>;
@@ -111,7 +116,11 @@ struct mock_element {
   using chare_type = ActionTesting::MockArrayChare;
   using array_index = ElementIndex<Metavariables::domain_dim>;
   using const_global_cache_tag_list = tmpl::list<>;
-  using action_list = tmpl::list<>;
+  using add_options_to_databox = Parallel::AddNoOptionsToDataBox;
+  using phase_dependent_action_list =
+      tmpl::list<Parallel::PhaseActions<typename Metavariables::Phase,
+                                        Metavariables::Phase::Initialization,
+                                        tmpl::list<>>>;
   using initial_databox = db::compute_databox_type<db::AddSimpleTags<>>;
 };
 
@@ -128,7 +137,7 @@ struct MockMetavariables {
   using component_list = tmpl::list<mock_interpolator<MockMetavariables>,
                                     mock_element<MockMetavariables>>;
   using const_global_cache_tag_list = tmpl::list<>;
-  enum class Phase { Initialize, Exit };
+  enum class Phase { Initialization, Testing, Exit };
 };
 
 SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.Interpolator.InterpolateEvent",
@@ -137,21 +146,16 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.Interpolator.InterpolateEvent",
   const ElementId<metavars::domain_dim> element_id(2);
   const ElementIndex<metavars::domain_dim> array_index(element_id);
 
-  using MockRuntimeSystem = ActionTesting::MockRuntimeSystem<metavars>;
-  typename MockRuntimeSystem::TupleOfMockDistributedObjects dist_objects{};
-  tuples::get<typename MockRuntimeSystem::template MockDistributedObjectsTag<
-      mock_interpolator<metavars>>>(dist_objects)
-      .emplace(
-          0,
-          ActionTesting::MockDistributedObject<mock_interpolator<metavars>>{});
-  tuples::get<typename MockRuntimeSystem::template MockDistributedObjectsTag<
-      mock_element<metavars>>>(dist_objects)
-      .emplace(array_index,
-               ActionTesting::MockDistributedObject<mock_element<metavars>>{});
-  MockRuntimeSystem runner{{}, std::move(dist_objects)};
-
-  runner.simple_action<mock_interpolator<metavars>,
-                       ::intrp::Actions::InitializeInterpolator>(0);
+  using interp_component = mock_interpolator<metavars>;
+  using elem_component = mock_element<metavars>;
+  ActionTesting::MockRuntimeSystem<metavars> runner{{}};
+  runner.set_phase(metavars::Phase::Initialization);
+  ActionTesting::emplace_component<interp_component>(&runner, 0);
+  ActionTesting::next_action<interp_component>(make_not_null(&runner), 0);
+  ActionTesting::emplace_component<elem_component>(&runner, array_index);
+  ActionTesting::next_action<elem_component>(make_not_null(&runner),
+                                             array_index);
+  runner.set_phase(metavars::Phase::Testing);
 
   const Mesh<metavars::domain_dim> mesh(5, Spectral::Basis::Legendre,
                                         Spectral::Quadrature::GaussLobatto);
@@ -177,15 +181,14 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.Interpolator.InterpolateEvent",
   auto event = std::make_unique<InterpolationEvent>(InterpolationEvent{});
 
   event->run(box, runner.cache(), array_index,
-             std::add_pointer_t<mock_element<metavars>>{});
+             std::add_pointer_t<elem_component>{});
 
   // Invoke all actions
-  runner.invoke_queued_simple_action<mock_interpolator<metavars>>(0);
+  runner.invoke_queued_simple_action<interp_component>(0);
 
   // No more queued simple actions.
-  CHECK(runner.is_simple_action_queue_empty<mock_interpolator<metavars>>(0));
-  CHECK(
-      runner.is_simple_action_queue_empty<mock_element<metavars>>(array_index));
+  CHECK(runner.is_simple_action_queue_empty<interp_component>(0));
+  CHECK(runner.is_simple_action_queue_empty<elem_component>(array_index));
 
   const auto& results = MockInterpolatorReceiveVolumeData::results;
   CHECK(results.temporal_id.time().value() == observation_time);

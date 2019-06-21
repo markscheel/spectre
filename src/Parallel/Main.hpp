@@ -89,6 +89,27 @@ class Main : public CBase_Main<Metavariables> {
 
 // ================================================================
 
+// Small helper function used below for constructing singleton
+// ParallelComponents.
+//
+// For singletons, all members of add_options_to_databox::simple_tags
+// must have a function convert_option_to_constructor_argument that
+// takes an object returned from option parsing, and returns an object
+// that can be passed into the constructor of the singleton.  An
+// example usage is when the option parser returns a DomainCreator and
+// the constructor expects a Domain.  If there is no need for a
+// conversion, convert_option_to_constructor_argument should simply
+// return its argument.
+template <typename... SimpleTags, typename... Options>
+tuples::TaggedTuple<SimpleTags...> create_tagged_tuple_for_singleton(
+    tmpl::list<SimpleTags...> /*meta*/, Options&&... options) noexcept {
+  return {SimpleTags::convert_option_to_constructor_argument(
+      std::forward<Options>(options))...};
+  //  return {std::forward<Options>(options)...};
+}
+
+// ================================================================
+
 template <typename Metavariables>
 Main<Metavariables>::Main(CkArgMsg* msg) noexcept
     : options_(Metavariables::help) {
@@ -297,8 +318,8 @@ Main<Metavariables>::Main(CkArgMsg* msg) noexcept
             options_
                 .template apply<typename add_options_to_databox::simple_tags,
                                 Metavariables>([](auto... args) noexcept {
-                  return tuples::tagged_tuple_from_typelist<
-                      typename add_options_to_databox::simple_tags>(
+                  return create_tagged_tuple_for_singleton(
+                      typename add_options_to_databox::simple_tags{},
                       std::move(args)...);
                 }));
   });

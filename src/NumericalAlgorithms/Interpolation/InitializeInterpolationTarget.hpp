@@ -116,11 +116,28 @@ struct InitializeInterpolationTarget {
                    typename initialize_interpolation_target_detail::
                        initialization_tags<InterpolationTargetTag>::type>;
 
+  // Custom tag for Domain that contains convert_from_option, which
+  // makes a Domain out of a DomainCreator.
+  // This tag will be used at the beginning of the initialization,
+  // and will then be replaced with the general Domain tag below.
+  template <size_t VolumeDim, typename Frame>
+  struct CustomDomainTag : db::SimpleTag {
+    static std::string name() noexcept { return "Domain"; }
+    using type = ::Domain<VolumeDim, Frame>;
+
+    using option_tag = OptionTags::DomainCreator<VolumeDim, Frame>;
+    static ::Domain<VolumeDim, Frame> convert_from_option(
+        const std::unique_ptr<DomainCreator<VolumeDim, Frame>>&
+            creator) noexcept {
+      return creator->create_domain();
+    }
+  };
+
   template <typename Metavariables>
   struct AddOptionsToDataBox {
     using simple_tags =
-        tmpl::list<::Tags::Domain<Metavariables::domain_dim,
-                                  typename Metavariables::domain_frame>>;
+        tmpl::list<CustomDomainTag<Metavariables::domain_dim,
+                                   typename Metavariables::domain_frame>>;
     template <typename DbTagsList>
     static auto apply(db::DataBox<DbTagsList>&& box,
                       ::Domain<Metavariables::domain_dim,
@@ -134,28 +151,51 @@ struct InitializeInterpolationTarget {
   template <
       typename DbTagsList, typename... InboxTags, typename Metavariables,
       typename ArrayIndex, typename ActionList, typename ParallelComponent,
-      Requires<tmpl::list_contains_v<
-                   DbTagsList,
-                   ::Tags::Domain<Metavariables::domain_dim,
-                                  typename Metavariables::domain_frame>> and
-               not tmpl::list_contains_v<
-                   DbTagsList, Tags::IndicesOfFilledInterpPoints>> = nullptr>
+      Requires<
+          tmpl::list_contains_v<
+              DbTagsList, CustomDomainTag<Metavariables::domain_dim,
+                                   typename Metavariables::domain_frame>> and
+          not tmpl::list_contains_v<
+              DbTagsList, Tags::IndicesOfFilledInterpPoints>> = nullptr>
   static auto apply(db::DataBox<DbTagsList>& box,
                     const tuples::TaggedTuple<InboxTags...>& /*inboxes*/,
                     const Parallel::ConstGlobalCache<Metavariables>& cache,
                     const ArrayIndex& /*array_index*/,
                     const ActionList /*meta*/,
                     const ParallelComponent* const /*meta*/) noexcept {
+    using custom_domain_tag =
+        CustomDomainTag<Metavariables::domain_dim,
+                        typename Metavariables::domain_frame>;
+    using general_domain_tag = ::Tags::Domain<Metavariables::domain_dim,
+                                          typename Metavariables::domain_frame>;
+    // We needed custom_domain_tag for option parsing reasons, but in
+    // the DataBox we return, we want the Domain to be available under
+    // the general_domain_tag.
+
+    // So first grab Domain from the DataBox.
+    db::item_type<custom_domain_tag> domain{};
+    db::mutate<custom_domain_tag>(
+        make_not_null(&box), [&domain](const auto domain_ptr) noexcept {
+          domain = std::move(*domain_ptr);
+        });
+
+    // Second, when constructing the new DataBox, remove
+    // custom_domain_tag and insert the Domain under
+    // general_domain_tag.
     return initialize_interpolation_target_detail::make_tuple_of_box<
         InterpolationTargetTag>(
-        db::create_from<db::RemoveTags<>,
-                        db::get_items<return_tag_list_initial<Metavariables>>>(
+        db::create_from<
+            db::RemoveTags<custom_domain_tag>,
+            tmpl::push_back<
+                db::get_items<return_tag_list_initial<Metavariables>>,
+                general_domain_tag>>(
             std::move(box), db::item_type<Tags::IndicesOfFilledInterpPoints>{},
             db::item_type<Tags::TemporalIds<Metavariables>>{},
             db::item_type<Tags::CompletedTemporalIds<Metavariables>>{},
             db::item_type<
                 ::Tags::Variables<typename InterpolationTargetTag::
-                                      vars_to_interpolate_to_target>>{}),
+                                      vars_to_interpolate_to_target>>{},
+            std::move(domain)),
         cache);
   }
 

@@ -30,6 +30,25 @@
 #include "Parallel/Main.decl.h"
 
 namespace Parallel {
+namespace detail {
+template <typename InitializationTag>
+struct get_option_tag {
+  using type = typename InitializationTag::option_tag;
+};
+
+// For singletons, all members of add_options_to_databox::simple_tags
+// must have a function convert_from_option that takes an object
+// returned from option parsing, and returns an object that can be
+// passed into the constructor of the singleton.  An example usage is
+// when the option parser returns a DomainCreator and the constructor
+// expects a Domain.  If there is no need for a conversion,
+// convert_from_option should simply return its argument.
+template <typename... SimpleTags, typename... Options>
+tuples::TaggedTuple<SimpleTags...> get_initial_tags_from_option_tags(
+    tmpl::list<SimpleTags...> /*meta*/, Options&&... opts) noexcept {
+  return {SimpleTags::convert_from_option(std::forward<Options>(opts))...};
+}
+}  // namespace detail
 
 /// \ingroup ParallelGroup
 /// The main function of a Charm++ executable.
@@ -270,12 +289,13 @@ Main<Metavariables>::Main(CkArgMsg* msg) noexcept
         ParallelComponentProxy::ckNew(
             const_global_cache_proxy_,
             options_.template apply<
-                typename add_options_to_databox::simple_tags, Metavariables>(
-                [](auto... args) noexcept {
-                  return tuples::tagged_tuple_from_typelist<
-                      typename add_options_to_databox::simple_tags>(
-                      std::move(args)...);
-                }),
+                tmpl::transform<typename add_options_to_databox::simple_tags,
+                                detail::get_option_tag<tmpl::_1>>,
+                Metavariables>([](auto... args) noexcept {
+              return detail::get_initial_tags_from_option_tags(
+                  typename add_options_to_databox::simple_tags{},
+                  std::move(args)...);
+            }),
             &const_global_cache_dependency);
   });
 
@@ -294,13 +314,14 @@ Main<Metavariables>::Main(CkArgMsg* msg) noexcept
     tuples::get<tmpl::type_<ParallelComponentProxy>>(the_parallel_components) =
         ParallelComponentProxy::ckNew(
             const_global_cache_proxy_,
-            options_
-                .template apply<typename add_options_to_databox::simple_tags,
-                                Metavariables>([](auto... args) noexcept {
-                  return tuples::tagged_tuple_from_typelist<
-                      typename add_options_to_databox::simple_tags>(
-                      std::move(args)...);
-                }));
+            options_.template apply<
+                tmpl::transform<typename add_options_to_databox::simple_tags,
+                                detail::get_option_tag<tmpl::_1>>,
+                Metavariables>([](auto... args) noexcept {
+              return detail::get_initial_tags_from_option_tags(
+                  typename add_options_to_databox::simple_tags{},
+                  std::move(args)...);
+            }));
   });
 
   // Create proxies for empty array chares (which are created by the

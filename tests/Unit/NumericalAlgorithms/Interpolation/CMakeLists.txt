@@ -21,6 +21,7 @@ set(LIBRARY_SOURCES
   Test_LagrangePolynomial.cpp
   Test_ObserveTimeSeriesOnSurface.cpp
   Test_ParallelInterpolator.cpp
+  Test_RegisterTargetWithObserver.cpp
   Test_RegularGridInterpolant.cpp
   )
 

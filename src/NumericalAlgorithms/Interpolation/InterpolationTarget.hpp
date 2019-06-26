@@ -103,6 +103,27 @@ namespace intrp {
 ///      The dimension of the Domain.
 template <class Metavariables, typename InterpolationTargetTag>
 struct InterpolationTarget {
+ private:
+  struct RegistrationHelper {
+    template <typename ParallelComponent, typename DbTagsList,
+              typename ArrayIndex>
+    static std::pair<observers::TypeOfObservation, observers::ObservationId>
+    register_info(const db::DataBox<DbTagsList>& /*box*/,
+                  const ArrayIndex& /*array_index*/) noexcept {
+      observers::ObservationId fake_initial_observation_id{
+          0.,
+          // Currently this ignores anything in
+          // post_interpolation_callback::observation_types except the first
+          // element.  This will be changed in an upcoming PR, which
+          // will modify RegisterSingletonWithObserverWriter.
+          tmpl::front<typename InterpolationTargetTag::
+                          post_interpolation_callback::observation_types>{}};
+      return {
+          observers::TypeOfObservation::Reduction,
+          std::move(fake_initial_observation_id)  // NOLINT
+      };
+    }
+  };
   using chare_type = ::Parallel::Algorithms::Singleton;
   using const_global_cache_tag_list = Parallel::get_const_global_cache_tags<
       tmpl::list<typename InterpolationTargetTag::compute_target_points,
@@ -121,8 +142,8 @@ struct InterpolationTarget {
                      Parallel::Actions::TerminatePhase>>,
       Parallel::PhaseActions<
           typename Metavariables::Phase, Metavariables::Phase::Register,
-          tmpl::list<intrp::Actions::RegisterTargetWithObserver<
-                         InterpolationTargetTag>,
+          tmpl::list<::observers::Actions::RegisterSingletonWithObserverWriter<
+                         RegistrationHelper>,
                      Parallel::Actions::TerminatePhase>>>;
   static void initialize(
       Parallel::CProxy_ConstGlobalCache<metavariables>& /*global_cache*/,

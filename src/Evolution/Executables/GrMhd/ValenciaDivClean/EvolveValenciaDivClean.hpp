@@ -56,7 +56,6 @@
 #include "NumericalAlgorithms/Interpolation/InterpolatorReceivePoints.hpp"
 #include "NumericalAlgorithms/Interpolation/InterpolatorReceiveVolumeData.hpp"
 #include "NumericalAlgorithms/Interpolation/InterpolatorRegisterElement.hpp"
-#include "NumericalAlgorithms/Interpolation/RegisterTargetWithObserver.hpp"
 #include "NumericalAlgorithms/Interpolation/Tags.hpp"
 #include "NumericalAlgorithms/Interpolation/TryToInterpolate.hpp"
 #include "Options/Options.hpp"

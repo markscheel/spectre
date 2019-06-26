@@ -103,7 +103,6 @@ namespace intrp {
 ///      The dimension of the Domain.
 template <class Metavariables, typename InterpolationTargetTag>
 struct InterpolationTarget {
- private:
   struct RegistrationHelper {
     template <typename ParallelComponent, typename DbTagsList,
               typename ArrayIndex>

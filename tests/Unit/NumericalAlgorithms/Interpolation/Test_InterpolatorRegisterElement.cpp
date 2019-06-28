@@ -69,6 +69,7 @@ struct MockMetavariables {
   struct InterpolatorTargetA {
     using vars_to_interpolate_to_target =
         tmpl::list<gr::Tags::Lapse<DataVector>>;
+    using compute_items_on_target = tmpl::list<>;
   };
   using temporal_id = ::Tags::TimeId;
   static constexpr size_t domain_dim = 3;

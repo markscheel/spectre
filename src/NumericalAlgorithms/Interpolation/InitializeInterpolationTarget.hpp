@@ -65,21 +65,20 @@ template <
     typename InterpolationTargetTag, typename DbTags, typename Metavariables,
     Requires<not has_empty_initialization_tags_v<InterpolationTargetTag>> =
         nullptr>
-auto make_tuple_of_box(
+auto make_initial_box(
     db::DataBox<DbTags>&& box,
     const Parallel::ConstGlobalCache<Metavariables>& cache) noexcept {
-  return std::make_tuple(
-      InterpolationTargetTag::compute_target_points::initialize(std::move(box),
-                                                                cache));
+  return InterpolationTargetTag::compute_target_points::initialize(
+      std::move(box), cache);
 }
 
 template <
     typename InterpolationTargetTag, typename DbTags, typename Metavariables,
     Requires<has_empty_initialization_tags_v<InterpolationTargetTag>> = nullptr>
-auto make_tuple_of_box(
+auto make_initial_box(
     db::DataBox<DbTags>&& box,
     const Parallel::ConstGlobalCache<Metavariables>& /*cache*/) noexcept {
-  return std::make_tuple(std::move(box));
+  return std::move(box);
 }
 
 }  // namespace initialize_interpolation_target_detail
@@ -182,7 +181,7 @@ struct InitializeInterpolationTarget {
     // Second, when constructing the new DataBox, remove
     // custom_domain_tag and insert the Domain under
     // general_domain_tag.
-    return initialize_interpolation_target_detail::make_tuple_of_box<
+    auto new_box = initialize_interpolation_target_detail::make_initial_box<
         InterpolationTargetTag>(
         db::create_from<
             db::RemoveTags<custom_domain_tag>,
@@ -197,6 +196,15 @@ struct InitializeInterpolationTarget {
                                       vars_to_interpolate_to_target>>{},
             std::move(domain)),
         cache);
+    // compute_items_on_target will depend on compute items added in
+    // make_initial_box, so compute_items_on_target must be added
+    // in a separate step.
+    return std::make_tuple(
+        db::create_from<
+            db::RemoveTags<>, db::AddSimpleTags<>,
+            db::AddComputeTags<
+                typename InterpolationTargetTag::compute_items_on_target>>(
+            std::move(new_box)));
   }
 
   template <typename DbTagsList, typename... InboxTags, typename Metavariables,

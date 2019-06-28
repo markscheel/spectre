@@ -83,7 +83,9 @@ struct mock_interpolation_target {
   using phase_dependent_action_list = tmpl::list<
       Parallel::PhaseActions<
           typename Metavariables::Phase, Metavariables::Phase::Initialization,
-          tmpl::list<ActionTesting::InitializeDataBox<simple_tags>>>,
+          tmpl::list<ActionTesting::InitializeDataBox<
+              simple_tags,
+              typename InterpolationTargetTag::compute_items_on_target>>>,
       Parallel::PhaseActions<typename Metavariables::Phase,
                              Metavariables::Phase::Testing, tmpl::list<>>>;
   using add_options_to_databox =

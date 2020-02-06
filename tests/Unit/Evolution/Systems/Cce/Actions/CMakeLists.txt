@@ -8,6 +8,7 @@ set(LIBRARY_SOURCES
   Test_CharacteristicEvolutionBondiCalculations.cpp
   Test_EnqueueInterpolationScriData.cpp
   Test_FilterSwshVolumeQuantity.cpp
+  Test_GHBoundaryCommunication.cpp
   Test_H5BoundaryCommunication.cpp
   Test_InitializeCharacteristicEvolution.cpp
   Test_InitializeWorldtubeBoundary.cpp

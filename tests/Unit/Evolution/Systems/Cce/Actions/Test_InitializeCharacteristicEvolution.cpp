@@ -79,6 +79,7 @@ struct metavariables {
       Spectral::Swsh::Tags::Derivative<Tags::GaugeOmega,
                                        Spectral::Swsh::Tags::Eth>>>;
 
+  using scri_values_to_observe = tmpl::list<>;
   using cce_integrand_tags = tmpl::flatten<tmpl::transform<
       bondi_hypersurface_step_tags,
       tmpl::bind<integrand_terms_to_compute_for_bondi_variable, tmpl::_1>>>;
@@ -148,12 +149,13 @@ SPECTRE_TEST_CASE(
   const double start_time = value_dist(gen);
   const double end_time = std::numeric_limits<double>::infinity();
   const double target_step_size = 0.01 * value_dist(gen);
+  const size_t scri_plus_interpolation_order = 3;
 
   runner.set_phase(metavariables::Phase::Initialization);
   ActionTesting::emplace_component<component>(
       &runner, 0, start_time,
       InitializationTags::EndTime::create_from_options(end_time, filename),
-      target_step_size);
+      target_step_size, scri_plus_interpolation_order);
 
   // this should run the initialization
   ActionTesting::next_action<component>(make_not_null(&runner), 0);

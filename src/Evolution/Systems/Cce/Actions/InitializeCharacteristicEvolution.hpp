@@ -13,6 +13,7 @@
 #include "DataStructures/DataBox/Prefixes.hpp"
 #include "Evolution/Systems/Cce/InitializeCce.hpp"
 #include "Evolution/Systems/Cce/OptionTags.hpp"
+#include "Evolution/Systems/Cce/ScriPlusInterpolationManager.hpp"
 #include "Evolution/Systems/Cce/Tags.hpp"
 #include "NumericalAlgorithms/Spectral/SwshInterpolation.hpp"
 #include "Parallel/Info.hpp"
@@ -78,13 +79,16 @@ namespace Actions {
  *  - `Tags::Variables<metavariables::cce_swsh_derivative_tags>`
  *  - `Spectral::Swsh::Tags::NumberOfRadialPoints`
  *  - `Tags::EndTime`
- *  - `Spectral::Swsh::Tags::SwshInterpolator<Tags::CauchyAngularCoords>`
+ *  - `Spectral::Swsh::Tags::SwshInterpolator< Tags::CauchyAngularCoords>`
+ *  - `Cce::Tags::InterpolationManager<ComplexDataVector, Tag>` for each `Tag`
+ * in `scri_values_to_observe`
  * - Removes: nothing
  */
 struct InitializeCharacteristicEvolution {
   using initialization_tags =
       tmpl::list<InitializationTags::StartTime, InitializationTags::EndTime,
-                 InitializationTags::TargetStepSize>;
+                 InitializationTags::TargetStepSize,
+                 InitializationTags::ScriInterpolationOrder>;
   using const_global_cache_tags =
       tmpl::list<::Tags::TimeStepper<TimeStepper>, InitializationTags::LMax,
                  InitializationTags::NumberOfRadialPoints>;
@@ -216,6 +220,39 @@ struct InitializeCharacteristicEvolution {
     }
   };
 
+  template <typename Metavariables>
+  struct ScriObservationTags {
+    template <typename TagList>
+    static auto initialize(
+        db::DataBox<TagList>&& box,
+        const Parallel::ConstGlobalCache<Metavariables>& cache) noexcept {
+      return initialize_impl(std::move(box), cache,
+                             typename Metavariables::scri_values_to_observe{});
+    }
+    template <typename TagList, typename... TagPack>
+    static auto initialize_impl(
+        db::DataBox<TagList>&& box,
+        const Parallel::ConstGlobalCache<Metavariables>& cache,
+        tmpl::list<TagPack...> /*meta*/) noexcept {
+      const size_t target_number_of_points =
+          db::get<InitializationTags::ScriInterpolationOrder>(box);
+      const size_t vector_size =
+          Spectral::Swsh::number_of_swsh_collocation_points(
+              Parallel::get<Spectral::Swsh::Tags::LMax>(cache));
+      return Initialization::merge_into_databox<
+          InitializeCharacteristicEvolution,
+          db::AddSimpleTags<
+              Tags::InterpolationManager<ComplexDataVector, TagPack>...>,
+          db::AddComputeTags<>, Initialization::MergePolicy::Overwrite>(
+          std::move(box),
+          ScriPlusInterpolationManager<ComplexDataVector, TagPack>{
+              target_number_of_points, vector_size,
+              std::make_unique<intrp::BarycentricRationalSpanInterpolator>(
+                  2 * target_number_of_points - 1,
+                  2 * target_number_of_points + 2)}...);
+    }
+  };
+
   template <class Metavariables>
   using return_tag_list = tmpl::append<
       typename EvolutionTags<Metavariables>::evolution_simple_tags,
@@ -241,13 +278,16 @@ struct InitializeCharacteristicEvolution {
     auto characteristic_evolution_box =
         CharacteristicTags<Metavariables>::initialize(std::move(evolution_box),
                                                       cache);
-    auto initialization_moved_box =
+    auto initialization_transferred_box =
         Initialization::merge_into_databox<InitializeCharacteristicEvolution,
                                            db::AddSimpleTags<Tags::EndTime>,
                                            db::AddComputeTags<>>(
             std::move(characteristic_evolution_box),
             db::get<InitializationTags::EndTime>(characteristic_evolution_box));
-    return std::make_tuple(std::move(initialization_moved_box));
+
+    auto scri_initialized_box = ScriObservationTags<Metavariables>::initialize(
+        std::move(initialization_transferred_box), cache);
+    return std::make_tuple(std::move(scri_initialized_box));
   }
 
   template <typename DbTags, typename... InboxTags, typename Metavariables,

@@ -239,6 +239,8 @@ struct InitializeCharacteristicEvolution {
       const size_t vector_size =
           Spectral::Swsh::number_of_swsh_collocation_points(
               Parallel::get<Spectral::Swsh::Tags::LMax>(cache));
+      // avoid erroneous compiler warnings that the variable is unused.
+      (void)vector_size;
       return Initialization::merge_into_databox<
           InitializeCharacteristicEvolution,
           db::AddSimpleTags<

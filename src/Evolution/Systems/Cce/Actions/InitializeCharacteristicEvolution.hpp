@@ -46,6 +46,7 @@ namespace Actions {
  *  - `Tags::TimeStepId`
  *  - `Tags::Next<Tags::TimeStepId>`
  *  - `Tags::TimeStep`
+ *  - `Tags::Time`
  *  -
  * ```
  * Tags::HistoryEvolvedVariables<
@@ -99,15 +100,18 @@ struct InitializeCharacteristicEvolution {
         typename Metavariables::evolved_coordinates_variables_tag;
     using dt_coordinate_variables_tag =
         db::add_tag_prefix<::Tags::dt, coordinate_variables_tag>;
+    using evolved_swsh_variables_tag =
+        ::Tags::Variables<tmpl::list<typename Metavariables::evolved_swsh_tag>>;
+    using evolved_swsh_dt_variables_tag =
+        db::add_tag_prefix<::Tags::dt, evolved_swsh_variables_tag>;
+
     using evolution_simple_tags = db::AddSimpleTags<
         ::Tags::TimeStepId, ::Tags::Next<::Tags::TimeStepId>, ::Tags::TimeStep,
+        ::Tags::Time,
         ::Tags::HistoryEvolvedVariables<coordinate_variables_tag,
                                         dt_coordinate_variables_tag>,
-        ::Tags::HistoryEvolvedVariables<
-            ::Tags::Variables<
-                tmpl::list<typename Metavariables::evolved_swsh_tag>>,
-            ::Tags::Variables<
-                tmpl::list<typename Metavariables::evolved_swsh_dt_tag>>>>;
+        ::Tags::HistoryEvolvedVariables<evolved_swsh_variables_tag,
+                                        evolved_swsh_dt_variables_tag>>;
     using evolution_compute_tags =
         db::AddComputeTags<::Tags::SubstepTimeCompute>;
 
@@ -135,10 +139,7 @@ struct InitializeCharacteristicEvolution {
           coordinate_history;
 
       db::item_type<::Tags::HistoryEvolvedVariables<
-          ::Tags::Variables<
-              tmpl::list<typename Metavariables::evolved_swsh_tag>>,
-          ::Tags::Variables<
-              tmpl::list<typename Metavariables::evolved_swsh_dt_tag>>>>
+          evolved_swsh_variables_tag, evolved_swsh_dt_variables_tag>>
           swsh_history;
 
       return Initialization::merge_into_databox<
@@ -146,7 +147,8 @@ struct InitializeCharacteristicEvolution {
           evolution_compute_tags, Initialization::MergePolicy::Overwrite>(
           std::move(box), std::move(initial_time_id),  // NOLINT
           std::move(second_time_id), fixed_time_step,  // NOLINT
-          std::move(coordinate_history), std::move(swsh_history));
+          initial_time_value, std::move(coordinate_history),
+          std::move(swsh_history));
     }
   };
 
@@ -176,8 +178,9 @@ struct InitializeCharacteristicEvolution {
         db::add_tag_prefix<::Tags::dt, coordinate_variables_tag>;
     using evolved_swsh_variables_tag =
         ::Tags::Variables<tmpl::list<typename Metavariables::evolved_swsh_tag>>;
-    using evolved_swsh_dt_variables_tag = ::Tags::Variables<
-        tmpl::list<typename Metavariables::evolved_swsh_dt_tag>>;
+    using evolved_swsh_dt_variables_tag =
+        db::add_tag_prefix<::Tags::dt, evolved_swsh_variables_tag>;
+
     template <typename TagList>
     static auto initialize(
         db::DataBox<TagList>&& box,

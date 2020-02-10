@@ -188,9 +188,9 @@ SPECTRE_TEST_CASE(
       component, ::Tags::HistoryEvolvedVariables<
                      ::Tags::Variables<
                          tmpl::list<typename metavariables::evolved_swsh_tag>>,
-                     ::Tags::Variables<tmpl::list<
-                         typename metavariables::evolved_swsh_dt_tag>>>>(runner,
-                                                                         0);
+                     ::Tags::dt<::Tags::Variables<tmpl::list<
+                         typename metavariables::evolved_swsh_dt_tag>>>>>(
+      runner, 0);
   CHECK(evolved_swsh_history.size() == 0);
 
   // the tensor storage variables inserted during the `CharacteristicTags` step
@@ -247,8 +247,8 @@ SPECTRE_TEST_CASE(
             number_of_radial_points);
 
   const auto& evolved_swsh_dt_variables = ActionTesting::get_databox_tag<
-      component, ::Tags::Variables<
-                     tmpl::list<typename metavariables::evolved_swsh_dt_tag>>>(
+      component, ::Tags::dt<::Tags::Variables<
+                     tmpl::list<typename metavariables::evolved_swsh_dt_tag>>>>(
       runner, 0);
   CHECK(evolved_swsh_dt_variables.number_of_grid_points() ==
         Spectral::Swsh::number_of_swsh_collocation_points(l_max) *

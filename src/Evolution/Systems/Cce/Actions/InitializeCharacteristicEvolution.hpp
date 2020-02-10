@@ -86,8 +86,8 @@ struct InitializeCharacteristicEvolution {
       tmpl::list<InitializationTags::StartTime, InitializationTags::EndTime,
                  InitializationTags::TargetStepSize>;
   using const_global_cache_tags =
-      tmpl::list<::Tags::TimeStepper<TimeStepper>, Spectral::Swsh::Tags::LMax,
-                 Spectral::Swsh::Tags::NumberOfRadialPoints>;
+      tmpl::list<::Tags::TimeStepper<TimeStepper>, InitializationTags::LMax,
+                 InitializationTags::NumberOfRadialPoints>;
 
   template <typename Metavariables>
   struct EvolutionTags {

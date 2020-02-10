@@ -151,7 +151,7 @@ struct H5WorldtubeBoundaryDataManager : db::SimpleTag {
   }
 };
 
-struct LMax : db::SimpleTag {
+struct LMax : Spectral::Swsh::Tags::LMax {
   using type = size_t;
   using option_tags = tmpl::list<OptionTags::LMax>;
 
@@ -160,7 +160,7 @@ struct LMax : db::SimpleTag {
   }
 };
 
-struct NumberOfRadialPoints : db::SimpleTag {
+struct NumberOfRadialPoints : Spectral::Swsh::Tags::NumberOfRadialPoints {
   using type = size_t;
   using option_tags = tmpl::list<OptionTags::NumberOfRadialPoints>;
 

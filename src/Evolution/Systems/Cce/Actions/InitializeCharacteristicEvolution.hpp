@@ -104,7 +104,6 @@ struct InitializeCharacteristicEvolution {
         ::Tags::Variables<tmpl::list<typename Metavariables::evolved_swsh_tag>>;
     using evolved_swsh_dt_variables_tag =
         db::add_tag_prefix<::Tags::dt, evolved_swsh_variables_tag>;
-
     using evolution_simple_tags = db::AddSimpleTags<
         ::Tags::TimeStepId, ::Tags::Next<::Tags::TimeStepId>, ::Tags::TimeStep,
         ::Tags::Time,
@@ -122,7 +121,6 @@ struct InitializeCharacteristicEvolution {
       const double initial_time_value =
           db::get<InitializationTags::StartTime>(box);
       const double step_size = db::get<InitializationTags::TargetStepSize>(box);
-
       const Slab single_step_slab{initial_time_value,
                                   initial_time_value + step_size};
       const Time initial_time = single_step_slab.start();
@@ -274,10 +272,6 @@ struct InitializeCharacteristicEvolution {
                     const ArrayIndex& /*array_index*/,
                     const ActionList /*meta*/,
                     const ParallelComponent* const /*meta*/) noexcept {
-    const double initial_time_value =
-        db::get<InitializationTags::StartTime>(box);
-    const double step_size = db::get<InitializationTags::TargetStepSize>(box);
-
     auto evolution_box =
         EvolutionTags<Metavariables>::initialize(std::move(box), cache);
     auto characteristic_evolution_box =

@@ -188,7 +188,8 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Cce.Actions.ScriObserveInterpolated",
   runner.set_phase(test_metavariables::Phase::Initialization);
   ActionTesting::emplace_component<evolution_component>(
       &runner, 0, start_time,
-      InitializationTags::EndTime::create_from_options(end_time, "unused"),
+      InitializationTags::EndTime::create_from_options<test_metavariables>(
+          end_time, "unused"),
       target_step_size, scri_interpolation_size);
   if (file_system::check_if_file_exists(filename + "0.h5")) {
     file_system::rm(filename + "0.h5", true);

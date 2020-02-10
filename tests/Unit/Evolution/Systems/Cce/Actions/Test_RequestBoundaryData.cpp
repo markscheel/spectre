@@ -183,11 +183,13 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Cce.Actions.RequestBoundaryData",
   runner.set_phase(test_metavariables::Phase::Initialization);
   ActionTesting::emplace_component<evolution_component>(
       &runner, 0, start_time,
-      InitializationTags::EndTime::create_from_options(end_time, filename),
+      InitializationTags::EndTime::create_from_options<test_metavariables>(
+          end_time, filename),
       target_step_size, scri_plus_interpolation_order);
   ActionTesting::emplace_component<worldtube_component>(
       &runner, 0,
-      InitializationTags::H5WorldtubeBoundaryDataManager::create_from_options(
+      InitializationTags::H5WorldtubeBoundaryDataManager::create_from_options<
+          test_metavariables>(
           l_max, filename, buffer_size,
           std::make_unique<intrp::BarycentricRationalSpanInterpolator>(3_st,
                                                                        4_st)));

@@ -154,7 +154,8 @@ SPECTRE_TEST_CASE(
   runner.set_phase(metavariables::Phase::Initialization);
   ActionTesting::emplace_component<component>(
       &runner, 0, start_time,
-      InitializationTags::EndTime::create_from_options(end_time, filename),
+      InitializationTags::EndTime::create_from_options<metavariables>(end_time,
+                                                                      filename),
       target_step_size, scri_plus_interpolation_order);
 
   // this should run the initialization

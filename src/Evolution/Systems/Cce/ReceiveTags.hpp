@@ -10,10 +10,10 @@ namespace Cce {
 namespace ReceiveTags {
 
 namespace detail {
-struct AllDifferent {
-  template <typename Lhs, typename Rhs>
-  bool operator()(const Lhs& /*lhs*/, const Rhs& /*rhs*/) noexcept {
-    return true;
+struct AllSame {
+  template <typename Lhs>
+  size_t operator()(const Lhs& /*lhs*/) const noexcept {
+    return 0;
   }
 };
 }  // namespace detail
@@ -23,11 +23,12 @@ struct AllDifferent {
 template <typename CommunicationTagList>
 struct BoundaryData {
   using temporal_id = TimeStepId;
-  using type = std::unordered_map<
-      temporal_id,
-      // there should only be one of these per time id, so we don't care what
-      // the comparitor does
-      std::multiset<Variables<CommunicationTagList>, detail::AllDifferent>>;
+  using type =
+      std::unordered_map<temporal_id,
+                         // there should only be one of these per time id, so we
+                         // don't care what the comparitor does
+                         std::unordered_multiset<
+                             Variables<CommunicationTagList>, detail::AllSame>>;
 };
 
 }  // namespace ReceiveTags

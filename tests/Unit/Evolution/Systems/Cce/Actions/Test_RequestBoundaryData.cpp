@@ -175,8 +175,8 @@ SPECTRE_TEST_CASE("Unit.Evolution.Systems.Cce.Actions.RequestBoundaryData",
                                extraction_radius, frequency, amplitude, l_max);
 
   const double start_time = value_dist(gen);
-  const double end_time = std::numeric_limits<double>::quiet_NaN();
   const double target_step_size = 0.01 * value_dist(gen);
+  const double end_time = 3.0 * target_step_size + start_time;
   const size_t buffer_size = 5;
   const size_t scri_plus_interpolation_order = 3;
 

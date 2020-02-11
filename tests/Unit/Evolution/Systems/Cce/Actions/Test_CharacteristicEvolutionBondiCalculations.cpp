@@ -46,6 +46,7 @@ struct mock_characteristic_evolution {
 
   using initialize_action_list =
       tmpl::list<Actions::InitializeCharacteristicEvolution,
+                 Actions::ReceiveWorldtubeData<Metavariables>,
                  ::Actions::MutateApply<InitializeJ<Tags::BoundaryValue>>,
                  ::Actions::MutateApply<InitializeGauge>,
                  ::Actions::MutateApply<GaugeUpdateAngularFromCartesian<
@@ -122,17 +123,22 @@ struct metavariables {
   enum class Phase { Initialization, Evolve, Exit };
 };
 
-template <typename Component, typename... SendTags>
-void send_worldtube_data_to_mock_component(
-    const gsl::not_null<ActionTesting::MockRuntimeSystem<metavariables>*>
-        runner,
-    size_t array_index, TimeStepId time_step_id,
-    Variables<tmpl::list<SendTags...>> send_variables) noexcept {
-  ActionTesting::simple_action<
-      Component,
-      Actions::ReceiveWorldtubeData<typename Component::metavariables>>(
-      runner, array_index, time_step_id, get<SendTags>(send_variables)...);
-}
+struct TestSendToEvolution {
+  template <typename ParallelComponent, typename... DbTags,
+            typename Metavariables, typename ArrayIndex>
+  static void apply(
+      const db::DataBox<tmpl::list<DbTags...>>& /*box*/,
+      Parallel::ConstGlobalCache<Metavariables>& cache,
+      const ArrayIndex& /*array_index*/, const TimeStepId& time,
+      const Variables<typename Metavariables::cce_boundary_communication_tags>&
+          data_to_send) noexcept {
+    Parallel::receive_data<Cce::ReceiveTags::BoundaryData<
+        typename Metavariables::cce_boundary_communication_tags>>(
+        Parallel::get_parallel_component<
+            mock_characteristic_evolution<metavariables>>(cache),
+        time, data_to_send, true);
+  }
+};
 }  // namespace
 
 SPECTRE_TEST_CASE(
@@ -235,7 +241,7 @@ SPECTRE_TEST_CASE(
       lapse_coefficients, dt_lapse_coefficients, dr_lapse_coefficients,
       extraction_radius, l_max);
 
-  send_worldtube_data_to_mock_component<component>(
+  ActionTesting::simple_action<component, TestSendToEvolution>(
       make_not_null(&runner), 0,
       ActionTesting::get_databox_tag<component, ::Tags::TimeStepId>(runner, 0),
       db::get<::Tags::Variables<
@@ -243,6 +249,7 @@ SPECTRE_TEST_CASE(
           boundary_box));
 
   // the rest of the initialization routine
+  ActionTesting::next_action<component>(make_not_null(&runner), 0);
   ActionTesting::next_action<component>(make_not_null(&runner), 0);
   ActionTesting::next_action<component>(make_not_null(&runner), 0);
   ActionTesting::next_action<component>(make_not_null(&runner), 0);

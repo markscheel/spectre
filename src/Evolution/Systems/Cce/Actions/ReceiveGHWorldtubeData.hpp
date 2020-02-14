@@ -50,11 +50,11 @@ struct ReceiveGHWorldtubeData {
       typename ParallelComponent, typename... DbTags, typename Metavariables,
       typename ArrayIndex,
       Requires<tmpl::list_contains_v<tmpl::list<DbTags...>,
-                                     Tags::GHInterfaceManager>>
-          Requires<tmpl2::flat_any_v<cpp17::is_same_v<
-              ::Tags::Variables<
-                  typename Metavariables::cce_boundary_communication_tags>,
-              DbTags>...>> = nullptr>
+                                     Tags::GHInterfaceManager> and
+               tmpl2::flat_any_v<cpp17::is_same_v<
+                   ::Tags::Variables<
+                       typename Metavariables::cce_boundary_communication_tags>,
+                   DbTags>...>> = nullptr>
   static void apply(
       db::DataBox<tmpl::list<DbTags...>>& box,
       Parallel::ConstGlobalCache<Metavariables>& cache,

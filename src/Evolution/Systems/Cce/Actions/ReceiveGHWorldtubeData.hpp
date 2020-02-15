@@ -73,6 +73,12 @@ struct ReceiveGHWorldtubeData {
           &time, &cache
         ](const gsl::not_null<db::item_type<Tags::GHInterfaceManager>*>
               interface_manager) noexcept {
+          for(auto component : spacetime_metric) {
+            Parallel::printf("component ..\n");
+            for(auto element : component) {
+              Parallel::printf("value : %e\n", element);
+            }
+          }
           (*interface_manager)
               ->insert_gh_data(time, spacetime_metric, phi, pi,
                                dt_spacetime_metric, dt_phi, dt_pi);
@@ -82,8 +88,8 @@ struct ReceiveGHWorldtubeData {
                 GHWorldtubeBoundary<Metavariables>, EvolutionComponent>>(
                 Parallel::get_parallel_component<
                     GHWorldtubeBoundary<Metavariables>>(cache),
-                get<1>(*gh_data), get<2>(*gh_data), get<3>(*gh_data),
-                get<0>(*gh_data));
+                get<0>(*gh_data), get<1>(*gh_data), get<2>(*gh_data),
+                get<3>(*gh_data));
           }
         });
   }

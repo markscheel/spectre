@@ -74,12 +74,12 @@ EventsAndTriggers:
       N: 5
       Offset: 0
   : - ObserveFields
-  ? EveryNSlabs:
-      N: 5
-      Offset: 2
+  ? EveryNSlabsAllSubsteps:
+      N: 1
+      Offset: 0
   : - Interpolate
   ? SpecifiedSlabs:
-      Slabs: [3]
+      Slabs: [100]
   : - Completion
 
 Observers:

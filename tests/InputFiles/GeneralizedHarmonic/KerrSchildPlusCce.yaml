@@ -15,9 +15,9 @@ Evolution:
     RungeKutta3
 
 Cce:
-  LMax: 12
-  ExtractionRadius: 2.2
-  NumberOfRadialPoints: 12
+  LMax: 32
+  ExtractionRadius: 48.0
+  NumberOfRadialPoints: 32
   ObservationLMax: 8
 
   BoundaryDataFilename:
@@ -30,7 +30,7 @@ Cce:
   Filtering:
     RadialFilterHalfPower: 24
     RadialFilterAlpha: 35.0
-    FilterLMax: 10
+    FilterLMax: 30
 
   GHInterfaceManager:
     GHLockstepInterfaceManager
@@ -41,13 +41,13 @@ Cce:
 DomainCreator:
     Shell:
       InnerRadius: 1.9
-      OuterRadius: 2.3
+      OuterRadius: 100.0
       InitialRefinement: 0
-      InitialGridPoints: [5, 5]
+      InitialGridPoints: [10, 10]
       UseEquiangularMap: true
       AspectRatio: 1.0
       UseLogarithmicMap: true
-      RadialBlockLayers: 1
+      RadialBlockLayers: 5
 
 AnalyticSolution:
   KerrSchild:
@@ -79,7 +79,7 @@ EventsAndTriggers:
       Offset: 0
   : - Interpolate
   ? SpecifiedSlabs:
-      Slabs: [100]
+      Slabs: [20]
   : - Completion
 
 Observers:
@@ -88,10 +88,10 @@ Observers:
 
 InterpolationTargets:
   CceWorldTubeTarget:
-        Lmax: 12
+        Lmax: 32
         Center: [0.0, 0.0, 0.0]
         DimensionlessSpin: [0.0, 0.0, 0.0]
-        Mass: 1.1
+        Mass: 24.0
 
 ApparentHorizons:
   Horizon:

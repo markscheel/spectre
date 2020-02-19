@@ -92,6 +92,7 @@ InterpolationTargets:
         Center: [0.0, 0.0, 0.0]
         DimensionlessSpin: [0.0, 0.0, 0.0]
         Mass: 24.0
+        ThetaVariesFastest: false
 
 ApparentHorizons:
   Horizon:

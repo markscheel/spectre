@@ -57,6 +57,7 @@ class DataBox;
 }  // namespace db
 namespace intrp {
 namespace Tags {
+template <typename Metavariables>
 struct IndicesOfFilledInterpPoints;
 struct NumberOfElements;
 template <typename Metavariables>
@@ -131,11 +132,13 @@ struct MockComputeTargetPoints {
     // Increment IndicesOfFilledInterpPoints so we can check later
     // whether this function was called.  This isn't the usual usage
     // of IndicesOfFilledInterpPoints; this is done only for the test.
-    db::mutate<intrp::Tags::IndicesOfFilledInterpPoints>(
-        make_not_null(&box), [](const gsl::not_null<db::item_type<
-                                    intrp::Tags::IndicesOfFilledInterpPoints>*>
-                                    indices) noexcept {
-          indices->insert(indices->size() + 1);
+    db::mutate<intrp::Tags::IndicesOfFilledInterpPoints<Metavariables>>(
+        make_not_null(&box),
+        [&temporal_id](
+            const gsl::not_null<db::item_type<
+                intrp::Tags::IndicesOfFilledInterpPoints<Metavariables>>*>
+                indices) noexcept {
+          (*indices)[temporal_id].insert((*indices)[temporal_id].size() + 1);
         });
   }
 };
@@ -273,12 +276,15 @@ void test_interpolation_target_receive_vars() noexcept {
       domain::creators::Shell(0.9, 4.9, 1, {{5, 5}}, false);
   Slab slab(0.0, 1.0);
   const size_t num_points = 10;
+  const TimeStepId first_temporal_id(true, 0, Time(slab, Rational(13, 15)));
+  const TimeStepId second_temporal_id(true, 0, Time(slab, Rational(14, 15)));
 
   // Add indices of invalid points (if there are any) at the end.
-  std::unordered_set<size_t> invalid_indices{};
+  std::unordered_map<typename metavars::temporal_id::type,
+                     std::unordered_set<size_t>> invalid_indices{};
   for (size_t index = num_points;
        index < num_points + NumberOfInvalidPointsToAdd; ++index) {
-    invalid_indices.insert(index);
+    invalid_indices[first_temporal_id].insert(index);
   }
 
   ActionTesting::MockRuntimeSystem<metavars> runner{
@@ -287,12 +293,11 @@ void test_interpolation_target_receive_vars() noexcept {
   ActionTesting::next_action<interp_component>(make_not_null(&runner), 0);
   ActionTesting::emplace_component_and_initialize<target_component>(
       &runner, 0,
-      {db::item_type<intrp::Tags::IndicesOfFilledInterpPoints>{},
-       db::item_type<intrp::Tags::IndicesOfInvalidInterpPoints>{
+      {db::item_type<intrp::Tags::IndicesOfFilledInterpPoints<metavars>>{},
+       db::item_type<intrp::Tags::IndicesOfInvalidInterpPoints<metavars>>{
            invalid_indices},
        db::item_type<typename intrp::Tags::TemporalIds<metavars>>{
-           TimeStepId(true, 0, Time(slab, Rational(13, 15))),
-           TimeStepId(true, 0, Time(slab, Rational(14, 15)))},
+           first_temporal_id, second_temporal_id},
        db::item_type<typename intrp::Tags::CompletedTemporalIds<metavars>>{},
        db::item_type<::Tags::Variables<typename metavars::InterpolationTargetA::
                                            vars_to_interpolate_to_target>>{
@@ -331,9 +336,10 @@ void test_interpolation_target_receive_vars() noexcept {
 
   // It should have interpolated 4 points by now.
   CHECK(
-      ActionTesting::get_databox_tag<target_component,
-                                     intrp::Tags::IndicesOfFilledInterpPoints>(
+      ActionTesting::get_databox_tag<
+          target_component, intrp::Tags::IndicesOfFilledInterpPoints<metavars>>(
           runner, 0)
+          .at(first_temporal_id)
           .size() == 4);
 
   // Should be no queued simple action until we get num_points points.
@@ -360,9 +366,10 @@ void test_interpolation_target_receive_vars() noexcept {
   // It should have interpolated 8 points by now. (The ninth point had
   // a repeated global_offsets so it should be ignored)
   CHECK(
-      ActionTesting::get_databox_tag<target_component,
-                                     intrp::Tags::IndicesOfFilledInterpPoints>(
+      ActionTesting::get_databox_tag<
+          target_component, intrp::Tags::IndicesOfFilledInterpPoints<metavars>>(
           runner, 0)
+          .at(first_temporal_id)
           .size() == 8);
 
   // Should be no queued simple action until we have added 10 points.
@@ -384,11 +391,10 @@ void test_interpolation_target_receive_vars() noexcept {
       make_not_null(&runner), 0, vars_src, global_offsets);
 
   // It should have interpolated all the points by now.
-  CHECK(
-      ActionTesting::get_databox_tag<target_component,
-                                     intrp::Tags::IndicesOfFilledInterpPoints>(
-          runner, 0)
-          .size() == num_points);
+  CHECK(ActionTesting::get_databox_tag < target_component,
+        intrp::Tags::IndicesOfFilledInterpPoints<metavars>(runner, 0)
+                .at(first_temporal_id)
+                .size() == num_points);
 
   if (NumberOfExpectedCleanUpActions == 0) {
     // We called the function without cleanup, as a test, so there should
@@ -443,7 +449,7 @@ void test_interpolation_target_receive_vars() noexcept {
     CHECK(ActionTesting::get_databox_tag<
               target_component, intrp::Tags::CompletedTemporalIds<metavars>>(
               runner, 0)
-              .front() == TimeStepId(true, 0, Time(slab, Rational(13, 15))));
+              .front() == first_temporal_id);
 
     // And there is yet one more simple action, compute_target_points,
     // which here we mock just to check that it is called.
@@ -454,8 +460,9 @@ void test_interpolation_target_receive_vars() noexcept {
     // It sets a (fake) value of IndicesOfFilledInterpPoints for the express
     // purpose of this check.
     CHECK(ActionTesting::get_databox_tag<
-              target_component, intrp::Tags::IndicesOfFilledInterpPoints>(
-              runner, 0)
+              target_component,
+              intrp::Tags::IndicesOfFilledInterpPoints<metavars>>(runner, 0)
+              .at(second_temporal_id)
               .size() == num_points + 1);
   }
 

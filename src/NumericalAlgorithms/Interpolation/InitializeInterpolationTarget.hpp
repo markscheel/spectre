@@ -89,18 +89,22 @@ auto make_initial_box(
 ///   - `Tags::TemporalIds<Metavariables>`
 ///   - `Tags::CompletedTemporalIds<Metavariables>`
 ///   - `Tags::InterpolatedVars<InterpolationTargetTag,Metavariables>`
+///   - `::Tags::Variables<typename
+///                   InterpolationTargetTag::vars_to_interpolate_to_target>`
 /// - Removes: nothing
 /// - Modifies: nothing
 ///
 /// For requirements on InterpolationTargetTag, see InterpolationTarget
 template <typename Metavariables, typename InterpolationTargetTag>
 struct InitializeInterpolationTarget {
-  using return_tag_list_initial =
-      tmpl::list<Tags::IndicesOfFilledInterpPoints<Metavariables>,
-                 Tags::IndicesOfInvalidInterpPoints<Metavariables>,
-                 Tags::TemporalIds<Metavariables>,
-                 Tags::CompletedTemporalIds<Metavariables>,
-                 Tags::InterpolatedVars<InterpolationTargetTag, Metavariables>>;
+  using return_tag_list_initial = tmpl::list<
+      Tags::IndicesOfFilledInterpPoints<Metavariables>,
+      Tags::IndicesOfInvalidInterpPoints<Metavariables>,
+      Tags::TemporalIds<Metavariables>,
+      Tags::CompletedTemporalIds<Metavariables>,
+      Tags::InterpolatedVars<InterpolationTargetTag, Metavariables>,
+      Tags::Variables<
+          typename InterpolationTargetTag::vars_to_interpolate_to_target>>;
   using return_tag_list =
       tmpl::append<return_tag_list_initial,
                    typename initialize_interpolation_target_detail::
@@ -127,7 +131,10 @@ struct InitializeInterpolationTarget {
             db::item_type<Tags::TemporalIds<Metavariables>>{},
             db::item_type<Tags::CompletedTemporalIds<Metavariables>>{},
             db::item_type<Tags::InterpolatedVars<InterpolationTargetTag,
-                                                 Metavariables>>{}),
+                                                 Metavariables>>{},
+            db::item_type<
+                ::Tags::Variables<typename InterpolationTargetTag::
+                                      vars_to_interpolate_to_target>>{}),
         cache);
     // compute_items_on_target will depend on compute items added in
     // make_initial_box, so compute_items_on_target must be added

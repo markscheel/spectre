@@ -150,6 +150,25 @@ void callback_and_cleanup(
   // of the points might be outside of the Domain.
   fill_invalid_points<InterpolationTargetTag>(box,temporal_id);
 
+  // Fill ::Tags::Variables<typename
+  //      InterpolationTargetTag::vars_to_interpolate_to_target>
+  // with variables from correct temporal_id.
+  db::mutate_apply<
+      tmpl::list<::Tags::Variables<
+          typename InterpolationTargetTag::vars_to_interpolate_to_target>>,
+      tmpl::list<
+          Tags::InterpolatedVars<InterpolationTargetTag, Metavariables>>>(
+      [&temporal_id](
+          const gsl::not_null<db::item_type<::Tags::Variables<
+              typename InterpolationTargetTag::vars_to_interpolate_to_target>>*>
+              vars,
+          const db::const_item_type<
+              Tags::InterpolatedVars<InterpolationTargetTag, Metavariables>>&
+              vars_at_all_times) noexcept {
+        *vars = vars_at_all_times[temporal_id];
+      },
+      box);
+
   // apply_callback should return true if we are done with this
   // temporal_id.  It should return false only if the callback
   // calls another `intrp::Action` that needs the volume data at this
@@ -234,7 +253,9 @@ namespace Actions {
 ///   - `Tags::TemporalIds<Metavariables>`
 ///   - `Tags::CompletedTemporalIds<Metavariables>`
 ///   - `Tags::IndicesOfFilledInterpPoints<Metavariables>`
-///   - ``Tags::InterpolatedVars<InterpolationTargetTag,Metavariables>`
+///   - `Tags::InterpolatedVars<InterpolationTargetTag,Metavariables>`
+///   - `::Tags::Variables<typename
+///                   InterpolationTargetTag::vars_to_interpolate_to_target>`
 ///
 /// For requirements on InterpolationTargetTag, see InterpolationTarget
 template <typename InterpolationTargetTag>

@@ -118,6 +118,7 @@ struct MockCleanUpInterpolator {
 };
 
 struct MockComputeTargetPoints {
+  using is_sequential = std::true_type;
   template <typename ParallelComponent, typename DbTags, typename Metavariables,
             typename ArrayIndex,
             Requires<tmpl::list_contains_v<

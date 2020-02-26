@@ -333,7 +333,7 @@ void test_interpolation_target_receive_vars() noexcept {
   ActionTesting::simple_action<target_component,
                                intrp::Actions::InterpolationTargetReceiveVars<
                                    typename metavars::InterpolationTargetA>>(
-        make_not_null(&runner), 0, vars_src, global_offsets, first_temporal_id);
+      make_not_null(&runner), 0, vars_src, global_offsets, first_temporal_id);
 
   // It should have interpolated 4 points by now.
   CHECK(
@@ -362,7 +362,7 @@ void test_interpolation_target_receive_vars() noexcept {
   ActionTesting::simple_action<target_component,
                                intrp::Actions::InterpolationTargetReceiveVars<
                                    typename metavars::InterpolationTargetA>>(
-     make_not_null(&runner), 0, vars_src, global_offsets, first_temporal_id);
+      make_not_null(&runner), 0, vars_src, global_offsets, first_temporal_id);
 
   // It should have interpolated 8 points by now. (The ninth point had
   // a repeated global_offsets so it should be ignored)
@@ -392,10 +392,12 @@ void test_interpolation_target_receive_vars() noexcept {
       make_not_null(&runner), 0, vars_src, global_offsets, first_temporal_id);
 
   // It should have interpolated all the points by now.
-  CHECK(ActionTesting::get_databox_tag<target_component,
-        intrp::Tags::IndicesOfFilledInterpPoints<metavars>>(runner, 0)
-                .at(first_temporal_id)
-                .size() == num_points);
+  CHECK(
+      ActionTesting::get_databox_tag<
+          target_component, intrp::Tags::IndicesOfFilledInterpPoints<metavars>>(
+          runner, 0)
+          .at(first_temporal_id)
+          .size() == num_points);
 
   if (NumberOfExpectedCleanUpActions == 0) {
     // We called the function without cleanup, as a test, so there should

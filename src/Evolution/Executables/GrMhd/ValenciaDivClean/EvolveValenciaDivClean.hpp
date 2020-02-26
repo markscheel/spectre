@@ -132,11 +132,10 @@ struct Horizon {
       hydro::Tags::LorentzFactor<DataVector>, gr::Tags::Lapse<DataVector>,
       gr::Tags::Shift<3, Frame::Inertial, DataVector>,
       gr::Tags::SqrtDetSpatialMetric<DataVector>>;
-  using compute_items_on_target = tmpl::append<
-      tmpl::list<
-          StrahlkorperTags::EuclideanAreaElement<::Frame::Inertial>,
-          hydro::Tags::MassFluxCompute<DataVector, 3, ::Frame::Inertial>>,
-      tags_to_observe>;
+  using compute_items_on_target = tmpl::push_front<
+      tags_to_observe,
+      StrahlkorperTags::EuclideanAreaElement<::Frame::Inertial>,
+      hydro::Tags::MassFluxCompute<DataVector, 3, ::Frame::Inertial>>;
   using compute_target_points =
       intrp::Actions::KerrHorizon<Horizon, ::Frame::Inertial>;
   using post_interpolation_callback =
@@ -230,9 +229,9 @@ struct EvolutionMetavars {
   using interpolation_target_tags = tmpl::list<InterpolationTargetTags...>;
 
   using observed_reduction_data_tags = observers::collect_reduction_data_tags<
-      tmpl::append<typename Event<observation_events>::creatable_classes,
-                   tmpl::list<typename InterpolationTargetTags::
-                                  post_interpolation_callback...>>>;
+      tmpl::push_back<typename Event<observation_events>::creatable_classes,
+                   typename InterpolationTargetTags::
+                                  post_interpolation_callback...>>;
 
   using step_actions = tmpl::flatten<tmpl::list<
       Actions::ComputeVolumeFluxes,

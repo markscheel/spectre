@@ -149,7 +149,7 @@ void callback_and_cleanup(
 
   // Before doing anything else, deal with the possibility that some
   // of the points might be outside of the Domain.
-  fill_invalid_points<InterpolationTargetTag,Metavariables>(box,temporal_id);
+  fill_invalid_points<InterpolationTargetTag, Metavariables>(box, temporal_id);
 
   // Fill ::Tags::Variables<typename
   //      InterpolationTargetTag::vars_to_interpolate_to_target>

@@ -122,7 +122,7 @@ void fill_invalid_points(
           auto& vars_dest = vars_dest_all_times->at(temporal_id);
           const size_t npts_dest = vars_dest.number_of_grid_points();
           const size_t nvars = vars_dest.number_of_independent_components;
-          for (auto index : indices_of_invalid_points.at(temporal_id)) {
+          for (auto index : (*indices_of_invalid_points).at(temporal_id)) {
             for (size_t v = 0; v < nvars; ++v) {
               // clang-tidy: no pointer arithmetic
               vars_dest.data()[index + v * npts_dest] =  // NOLINT

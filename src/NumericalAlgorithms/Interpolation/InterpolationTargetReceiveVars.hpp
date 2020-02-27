@@ -166,7 +166,7 @@ void callback_and_cleanup(
           const db::const_item_type<
               Tags::InterpolatedVars<InterpolationTargetTag, Metavariables>>&
               vars_at_all_times) noexcept {
-        *vars = vars_at_all_times[temporal_id];
+        *vars = vars_at_all_times.at(temporal_id);
       },
       box);
 

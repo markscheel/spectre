@@ -103,7 +103,7 @@ struct InitializeInterpolationTarget {
       Tags::TemporalIds<Metavariables>,
       Tags::CompletedTemporalIds<Metavariables>,
       Tags::InterpolatedVars<InterpolationTargetTag, Metavariables>,
-      Tags::Variables<
+      ::Tags::Variables<
           typename InterpolationTargetTag::vars_to_interpolate_to_target>>;
   using return_tag_list =
       tmpl::append<return_tag_list_initial,

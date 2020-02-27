@@ -301,8 +301,12 @@ void test_interpolation_target_receive_vars() noexcept {
            first_temporal_id, second_temporal_id},
        db::item_type<typename intrp::Tags::CompletedTemporalIds<metavars>>{},
        db::item_type<typename intrp::Tags::InterpolatedVars<
-                       typename metavars::InterpolationTargetA, metavars>>{{
-           first_temporal_id, num_points + NumberOfInvalidPointsToAdd}},
+           typename metavars::InterpolationTargetA, metavars>>{
+           first_temporal_id,
+           db::item_type<
+               ::Tags::Variables<typename metavars::InterpolationTargetA::
+                                     vars_to_interpolate_to_target>>{
+               num_points + NumberOfInvalidPointsToAdd}},
        db::item_type<::Tags::Variables<typename metavars::InterpolationTargetA::
                                            vars_to_interpolate_to_target>>{}});
   ActionTesting::set_phase(make_not_null(&runner), metavars::Phase::Testing);

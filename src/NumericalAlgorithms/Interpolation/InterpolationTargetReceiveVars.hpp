@@ -14,6 +14,7 @@
 #include "Parallel/ConstGlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/Literals.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
@@ -326,7 +327,7 @@ struct InterpolationTargetReceiveVars {
       if (invalid_indices.find(temporal_id) != invalid_indices.end()) {
         return invalid_indices.at(temporal_id).size();
       }
-      return 0;
+      return 0_st;
     }
     ();
     const size_t interp_size =

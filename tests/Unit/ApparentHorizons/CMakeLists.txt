@@ -11,6 +11,7 @@ set(LIBRARY_SOURCES
   Test_SpherepackIterator.cpp
   Test_Strahlkorper.cpp
   Test_StrahlkorperGr.cpp
+  Test_StrahlkorperInDifferentFrame.cpp
   Test_Tags.cpp
   Test_YlmSpherepack.cpp
   )

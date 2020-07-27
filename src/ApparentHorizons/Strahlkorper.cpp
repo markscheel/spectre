@@ -144,3 +144,4 @@ bool Strahlkorper<Frame>::point_is_contained(
 }
 
 template class Strahlkorper<Frame::Inertial>;
+template class Strahlkorper<Frame::Grid>;

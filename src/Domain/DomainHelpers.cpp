@@ -1259,6 +1259,11 @@ INSTANTIATE_MAPS_FUNCTIONS(((Affine2d), (Affine3d), (Equiangular3d),
                            (Frame::Logical), (Frame::Grid, Frame::Inertial),
                            (double, DataVector))
 
+INSTANTIATE_MAPS_FUNCTIONS(((Affine2d), (Affine3d)), (Frame::Grid),
+                           (Frame::Inertial), (double, DataVector))
+INSTANTIATE_MAPS_FUNCTIONS(((Affine2d), (Affine3d)), (Frame::Inertial),
+                           (Frame::Grid), (double, DataVector))
+
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(1, data)
 

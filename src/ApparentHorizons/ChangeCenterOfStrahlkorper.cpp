@@ -151,7 +151,7 @@ void change_expansion_center_of_strahlkorper_to_physical(
   template void change_expansion_center_of_strahlkorper_to_physical( \
       const gsl::not_null<Strahlkorper<FRAME(data)>*> strahlkorper) noexcept;
 
-GENERATE_INSTANTIATIONS(INSTANTIATE, (::Frame::Inertial))
+GENERATE_INSTANTIATIONS(INSTANTIATE, (::Frame::Inertial, ::Frame::Grid))
 
 #undef INSTANTIATE
 #undef FRAME

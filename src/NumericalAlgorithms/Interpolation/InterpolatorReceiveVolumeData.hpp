@@ -48,6 +48,10 @@ struct InterpolatorReceiveVolumeData {
       const ArrayIndex& /*array_index*/,
       const typename Metavariables::temporal_id::type& temporal_id,
       const ElementId<VolumeDim>& element_id, const ::Mesh<VolumeDim>& mesh,
+      std::unordered_map<
+          std::string,
+          std::unique_ptr<::domain::FunctionsOfTime::FunctionOfTime>>&&
+          functions_of_time,
       Variables<typename Metavariables::interpolator_source_vars>&&
           vars) noexcept {
     db::mutate<Tags::VolumeVarsInfo<Metavariables>>(
@@ -67,7 +71,7 @@ struct InterpolatorReceiveVolumeData {
               .emplace(std::make_pair(
                   element_id,
                   typename Tags::VolumeVarsInfo<Metavariables>::Info{
-                      mesh, std::move(vars)}));
+                    mesh, std::move(functions_of_time), std::move(vars)}));
         });
 
     // Try to interpolate data for all InterpolationTargets.

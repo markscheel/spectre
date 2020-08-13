@@ -88,11 +88,13 @@ void interpolate_data(
             // InterpolationTargetTag::compute_items_on_source.
 
             auto new_box = db::create<
-                db::AddSimpleTags<::Tags::Variables<
-                    typename Metavariables::interpolator_source_vars>>,
+                db::AddSimpleTags<
+                    ::Tags::Variables<
+                        typename Metavariables::interpolator_source_vars>,
+                    ::domain::Tags::FunctionsOfTime>,
                 db::AddComputeTags<
                     typename InterpolationTargetTag::compute_items_on_source>>(
-                volume_info.vars);
+                volume_info.vars, volume_info.functions_of_time);
 
             Variables<
                 typename InterpolationTargetTag::vars_to_interpolate_to_target>

@@ -85,10 +85,14 @@ template <typename Metavariables>
 struct VolumeVarsInfo : db::SimpleTag {
   struct Info {
     Mesh<Metavariables::volume_dim> mesh;
+    std::unordered_map<
+        std::string, std::unique_ptr<::domain::FunctionsOfTime::FunctionOfTime>>
+        functions_of_time;
     Variables<typename Metavariables::interpolator_source_vars> vars;
 
     void pup(PUP::er& p) noexcept {  // NOLINT
       p | mesh;
+      p | functions_of_time;
       p | vars;
     }
   };

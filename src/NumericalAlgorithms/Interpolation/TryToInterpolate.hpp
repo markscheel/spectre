@@ -8,11 +8,13 @@
 #include "DataStructures/Variables.hpp"
 #include "DataStructures/VariablesTag.hpp"
 #include "Domain/ElementLogicalCoordinates.hpp"
+#include "Domain/FunctionsOfTime/Tags.hpp"
 #include "Domain/Tags.hpp"
 #include "NumericalAlgorithms/Interpolation/IrregularInterpolant.hpp"
 #include "NumericalAlgorithms/Interpolation/Tags.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
+#include "Utilities/CloneUniquePtrs.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
@@ -111,6 +113,8 @@ void interpolate_data(
             intrp::Irregular<Metavariables::volume_dim> interpolator(
                 volume_info.mesh, element_coord_holder.element_logical_coords);
             interp_info.vars.emplace_back(interpolator.interpolate(local_vars));
+            interp_info.functions_of_time =
+                clone_unique_ptrs(volume_info.functions_of_time);
             interp_info.global_offsets.emplace_back(
                 element_coord_holder.offsets);
           }

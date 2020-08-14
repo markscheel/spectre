@@ -9,6 +9,7 @@
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "DataStructures/DataBox/DataBoxTag.hpp"
 #include "DataStructures/Variables.hpp"
+#include "Domain/FunctionsOfTime/Tags.hpp"
 #include "Domain/Tags.hpp"
 #include "NumericalAlgorithms/Interpolation/Tags.hpp"
 #include "NumericalAlgorithms/Interpolation/TryToInterpolate.hpp"
@@ -56,7 +57,7 @@ struct InterpolatorReceiveVolumeData {
           vars) noexcept {
     db::mutate<Tags::VolumeVarsInfo<Metavariables>>(
         make_not_null(&box),
-        [&temporal_id, &element_id, &mesh, &
+        [&temporal_id, &element_id, &functions_of_time, &mesh, &
          vars ](const gsl::not_null<
                 typename Tags::VolumeVarsInfo<Metavariables>::type*>
                     container) noexcept {
@@ -71,7 +72,7 @@ struct InterpolatorReceiveVolumeData {
               .emplace(std::make_pair(
                   element_id,
                   typename Tags::VolumeVarsInfo<Metavariables>::Info{
-                    mesh, std::move(functions_of_time), std::move(vars)}));
+                      mesh, std::move(functions_of_time), std::move(vars)}));
         });
 
     // Try to interpolate data for all InterpolationTargets.

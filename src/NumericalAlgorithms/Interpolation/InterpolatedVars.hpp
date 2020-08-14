@@ -5,6 +5,7 @@
 
 #include <boost/optional.hpp>
 #include <cstddef>
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "DataStructures/IdPair.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "DataStructures/Variables.hpp"
+#include "Domain/FunctionsOfTime/FunctionOfTime.hpp"
 #include "Domain/Structure/BlockId.hpp"
 #include "Domain/Structure/ElementId.hpp"
 
@@ -57,6 +59,11 @@ struct Info {
   /// already been done for this `Info`.
   std::unordered_set<ElementId<VolumeDim>>
       interpolation_is_done_for_these_elements{};
+  /// Holds the `FunctionsOfTime`, which are the same for all `Element`s
+  /// so we need to store only one copy.
+  std::unordered_map<std::string,
+                     std::unique_ptr<::domain::FunctionsOfTime::FunctionOfTime>>
+      functions_of_time{};
 };
 
 template <size_t VolumeDim, typename TagList>

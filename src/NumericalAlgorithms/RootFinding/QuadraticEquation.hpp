@@ -23,6 +23,7 @@ double positive_root(double a, double b, double c) noexcept;
  * bx + c = 0\f$ that is greater than the given value, within roundoff.
  * \returns A root of a quadratic equation.
  * \requires That there are two real roots.
+ * \requires At least one root is greater than the given value, to roundoff.
  */
 template <typename T>
 T smallest_root_greater_than_value_within_roundoff(const T& a, const T& b,
@@ -35,6 +36,7 @@ T smallest_root_greater_than_value_within_roundoff(const T& a, const T& b,
  * within roundoff.
  * \returns A root of a quadratic equation.
  * \requires That there are two real roots.
+ * \requires At least one root is between min_value and max_value, to roundoff.
  */
 template <typename T>
 T largest_root_between_values_within_roundoff(const T& a, const T& b,

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <limits>
 
 #include "DataStructures/DataVector.hpp"
 #include "ErrorHandling/Error.hpp"
@@ -60,6 +61,12 @@ namespace {
     CHECK_ITERABLE_APPROX(expected_root_1, root);
     root = smallest_root_greater_than_value_within_roundoff(a, b, c, 0.6);
     CHECK_ITERABLE_APPROX(expected_root_2, root);
+
+    // Note that 'within roundoff' is defined as 100*epsilon,
+    // so adding 10*epsilon should still be within roundoff.
+    root = smallest_root_greater_than_value_within_roundoff(
+        a, b, c, 0.5 * (1.0 + std::numeric_limits<double>::epsilon() * 10.0));
+    CHECK_ITERABLE_APPROX(expected_root_1, root);
   }
 
   template <typename T>
@@ -85,7 +92,22 @@ namespace {
     CHECK_ITERABLE_APPROX(expected_root_2, root);
     root = largest_root_between_values_within_roundoff(a, b, c, 0.3, 5.0);
     CHECK_ITERABLE_APPROX(expected_root_2, root);
-  }
+
+    // Note that 'within roundoff' is defined as 100*epsilon,
+    // so adding/subtracting 10*epsilon should still be within roundoff.
+    root = largest_root_between_values_within_roundoff(
+        a, b, c, 0.3,
+        0.5 * (1.0 - std::numeric_limits<double>::epsilon() * 10.0));
+    CHECK_ITERABLE_APPROX(expected_root_1, root);
+    root = largest_root_between_values_within_roundoff(
+        a, b, c, 0.5 * (1.0 - std::numeric_limits<double>::epsilon() * 10.0),
+        4.0);
+    CHECK_ITERABLE_APPROX(expected_root_1, root);
+    root = largest_root_between_values_within_roundoff(
+        a, b, c, 0.5,
+        6.0 * (1.0 - std::numeric_limits<double>::epsilon() * 10.0));
+    CHECK_ITERABLE_APPROX(expected_root_2, root);
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Numerical.RootFinding.QuadraticEquation",

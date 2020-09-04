@@ -52,7 +52,30 @@ struct get_const_global_cache_tags_from_pdal {
           get_action_list_from_phase_dep_action_list<tmpl::_1>>>,
       get_const_global_cache_tags_from_parallel_struct<tmpl::_1>>>;
 };
+
+template <class ParallelStruct, class = std::void_t<>>
+struct get_mutable_global_cache_tags_from_parallel_struct {
+  using type = tmpl::list<>;
+};
+
+template <class ParallelStruct>
+struct get_mutable_global_cache_tags_from_parallel_struct<
+    ParallelStruct,
+    std::void_t<typename ParallelStruct::mutable_global_cache_tags>> {
+  using type = typename ParallelStruct::mutable_global_cache_tags;
+};
+
+template <class Component>
+struct get_mutable_global_cache_tags_from_pdal {
+  using type = tmpl::join<tmpl::transform<
+      tmpl::flatten<tmpl::transform<
+          typename Component::phase_dependent_action_list,
+          get_action_list_from_phase_dep_action_list<tmpl::_1>>>,
+      get_mutable_global_cache_tags_from_parallel_struct<tmpl::_1>>>;
+};
+
 }  // namespace detail
+
 
 /*!
  * \ingroup ParallelGroup
@@ -64,6 +87,17 @@ using get_const_global_cache_tags_from_actions =
     tmpl::remove_duplicates<tmpl::join<tmpl::transform<
         ActionsList,
         detail::get_const_global_cache_tags_from_parallel_struct<tmpl::_1>>>>;
+
+/*!
+ * \ingroup ParallelGroup
+ * \brief Given a list of Actions, get a list of the unique tags specified in
+ * the actions' `mutable_global_cache_tags` aliases.
+ */
+template <class ActionsList>
+using get_mutable_global_cache_tags_from_actions =
+    tmpl::remove_duplicates<tmpl::join<tmpl::transform<
+        ActionsList,
+        detail::get_mutable_global_cache_tags_from_parallel_struct<tmpl::_1>>>>;
 
 /*!
  * \ingroup ParallelGroup
@@ -81,6 +115,81 @@ using get_const_global_cache_tags =
         tmpl::transform<
             typename Metavariables::component_list,
             detail::get_const_global_cache_tags_from_pdal<tmpl::_1>>>>>;
+
+/*!
+ * \ingroup ParallelGroup
+ * \brief Given the metavariables, get a list of the unique tags that will
+ * specify the mutable items in the GlobalCache.
+ */
+template <typename Metavariables>
+using get_mutable_global_cache_tags =
+    tmpl::remove_duplicates<tmpl::flatten<tmpl::list<
+        typename detail::get_mutable_global_cache_tags_from_parallel_struct<
+            Metavariables>::type,
+        tmpl::transform<
+            typename Metavariables::component_list,
+            detail::get_mutable_global_cache_tags_from_parallel_struct<
+                tmpl::_1>>,
+        tmpl::transform<
+            typename Metavariables::component_list,
+            detail::get_mutable_global_cache_tags_from_pdal<tmpl::_1>>>>>;
+
+template <typename Tag>
+struct MutableCacheTag {
+  using tag  = Tag;
+  using type = std::tuple<typename Tag::type, std::vector<CkCallback>>;
+};
+
+template <typename Tag>
+struct get_mutable_cache_tag {
+  using type = MutableCacheTag<Tag>;
+};
+
+template <typename Metavariables>
+using get_mutable_global_cache_tag_storage =
+    tmpl::transform<get_mutable_global_cache_tags<Metavariables>,
+                    get_mutable_cache_tag<tmpl::_1>>;
+
+namespace GlobalCache_detail {
+
+template <typename T>
+struct type_for_get_helper {
+  using type = T;
+};
+
+template <typename T, typename D>
+struct type_for_get_helper<std::unique_ptr<T, D>> {
+  using type = T;
+};
+
+// This struct provides a better error message if
+// an unknown tag is requested from the GlobalCache.
+template <typename GlobalCacheTag, typename ListOfPossibleTags>
+struct list_of_matching_tags_helper {
+  using type = tmpl::filter<ListOfPossibleTags,
+               std::is_base_of<tmpl::pin<GlobalCacheTag>, tmpl::_1>>;
+  static_assert(not std::is_same_v<type, tmpl::list<>>,
+                "Trying to get a nonexistent tag from the GlobalCache. "
+                "To diagnose the problem, search for "
+                "'list_of_matching_tags_helper' in the error message. "
+                "The first template parameter of "
+                "'list_of_matching_tags_helper' is the requested tag, and "
+                "the second template parameter is a tmpl::list of all the "
+                "tags in the GlobalCache.  One possible bug that may "
+                "lead to this error message is a missing or misspelled "
+                "const_global_cache_tags or mutable_global_cache_tags "
+                "type alias.");
+};
+
+template <class GlobalCacheTag, class Metavariables>
+using get_list_of_matching_mutable_tags = typename list_of_matching_tags_helper<
+    GlobalCacheTag, get_mutable_global_cache_tags<Metavariables>>::type;
+
+template <class GlobalCacheTag, class Metavariables>
+using type_for_set = typename type_for_get_helper<typename tmpl::front<
+    get_list_of_matching_mutable_tags<GlobalCacheTag, Metavariables>>::type>::
+    type;
+}  // namespace GlobalCache_detail
 
 namespace detail {
 template <typename PhaseAction>

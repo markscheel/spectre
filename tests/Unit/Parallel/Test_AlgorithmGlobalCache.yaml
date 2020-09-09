@@ -1,0 +1,7 @@
+# Distributed under the MIT License.
+# See LICENSE.txt for details.
+
+# This input file is intentionally empty. It needs to exist so that
+# Main.hpp can read it, in order to get options for items to put into
+# the GlobalCache during initialization.  In the test itself, the
+# items that initialize the GlobalCache have default values.

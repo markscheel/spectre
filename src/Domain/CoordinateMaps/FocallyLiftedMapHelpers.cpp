@@ -26,7 +26,13 @@ tt::remove_cvref_wrap_t<T> scale_factor(
     const bool src_is_between_proj_and_target) noexcept {
   using return_type = tt::remove_cvref_wrap_t<T>;
   // quadratic equation is
-  // a x^2 + b x + c = 0
+  // a scale_factor^2 + b scale_factor + c = 0
+  //
+  // For this case
+  // a = |x_0^i-P^i|^2
+  // b = 2(x_0^i-P^i)(P^j-C^j)\delta_{ij}
+  // c = |P^i-C^i|^2 - R^2
+  //
   const return_type a = square(src_point[0] - proj_center[0]) +
                         square(src_point[1] - proj_center[1]) +
                         square(src_point[2] - proj_center[2]);
@@ -43,6 +49,8 @@ tt::remove_cvref_wrap_t<T> scale_factor(
     // target_point.  There are three cases: 1) src and proj are both
     // inside the sphere, 2) src and proj are both outside the sphere,
     // and 3) proj is outside the sphere and src is inside the sphere.
+    // Note that a root of zero corresponds to target_point = proj_center,
+    // and a root of unity corresponds to target_point = src_point.
     // To cover all 3 cases, we choose the smallest root that is
     // greater than or equal to unity. This means for case 2) we are
     // choosing the point closest to src.
@@ -53,6 +61,8 @@ tt::remove_cvref_wrap_t<T> scale_factor(
   // src_point. There are three cases: 1) proj is inside the sphere
   // and src is outside the sphere 2) src is inside the sphere and proj
   // is outside the sphere, and 3) the sphere is between src and proj.
+  // Note that a root of zero corresponds to target_point = proj_center,
+  // and a root of unity corresponds to target_point = src_point.
   // To cover all 3 cases, we choose the largest root that is less than
   // or equal to unity, and we require that this root is positive.
   // This means that for 3) we are choosing the point closest to src.
@@ -66,13 +76,41 @@ boost::optional<double> try_scale_factor(
     const std::array<double, 3>& sphere_center, double radius,
     const bool pick_larger_root,
     const bool pick_root_greater_than_one) noexcept {
-  // We solve the quadratic for (scale_factor-1) instead of scale_factor to
-  // avoid roundoff problems when scale_factor is very nearly equal to unity.
-  // Note that scale_factor==1 will occur when src_point is on the sphere, which
-  // happens when inverse-mapping the boundaries.
+  // We solve the quadratic for (scale_factor-1) instead of
+  // scale_factor to avoid roundoff problems when scale_factor is very
+  // nearly equal to unity.  Note that scale_factor==1 will occur in
+  // the inverse map when src_point (which is x^i) is
+  // on the sphere.
+  //
+  // Roundoff is not a problem when forward-mapping and solving only
+  // for lambda.
 
-  // quadratic equation is
+  // If the original quadratic equation is
+  //
+  // A scale_factor^2 + B scale_factor + C = 0,
+  //
+  // and if x = scale_factor-1, then the quadratic equation for x is
+  //
   // a x^2 + b x + c = 0
+  //
+  // where
+  //
+  // a = A
+  // b = 2A + B
+  // c = A + B + C
+  //
+  // For this case
+  // A = |x_0^i-P^i|^2
+  // B = 2(x_0^i-P^i)(P^j-C^j)\delta_{ij}
+  // C = |P^i-C^i|^2 - R^2
+  //
+  // Note that A + B + C is |x_0^i-P^i+P^i-C^i|^2 - R^2
+  // and 2A+B is 2(x_0^i-P^i)(x_0^j-P^j+P^j-C^j), so
+  //
+  // a = |x_0^i-P^i|^2
+  // b = 2(x_0^i-P^i)(x_0^j-C^j)\delta_{ij}
+  // c = |x_0^i-C^i|^2 - R^2
+
   const double a = square(src_point[0] - proj_center[0]) +
                    square(src_point[1] - proj_center[1]) +
                    square(src_point[2] - proj_center[2]);
@@ -92,10 +130,10 @@ boost::optional<double> try_scale_factor(
     // We solved for scale_factor-1 above, so add 1 to get scale_factor.
     x0 += 1.0;
     x1 += 1.0;
-    if (equal_within_roundoff(x0, 1.0)) {
+    if (UNLIKELY(equal_within_roundoff(x0, 1.0))) {
       x0 = 1.0;
     }
-    if (equal_within_roundoff(x1, 1.0)) {
+    if (UNLIKELY(equal_within_roundoff(x1, 1.0))) {
       x1 = 1.0;
     }
     if (pick_root_greater_than_one) {
@@ -168,7 +206,7 @@ std::array<tt::remove_cvref_wrap_t<T>, 3> d_scale_factor_d_src_point(
     const std::array<double, 3>& proj_center,
     const std::array<double, 3>& sphere_center, const T& lambda) noexcept {
   using return_type = tt::remove_cvref_wrap_t<T>;
-  const return_type lambda_over_denominator =
+  const return_type lambda_squared_over_denominator =
       square(lambda) / (square(intersection_point[0] - proj_center[0]) +
                         square(intersection_point[1] - proj_center[1]) +
                         square(intersection_point[2] - proj_center[2]) +
@@ -178,11 +216,15 @@ std::array<tt::remove_cvref_wrap_t<T>, 3> d_scale_factor_d_src_point(
                              (proj_center[1] - sphere_center[1]) +
                          (intersection_point[2] - proj_center[2]) *
                              (proj_center[2] - sphere_center[2])));
-  auto result =
-      make_with_value<std::array<return_type, 3>>(lambda_over_denominator, 0.0);
+  // The denominator in lambda_squared_over_denominator is zero if
+  // intersection_point == proj_center.  But if that happens,
+  // the map is singular and problems will show up
+  // elsewhere.
+  auto result = make_with_value<std::array<return_type, 3>>(
+      lambda_squared_over_denominator, 0.0);
   for (size_t i = 0; i < 3; ++i) {
     gsl::at(result, i) =
-        lambda_over_denominator *
+        lambda_squared_over_denominator *
         (gsl::at(sphere_center, i) - gsl::at(intersection_point, i));
   }
   return result;

@@ -37,23 +37,30 @@ namespace {
 struct Metavars {
   using const_global_cache_tags =
       tmpl::list<Tags::IntegerList, Tags::UniquePtrIntegerList>;
+  using mutable_global_cache_tags = tmpl::list<Tags::DoubleList>;
   using component_list = tmpl::list<>;
 };
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Parallel.GlobalCacheDataBox", "[Unit][Parallel]") {
+  tuples::TaggedTuple<Tags::DoubleList>
+      mutable_global_cache_items{};
+  tuples::get<Tags::DoubleList>(mutable_global_cache_items) =
+      std::array<double, 3>{{3.14, 42.0, 69.0}};
+  MutableGlobalCache<Metavars> mutable_cache{
+      std::move(mutable_global_cache_items)};
   tuples::TaggedTuple<Tags::IntegerList, Tags::UniquePtrIntegerList>
       global_cache_items{};
   tuples::get<Tags::IntegerList>(global_cache_items) =
       std::array<int, 3>{{-1, 3, 7}};
   tuples::get<Tags::UniquePtrIntegerList>(global_cache_items) =
       std::make_unique<std::array<int, 3>>(std::array<int, 3>{{1, 5, -8}});
-  MutableGlobalCache<Metavars> mutable_cache{tuples::TaggedTuple<>{}};
   GlobalCache<Metavars> cache{std::move(global_cache_items), &mutable_cache};
   auto box = db::create<
       db::AddSimpleTags<Tags::GlobalCacheImpl<Metavars>>,
       db::AddComputeTags<Tags::FromGlobalCache<Tags::IntegerList>,
-                         Tags::FromGlobalCache<Tags::UniquePtrIntegerList>>>(
+                         Tags::FromGlobalCache<Tags::UniquePtrIntegerList>,
+                         Tags::FromGlobalCache<Tags::DoubleList>>>(
       &std::as_const(cache));
   CHECK(db::get<Tags::GlobalCache>(box) == &cache);
   CHECK(std::array<int, 3>{{-1, 3, 7}} == db::get<Tags::IntegerList>(box));
@@ -63,14 +70,28 @@ SPECTRE_TEST_CASE("Unit.Parallel.GlobalCacheDataBox", "[Unit][Parallel]") {
         &db::get<Tags::IntegerList>(box));
   CHECK(&Parallel::get<Tags::UniquePtrIntegerList>(cache) ==
         &db::get<Tags::UniquePtrIntegerList>(box));
+  // Because we explicitly added
+  // Tags::FromGlobalCache<Tags::DoubleList> into the DataBox, we
+  // should be able to retrieve them.  However, in Algorithm.hpp we
+  // intentionally put only the const GlobalCache items into the
+  // DataBox.
+  CHECK(std::array<double, 3>{{3.14, 42.0, 69.0}} ==
+        db::get<Tags::DoubleList>(box));
+  CHECK(&Parallel::get<Tags::DoubleList>(cache) ==
+        &db::get<Tags::DoubleList>(box));
 
+  tuples::TaggedTuple<Tags::DoubleList>
+      mutable_global_cache_items2{};
+  tuples::get<Tags::DoubleList>(mutable_global_cache_items2) =
+      std::array<double, 3>{{2.718, 1.618 , 0.007297}};
+  MutableGlobalCache<Metavars> mutable_cache2{
+      std::move(mutable_global_cache_items2)};
   tuples::TaggedTuple<Tags::IntegerList, Tags::UniquePtrIntegerList>
       global_cache_items2{};
   tuples::get<Tags::IntegerList>(global_cache_items2) =
       std::array<int, 3>{{10, -3, 700}};
   tuples::get<Tags::UniquePtrIntegerList>(global_cache_items2) =
       std::make_unique<std::array<int, 3>>(std::array<int, 3>{{100, -7, -300}});
-  MutableGlobalCache<Metavars> mutable_cache2{tuples::TaggedTuple<>{}};
   GlobalCache<Metavars> cache2{std::move(global_cache_items2), &mutable_cache2};
   db::mutate<Tags::GlobalCache>(
       make_not_null(&box),
@@ -87,6 +108,15 @@ SPECTRE_TEST_CASE("Unit.Parallel.GlobalCacheDataBox", "[Unit][Parallel]") {
         &db::get<Tags::IntegerList>(box));
   CHECK(&Parallel::get<Tags::UniquePtrIntegerList>(cache2) ==
         &db::get<Tags::UniquePtrIntegerList>(box));
+  // Because we explicitly added
+  // Tags::FromGlobalCache<Tags::DoubleList> into the DataBox, we
+  // should be able to retrieve them.  However, in Algorithm.hpp we
+  // intentionally put only the const GlobalCache items into the
+  // DataBox.
+  CHECK(std::array<double, 3>{{2.718, 1.618, 0.007297}} ==
+        db::get<Tags::DoubleList>(box));
+  CHECK(&Parallel::get<Tags::DoubleList>(cache2) ==
+        &db::get<Tags::DoubleList>(box));
 
   TestHelpers::db::test_base_tag<Tags::GlobalCache>("GlobalCache");
   TestHelpers::db::test_simple_tag<Tags::GlobalCacheImpl<Metavars>>(

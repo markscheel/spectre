@@ -354,6 +354,11 @@ class AlgorithmImpl<ParallelComponent, tmpl::list<PhaseDepActionListsPack...>> {
 
   bool terminate_{true};
 
+  // Here we add const_global_cache_tags to the initial_databox,
+  // but we intentionally do not add mutable_global_cache_tags to the
+  // initial_databox.
+  // We forbid retrieval of mutable GlobalCache items from the
+  // DataBox so that such items cannot be used as input tags in a ComputeItem.
   using all_cache_tags = get_const_global_cache_tags<metavariables>;
   using initial_databox = db::compute_databox_type<tmpl::flatten<tmpl::list<
       Tags::GlobalCacheImpl<metavariables>,

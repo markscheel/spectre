@@ -22,9 +22,9 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
 
 namespace Endcap_detail {
 double sin_ax_over_x(double x, double ax, double a) noexcept {
-  return square(ax) < 6.0 * std::numeric_limits<double>::epsilon()
-             ? a
-             : sin(ax) / x;
+  // sin(ax)/x returns the right thing except if x is zero, so
+  // we need to treat only that case as special.
+  return x == 0.0 ? a : sin(ax) / x;
 }
 double sin_ax_over_x(double x, double a) noexcept {
   return sin_ax_over_x(x, a * x, a);
@@ -37,8 +37,49 @@ DataVector sin_ax_over_x(const DataVector& x, double a) noexcept {
   return result;
 }
 double dlogx_sin_ax_over_x(double x, double ax, double a) noexcept {
-  return square(ax) < 10.0 * std::numeric_limits<double>::epsilon()
-             ? -cube(a) / 3.0
+  // Here we need to worry about roundoff. Note that we can expand
+  // d/d(log x) [ sin(ax)/x ] =
+  // a/x^2 [ 1 - 1 - 2(ax)^2/3! + 4(ax)^4/5! - 6(ax)^6/7! + ...],
+  // where I kept the "1 - 1" above as a reminder that when evaluating
+  // this function directly as (a * cos(ax) - sin(ax) / x) / square(x)
+  // there can be significant roundoff because of the "1" in each of the
+  // two terms that are subtracted.
+  //
+  // The relative error in the above expression, if evaluated directly,
+  // is 3*eps/(ax)^2 where eps is machine epsilon.  (That expression comes
+  // from replacing "1 - 1" with eps and noting that the correct answer
+  // is the 2(ax)^2/3! term and eps is an error contribution).
+  // This means the error 100% if (ax)^2 is 3*eps.
+  //
+  // The solution is to evaluate the series if (ax) is small enough.
+  // Suppose we keep up to and including the (ax)^(2n) term in the
+  // series.  Then the series is accurate if the (ax)^{2n+2} term (the
+  // next term in the series) is small, i.e. if
+  // (2n+2)(ax)^{2n+2}/(2n+3)! < eps.
+  //
+  // For the worst case of (2n+2)(ax)^{2n+2}/(2n+3)! == eps, the direct
+  // evaluation still has a relative error of 3*eps/(ax)^2, which evaluates to
+  // error = 3*eps* eps^{-1/(n+1)} * ((2n+2)/(2n+3)!)^{1/(n+1)}.
+  // This can be rewritten as
+  // error = 3 * [eps^n*((2n+2)/(2n+3)!)]^{1/(n+1)}.
+  //
+  // For certain values of n:
+  // n=1    error=3*sqrt(eps/30)               ~ 5e-9
+  // n=2    error=3*(eps^2/840)^(1/3)          ~ 7e-12
+  // n=3    error=3*(eps^3/45360)^(1/4)        ~ 2e-13
+  // n=4    error=3*(eps^4/3991680)^(1/5)      ~ 2e-14
+  // n=5    error=3*(eps^5/518918400)^(1/6)    ~ 5e-15
+  // n=6    error=3*(eps^6/93405312000)^(1/7)  ~ 1e-15
+  //
+  // We gain less and less with each order.
+  //
+  // So here we choose n=3.
+  // Then the series above can be rewritten
+  // d/d(log x) [ sin(ax)/x ] = a/x^2 [- 2(ax)^2/3! + 4(ax)^4/5! - 6(ax)^6/7!]
+  //                          = -a^3/3 [ 1 - 4*3*(ax)^2/5! + 6*3*(ax)^4/7!]
+  return pow<8>(ax) < 45360.0 * std::numeric_limits<double>::epsilon()
+             ? (-cube(a) / 3.0) *
+                   (1.0 + square(ax) * (-0.1 + square(ax) / 280.0))
              : (a * cos(ax) - sin(ax) / x) / square(x);
 }
 double dlogx_sin_ax_over_x(double x, double a) noexcept {
@@ -78,9 +119,9 @@ std::array<tt::remove_cvref_wrap_t<T>, 3> Endcap::operator()(
   const return_type rho = sqrt(square(xbar) + square(ybar));
   const return_type sin_factor =
       radius_ * Endcap_detail::sin_ax_over_x(rho, theta_);
-  const return_type z = radius_ * cos(rho * theta_) + center_[2];
-  const return_type x = sin_factor * xbar + center_[0];
-  const return_type y = sin_factor * ybar + center_[1];
+  return_type z = radius_ * cos(rho * theta_) + center_[2];
+  return_type x = sin_factor * xbar + center_[0];
+  return_type y = sin_factor * ybar + center_[1];
   return std::array<return_type, 3>{{std::move(x), std::move(y), std::move(z)}};
 }
 
@@ -152,47 +193,39 @@ boost::optional<std::array<double, 3>> Endcap::inverse(
   const double x = target_coords[0] - center_[0];
   const double y = target_coords[1] - center_[1];
   const double z = target_coords[2] - center_[2];
-  const double r = sqrt(square(x) + square(y) + square(z));
+
+  // Are we in the range of the map?
   // The equal_within_roundoff below has an implicit scale of 1,
   // so the inverse may fail if radius_ is very small on purpose,
   // e.g. if we really want a tiny tiny domain for some reason.
+  const double r = sqrt(square(x) + square(y) + square(z));
   if (not equal_within_roundoff(r, radius_)) {
     return boost::none;
   }
 
-  // Compute sin^2(rho theta).
-  const double sin_squared_rho_theta = (square(x) + square(y)) / square(r);
-  // Compute sin(rho theta)/rho.
-  // If sin^2(rho theta) is small,
-  // use arcsin(q) = q(1 + q^2/6 + 3 q^4/40 + ...)
-  // for q = sin(rho theta).
-  double sin_rho_theta_over_rho = 0.0;
-  if (square(sin_squared_rho_theta) <
-      (40.0 / 3.0) * std::numeric_limits<double>::epsilon()) {
-    sin_rho_theta_over_rho = theta_ * (1.0 - sin_squared_rho_theta / 6.0);
-  } else {
-    const double rho = asin(sqrt(sin_squared_rho_theta)) / theta_;
-    sin_rho_theta_over_rho = sqrt(sin_squared_rho_theta) / rho;
-  }
-
-  // Note about the division in the next line: The above check of r
-  // versus radius_ means that r cannot be zero unless the radius of
-  // the sphere (a map parameter) is chosen to be zero, which would
-  // make the map singular.  Also sin_rho_theta_over_rho cannot be
-  // zero unless theta_ (a map parameter) is chosen to be zero, which
-  // also would make the map singular.
-  const double xbar = x / (r * sin_rho_theta_over_rho);
-  const double ybar = y / (r * sin_rho_theta_over_rho);
-  const double rho_squared = square(xbar) + square(ybar);
-  if (rho_squared > 1.0 and not equal_within_roundoff(rho_squared, 1.0)) {
-    return boost::none;
-  }
-
+  // Compute zbar and check if we are in the range of the map.
   const double zbar = 2.0 * sigma_in - 1.0;
   if (abs(zbar) > 1.0 and not equal_within_roundoff(abs(zbar), 1.0)) {
     return boost::none;
   }
 
+  const double rhobar = sqrt(square(x) + square(y));
+  if (UNLIKELY(rhobar == 0.0)) {
+    // If x and y are zero, so are xbar and ybar,
+    // so we are done.
+    return std::array<double, 3>{{0.0, 0.0, zbar}};
+  }
+
+  // Note: theta_ cannot be zero for a nonsingular map.
+  const double rho = atan2(rhobar, z) / theta_;
+
+  // Check if we are outside the range of the map.
+  if (rho > 1.0 and not equal_within_roundoff(rho, 1.0)) {
+    return boost::none;
+  }
+
+  const double xbar = x * rho / rhobar;
+  const double ybar = y * rho / rhobar;
   return std::array<double, 3>{{xbar, ybar, zbar}};
 }
 

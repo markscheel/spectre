@@ -253,7 +253,7 @@ bool operator==(const FocallyLiftedMap<InnerMap>& lhs,
  * the `deriv_lambda_tilde` function of `InnerMap`.  Note that for
  * nonsingular maps there is no worry that \f$\tilde{\lambda}\f$ is
  * zero in the denominator of the second term of Eq. (13); if
- * \f$\tilde{\lambda}=0\f$ then $x_0^i=P^i$ by Eq. (7), and therefore
+ * \f$\tilde{\lambda}=0\f$ then \f$x_0^i=P^i\f$ by Eq. (7), and therefore
  * the map is singular.
  *
  * To evaluate the remaining unknown factor in Eq. (12),

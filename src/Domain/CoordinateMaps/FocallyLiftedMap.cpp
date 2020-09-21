@@ -34,17 +34,17 @@ template <typename InnerMap>
 template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, 3> FocallyLiftedMap<InnerMap>::
 operator()(const std::array<T, 3>& source_coords) const noexcept {
-  using return_type = tt::remove_cvref_wrap_t<T>;
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
 
   // lower_coords are the mapped coords on the surface.
-  const std::array<return_type, 3> lower_coords = inner_map_(source_coords);
+  const std::array<ReturnType, 3> lower_coords = inner_map_(source_coords);
 
   // upper_coords are the mapped coords on the surface of the sphere.
-  const auto lambda = FocallyLiftedMapHelpers::scale_factor<return_type>(
+  const auto lambda = FocallyLiftedMapHelpers::scale_factor<ReturnType>(
       lower_coords, proj_center_, center_, radius_,
       InnerMap::projection_source_is_between_focus_and_target());
 
-  std::array<return_type, 3> upper_coords = lower_coords;
+  std::array<ReturnType, 3> upper_coords = lower_coords;
   for (size_t i = 0; i < 3; ++i) {
     gsl::at(upper_coords, i) =
         gsl::at(proj_center_, i) +
@@ -53,8 +53,8 @@ operator()(const std::array<T, 3>& source_coords) const noexcept {
 
   // mapped_coords goes linearly from lower_coords to upper_coords
   // as sigma goes from 0 to 1.
-  const return_type sigma = inner_map_.sigma(source_coords);
-  auto mapped_coords = make_with_value<std::array<return_type, 3>>(sigma, 0.0);
+  const ReturnType sigma = inner_map_.sigma(source_coords);
+  auto mapped_coords = make_with_value<std::array<ReturnType, 3>>(sigma, 0.0);
   for (size_t i = 0; i < 3; ++i) {
     gsl::at(mapped_coords, i) =
         gsl::at(lower_coords, i) +
@@ -68,16 +68,16 @@ template <typename T>
 tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame>
 FocallyLiftedMap<InnerMap>::jacobian(
     const std::array<T, 3>& source_coords) const noexcept {
-  using return_type = tt::remove_cvref_wrap_t<T>;
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
 
   // lower_coords are the mapped coords on the surface.
-  const std::array<return_type, 3> lower_coords = inner_map_(source_coords);
-  const auto lambda = FocallyLiftedMapHelpers::scale_factor<return_type>(
+  const std::array<ReturnType, 3> lower_coords = inner_map_(source_coords);
+  const auto lambda = FocallyLiftedMapHelpers::scale_factor<ReturnType>(
       lower_coords, proj_center_, center_, radius_,
       InnerMap::projection_source_is_between_focus_and_target());
 
   // upper_coords are the mapped coords on the surface of the sphere.
-  std::array<return_type, 3> upper_coords = lower_coords;
+  std::array<ReturnType, 3> upper_coords = lower_coords;
   for (size_t i = 0; i < 3; ++i) {
     gsl::at(upper_coords, i) =
         gsl::at(proj_center_, i) +
@@ -89,9 +89,9 @@ FocallyLiftedMap<InnerMap>::jacobian(
           dereference_wrapper(source_coords[0]), 0.0);
 
   // Do the easiest of the terms involving the inner map.
-  const return_type sigma = inner_map_.sigma(source_coords);
+  const ReturnType sigma = inner_map_.sigma(source_coords);
   const auto d_inner = inner_map_.jacobian(source_coords);
-  const return_type lambda_factor = 1.0 - sigma + lambda * sigma;
+  const ReturnType lambda_factor = 1.0 - sigma + lambda * sigma;
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       jacobian_matrix.get(i, j) += lambda_factor * d_inner.get(i, j);
@@ -110,10 +110,10 @@ FocallyLiftedMap<InnerMap>::jacobian(
 
   // Do lambda term, which is the most complicated one.
   const auto d_lambda_d_lower_coords =
-      FocallyLiftedMapHelpers::d_scale_factor_d_src_point<return_type>(
+      FocallyLiftedMapHelpers::d_scale_factor_d_src_point<ReturnType>(
           upper_coords, proj_center_, center_, lambda);
   for (size_t j = 0; j < 3; ++j) {
-    auto temp = make_with_value<return_type>(sigma, 0.0);
+    auto temp = make_with_value<ReturnType>(sigma, 0.0);
     for (size_t k = 0; k < 3; ++k) {
       temp += gsl::at(d_lambda_d_lower_coords, k) * d_inner.get(k, j);
     }
@@ -132,16 +132,16 @@ template <typename T>
 tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame>
 FocallyLiftedMap<InnerMap>::inv_jacobian(
     const std::array<T, 3>& source_coords) const noexcept {
-  using return_type = tt::remove_cvref_wrap_t<T>;
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
 
   // lower_coords are the mapped coords on the surface.
-  const std::array<return_type, 3> lower_coords = inner_map_(source_coords);
-  const auto lambda = FocallyLiftedMapHelpers::scale_factor<return_type>(
+  const std::array<ReturnType, 3> lower_coords = inner_map_(source_coords);
+  const auto lambda = FocallyLiftedMapHelpers::scale_factor<ReturnType>(
       lower_coords, proj_center_, center_, radius_,
       InnerMap::projection_source_is_between_focus_and_target());
 
   // upper_coords are the mapped coords on the surface of the sphere.
-  std::array<return_type, 3> upper_coords = lower_coords;
+  std::array<ReturnType, 3> upper_coords = lower_coords;
   for (size_t i = 0; i < 3; ++i) {
     gsl::at(upper_coords, i) =
         gsl::at(proj_center_, i) +
@@ -150,14 +150,14 @@ FocallyLiftedMap<InnerMap>::inv_jacobian(
 
   // Derivative of lambda
   const auto d_lambda_d_lower_coords =
-      FocallyLiftedMapHelpers::d_scale_factor_d_src_point<return_type>(
+      FocallyLiftedMapHelpers::d_scale_factor_d_src_point<ReturnType>(
           upper_coords, proj_center_, center_, lambda);
 
   // Lambda_tilde is the scale factor between mapped coords and lower coords.
   // We can compute it with a shortcut because there is a relationship
   // between lambda, lambda_tilde, and sigma.
-  const return_type sigma = inner_map_.sigma(source_coords);
-  const return_type lambda_tilde = 1.0 / (1.0 - sigma * (1.0 - lambda));
+  const ReturnType sigma = inner_map_.sigma(source_coords);
+  const ReturnType lambda_tilde = 1.0 / (1.0 - sigma * (1.0 - lambda));
 
   // Derivative of lambda_tilde
   const auto d_lambda_tilde_d_mapped_coords =
@@ -181,7 +181,7 @@ FocallyLiftedMap<InnerMap>::inv_jacobian(
       make_with_value<tnsr::i<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame>>(
           sigma, 0.0);
   for (size_t i = 0; i < 3; ++i) {
-    auto tmp = make_with_value<return_type>(lambda, 0.0);
+    auto tmp = make_with_value<ReturnType>(lambda, 0.0);
     for (size_t j = 0; j < 3; ++j) {
       tmp += gsl::at(d_lambda_d_lower_coords, j) * dx0_dx.get(j, i);
     }

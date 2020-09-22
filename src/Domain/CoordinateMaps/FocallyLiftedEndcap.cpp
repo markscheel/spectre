@@ -100,10 +100,12 @@ Endcap::Endcap(const std::array<double, 3>& center, double radius,
                "Cannot have zero radius");
         return radius;
       }()),
-      theta_max_(acos((z_plane - center_[2]) / radius_)) {
-  ASSERT(z_plane != center[2],
-         "Plane must intersect sphere at more than one point");
-}
+      theta_max_([&]() noexcept {
+        const double cos_theta_max = (z_plane - center_[2]) / radius_;
+        ASSERT(abs(cos_theta_max) < 1.0,
+               "Plane must intersect sphere, and at more than one point");
+        return acos(cos_theta_max);
+      }()) {}
 
 template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, 3> Endcap::operator()(
@@ -145,7 +147,7 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::jacobian(
   // dx/dybar
   get<0, 1>(jacobian_matrix) = d_sin_factor * xbar * ybar;
   // dy/dxbar
-  get<1, 0>(jacobian_matrix) = d_sin_factor * ybar * xbar;
+  get<1, 0>(jacobian_matrix) = get<0, 1>(jacobian_matrix);
   // dy/dybar
   get<1, 1>(jacobian_matrix) = d_sin_factor * square(ybar) + sin_factor;
 
@@ -164,7 +166,7 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::inv_jacobian(
   const return_type dlogrhobar_q =
       Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_max_);
   const return_type one_over_r_q = 1.0 / (q * radius_);
-  const return_type tmp =
+  const return_type jacobian_factor =
       one_over_r_q * dlogrhobar_q / (q + square(rhobar) * dlogrhobar_q);
 
   auto inv_jacobian_matrix =
@@ -172,13 +174,15 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::inv_jacobian(
           dereference_wrapper(source_coords[0]), 0.0);
 
   // dxbar/dx
-  get<0, 0>(inv_jacobian_matrix) = one_over_r_q - square(xbar) * tmp;
+  get<0, 0>(inv_jacobian_matrix) =
+      one_over_r_q - square(xbar) * jacobian_factor;
   // dxbar/dy
-  get<0, 1>(inv_jacobian_matrix) = -xbar * ybar * tmp;
+  get<0, 1>(inv_jacobian_matrix) = -xbar * ybar * jacobian_factor;
   // dybar/dx
   get<1, 0>(inv_jacobian_matrix) = get<0, 1>(inv_jacobian_matrix);
   // dybar/dy
-  get<1, 1>(inv_jacobian_matrix) = one_over_r_q - square(ybar) * tmp;
+  get<1, 1>(inv_jacobian_matrix) =
+      one_over_r_q - square(ybar) * jacobian_factor;
 
   return inv_jacobian_matrix;
 }

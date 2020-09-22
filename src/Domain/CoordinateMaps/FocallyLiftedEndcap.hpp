@@ -23,6 +23,8 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * \brief A FocallyLiftedInnerMap that maps a 3D unit right cylinder
  *  to a volume that connects portions of two spherical surfaces.
  *
+ * \image html FocallyLiftedEndcap.svg "Focally Lifted Endcap."
+ *
  * \details The domain of the map is a 3D unit right cylinder with
  * coordinates \f$(\bar{x},\bar{y},\bar{z})\f$ such that
  * \f$-1\leq\bar{z}\leq 1\f$ and \f$\bar{x}^2+\bar{y}^2 \leq
@@ -30,7 +32,11 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  *
  * Consider a sphere with center \f$C^i\f$ and radius \f$R\f$ that is
  * intersected by a plane normal to the \f$z\f$ axis and located at
- * \f$z = z_\mathrm{P}\f$. `Endcap` provides the following functions:
+ * \f$z = z_\mathrm{P}\f$.  In the figure above, every point
+ * \f$\bar{x}^i\f$ in the blue region \f$\sigma=0\f$ maps to a point
+ * \f$x_0^i\f$ on a portion of the surface of the sphere.
+ *
+ * `Endcap` provides the following functions:
  *
  * ### operator()
  * `operator()` maps \f$(\bar{x},\bar{y},\bar{z}=-1)\f$ to the portion of
@@ -47,17 +53,21 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * x_0^2 &= R \cos(\bar{\rho} \theta_\mathrm{max}) + C^2.
  * \f}
  *
- * Here \f$\bar{\rho}^2 \equiv \bar{x}^2+\bar{y}^2\f$, and where
+ * Here \f$\bar{\rho}^2 \equiv (\bar{x}^2+\bar{y}^2)/\bar{R}^2\f$, where
+ * \f$\bar{R}\f$ is the radius of the cylinder in barred coordinates,
+ * which is always unity,
+ * and where
  * \f$\theta_\mathrm{max}\f$ is defined by
  * \f$\cos(\theta_\mathrm{max}) = (z_\mathrm{P}-C^2)/R\f$.
- * Note that care must be taken to evaluate
+ * Note that when \f$\bar{\rho}=0\f$, we must evaluate
  * \f$\sin(\bar{\rho}\theta_\mathrm{max})/\bar{\rho}\f$
- * near \f$\bar{\rho}=0\f$.
+ * as \f$\theta_\mathrm{max}\f$.
  *
  * ### sigma
  *
- * \f$\sigma\f$ is a function that is zero on the sphere
- * \f$x^i=x_0^i\f$ and unity at \f$\bar{z}=+1\f$ (corresponding to the
+ * \f$\sigma\f$ is a function that is zero at \f$\bar{z}=-1\f$
+ * (which maps onto the sphere \f$x^i=x_0^i\f$) and
+ * unity at \f$\bar{z}=+1\f$ (corresponding to the
  * upper surface of the FocallyLiftedMap). We define
  *
  * \f{align}

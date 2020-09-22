@@ -87,7 +87,7 @@ tt::remove_cvref_wrap_t<T> scale_factor(
 /*!
  *  Solves a problem of the same form as `scale_factor`, but is used
  *  only by the inverse function to compute \f$\tilde{\lambda}\f$ and
- *  \f$\bar{\lambda}\f$. `try_scalar_factor` is used in two contexts:
+ *  \f$\bar{\lambda}\f$. `try_scale_factor` is used in two contexts:
  *
  *  `try_scale_factor` is used to determine \f$\bar{\lambda}\f$
  *  given \f$x^i\f$. \f$\bar{\lambda}\f$ is defined by

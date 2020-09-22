@@ -116,10 +116,10 @@ std::array<tt::remove_cvref_wrap_t<T>, 3> Endcap::operator()(
   using return_type = tt::remove_cvref_wrap_t<T>;
   const return_type& xbar = source_coords[0];
   const return_type& ybar = source_coords[1];
-  const return_type rho = sqrt(square(xbar) + square(ybar));
+  const return_type rhobar = sqrt(square(xbar) + square(ybar));
   const return_type sin_factor =
-      radius_ * Endcap_detail::sin_ax_over_x(rho, theta_);
-  return_type z = radius_ * cos(rho * theta_) + center_[2];
+      radius_ * Endcap_detail::sin_ax_over_x(rhobar, theta_);
+  return_type z = radius_ * cos(rhobar * theta_) + center_[2];
   return_type x = sin_factor * xbar + center_[0];
   return_type y = sin_factor * ybar + center_[1];
   return std::array<return_type, 3>{{std::move(x), std::move(y), std::move(z)}};
@@ -131,11 +131,11 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::jacobian(
   using return_type = tt::remove_cvref_wrap_t<T>;
   const return_type& xbar = source_coords[0];
   const return_type& ybar = source_coords[1];
-  const return_type rho = sqrt(square(xbar) + square(ybar));
+  const return_type rhobar = sqrt(square(xbar) + square(ybar));
   const return_type sin_factor =
-      radius_ * Endcap_detail::sin_ax_over_x(rho, theta_);
+      radius_ * Endcap_detail::sin_ax_over_x(rhobar, theta_);
   const return_type d_sin_factor =
-      radius_ * Endcap_detail::dlogx_sin_ax_over_x(rho, theta_);
+      radius_ * Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_);
 
   auto jacobian_matrix =
       make_with_value<tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame>>(
@@ -163,13 +163,14 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::inv_jacobian(
   using return_type = tt::remove_cvref_wrap_t<T>;
   const return_type& xbar = source_coords[0];
   const return_type& ybar = source_coords[1];
-  const return_type rho = sqrt(square(xbar) + square(ybar));
-  // Let q = sin(rho theta)/rho
-  const return_type q = Endcap_detail::sin_ax_over_x(rho, theta_);
-  const return_type dlogrho_q = Endcap_detail::dlogx_sin_ax_over_x(rho, theta_);
+  const return_type rhobar = sqrt(square(xbar) + square(ybar));
+  // Let q = sin(rhobar theta)/rhobar
+  const return_type q = Endcap_detail::sin_ax_over_x(rhobar, theta_);
+  const return_type dlogrhobar_q =
+      Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_);
   const return_type one_over_r_q = 1.0 / (q * radius_);
   const return_type tmp =
-      one_over_r_q * dlogrho_q / (q + square(rho) * dlogrho_q);
+      one_over_r_q * dlogrhobar_q / (q + square(rhobar) * dlogrhobar_q);
 
   auto inv_jacobian_matrix =
       make_with_value<tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame>>(
@@ -209,23 +210,23 @@ boost::optional<std::array<double, 3>> Endcap::inverse(
     return boost::none;
   }
 
-  const double rhobar = sqrt(square(x) + square(y));
-  if (UNLIKELY(rhobar == 0.0)) {
+  const double rho = sqrt(square(x) + square(y));
+  if (UNLIKELY(rho == 0.0)) {
     // If x and y are zero, so are xbar and ybar,
     // so we are done.
     return std::array<double, 3>{{0.0, 0.0, zbar}};
   }
 
   // Note: theta_ cannot be zero for a nonsingular map.
-  const double rho = atan2(rhobar, z) / theta_;
+  const double rhobar = atan2(rho, z) / theta_;
 
   // Check if we are outside the range of the map.
-  if (rho > 1.0 and not equal_within_roundoff(rho, 1.0)) {
+  if (rhobar > 1.0 and not equal_within_roundoff(rhobar, 1.0)) {
     return boost::none;
   }
 
-  const double xbar = x * rho / rhobar;
-  const double ybar = y * rho / rhobar;
+  const double xbar = x * rhobar / rho;
+  const double ybar = y * rhobar / rho;
   return std::array<double, 3>{{xbar, ybar, zbar}};
 }
 

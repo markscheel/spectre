@@ -21,22 +21,19 @@
 namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
 
 namespace Endcap_detail {
-double sin_ax_over_x(double x, double ax, double a) noexcept {
+double sin_ax_over_x(double x, double a) noexcept {
   // sin(ax)/x returns the right thing except if x is zero, so
   // we need to treat only that case as special.
-  return x == 0.0 ? a : sin(ax) / x;
-}
-double sin_ax_over_x(double x, double a) noexcept {
-  return sin_ax_over_x(x, a * x, a);
+  return x == 0.0 ? a : sin(a * x) / x;
 }
 DataVector sin_ax_over_x(const DataVector& x, double a) noexcept {
   DataVector result(x);
   for (size_t i = 0; i < x.size(); ++i) {
-    result[i] = sin_ax_over_x(x[i], a * x[i], a);
+    result[i] = sin_ax_over_x(x[i], a);
   }
   return result;
 }
-double dlogx_sin_ax_over_x(double x, double ax, double a) noexcept {
+double dlogx_sin_ax_over_x(double x, double a) noexcept {
   // Here we need to worry about roundoff. Note that we can expand
   // d/d(log x) [ sin(ax)/x ] =
   // a/x^2 [ 1 - 1 - 2(ax)^2/3! + 4(ax)^4/5! - 6(ax)^6/7! + ...],
@@ -77,18 +74,16 @@ double dlogx_sin_ax_over_x(double x, double ax, double a) noexcept {
   // Then the series above can be rewritten
   // d/d(log x) [ sin(ax)/x ] = a/x^2 [- 2(ax)^2/3! + 4(ax)^4/5! - 6(ax)^6/7!]
   //                          = -a^3/3 [ 1 - 4*3*(ax)^2/5! + 6*3*(ax)^4/7!]
+  const double ax = a*x;
   return pow<8>(ax) < 45360.0 * std::numeric_limits<double>::epsilon()
              ? (-cube(a) / 3.0) *
                    (1.0 + square(ax) * (-0.1 + square(ax) / 280.0))
              : (a * cos(ax) - sin(ax) / x) / square(x);
 }
-double dlogx_sin_ax_over_x(double x, double a) noexcept {
-  return dlogx_sin_ax_over_x(x, a * x, a);
-}
 DataVector dlogx_sin_ax_over_x(const DataVector& x, double a) noexcept {
   DataVector result(x);
   for (size_t i = 0; i < x.size(); ++i) {
-    result[i] = dlogx_sin_ax_over_x(x[i], a * x[i], a);
+    result[i] = dlogx_sin_ax_over_x(x[i], a);
   }
   return result;
 }

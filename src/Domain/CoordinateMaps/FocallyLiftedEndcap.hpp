@@ -115,11 +115,67 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * R \frac{1}{\bar{\rho}}\frac{d}{d\bar{\rho}}
  * \left(\frac{\sin(\bar{\rho}\theta_\mathrm{max})}{\bar{\rho}}\right)
  * \bar{y}^2\\
- * \frac{\partial x_0^i}{\partial \bar{z}} &=0,
+ * \frac{\partial x_0^i}{\partial \bar{z}} &=0.
  * \f}
- * where care must be taken to evaluate
- * \f$\sin(\bar{\rho}\theta_\mathrm{max})/\bar{\rho}\f$
- * and its derivatives near \f$\bar{\rho}=0\f$.
+ *
+ * ### Evaluating sinc functions
+ *
+ * Note that \f$\sin(\bar{\rho}\theta_\mathrm{max})/\bar{\rho}\f$ and
+ * its derivative appear in the above equations.  We evaluate
+ * \f$\sin(ax)/x\f$ in a straightforward way, except we are careful
+ * to evaluate \f$\sin(ax)/x = a\f$ for the special case \f$x=0\f$.
+ *
+ * The derivative of the sync function is more complicated to evaluate
+ * because of roundoff. Note that we can expand
+ *
+ * \f{align*}
+ *  \frac{d}{d \log x}\left(\frac{\sin(ax)}{x}\right) &=
+ *  \frac{a}{x^2}\left(1 - 1 - \frac{2 (ax)^2}{3!} +
+ *  \frac{4(ax)^4}{5!} - \frac{5(ax)^6}{7!} + \cdots \right),
+ * \f}
+ *
+ * where we kept the "1 - 1" above as a reminder that when evaluating
+ * this function directly as \f$(a \cos(ax)/x^2 - \sin(ax)/x^3)\f$, there
+ * can be significant roundoff because of the "1" in each of the two
+ * terms that are subtracted. The relative error in direct evaluation is
+ * \f$3\epsilon/(ax)^2\f$, where \f$\epsilon\f$ is machine precision
+ * (This expression comes from replacing "1 - 1" with \f$\epsilon\f$
+ * and comparing the lowest-order contribution to the correct answer, i.e.
+ * the \f$2(ax)^2/3!\f$ term, with \f$\epsilon\f$, the error contribution).
+ * This means the error
+ * 100% if \f$(ax)^2=3\epsilon\f$.
+ *
+ * To avoid roundoff, we evaluate the series if \f$ax\f$ is small
+ * enough.  Suppose we keep terms up to and including the \f$(ax)^{2n}\f$
+ * term in the series.  Then we evaluate the series if the
+ * next term, the \f$(ax)^{2n+2}\f$ term, is roundoff,
+ * i.e. if \f$(2n+2)(ax)^{2n+2}/(2n+3)! < \epsilon\f$.  In this case,
+ * the direct evaluation has the maximum error if
+ * \f$(2n+2)(ax)^{2n+2}/(2n+3)! = \epsilon\f$.  We showed above that the
+ * relative error in direct evaluation is \f$3\epsilon/(ax)^2\f$,
+ * which evaluates to \f$(\epsilon^n (2n+2)/(2n+3)!)^{1/(n+1)}\f$.
+ *
+ * \f{align*}
+ *   n=1 \qquad& \mathrm{error}=3(\epsilon/30)^{1/2} &\qquad
+ *               \sim \mathrm{5e-09}\\
+ *   n=2 \qquad& \mathrm{error}=3(\epsilon^2/840)^{1/3} &\qquad
+ *               \sim \mathrm{7e-12}\\
+ *   n=3 \qquad& \mathrm{error}=3(\epsilon^3/45360)^{1/4} &\qquad
+ *               \sim \mathrm{2e-13}\\
+ *   n=4 \qquad& \mathrm{error}=3(\epsilon^4/3991680)^{1/5} &\qquad
+ *               \sim \mathrm{2e-14}\\
+ *   n=5 \qquad& \mathrm{error}=3(\epsilon^5/518918400)^{1/6} &\qquad
+ *               \sim \mathrm{5e-15}\\
+ *   n=6 \qquad& \mathrm{error}=3(\epsilon^6/93405312000)^{1/7} &\qquad
+ *               \sim \mathrm{1e-15}
+ * \f}
+ * We gain less and less with each order, so we choose \f$n=3\f$.
+ * Then the series above can be rewritten to this order in the form
+ * \f{align*}
+ *  \frac{d}{d \log x}\left(\frac{\sin(ax)}{x}\right) &=
+ *  -\frac{a^3}{3}\left(1 - \frac{3\cdot 4 (ax)^2}{5!} +
+ *  \frac{3 \cdot 6(ax)^4}{7!}\right).
+ * \f}
  *
  * ### inverse
  *
@@ -282,7 +338,8 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * \f}
  * Note that care must be taken to evaluate
  * \f$q = \sin(\bar{\rho}\theta_\mathrm{max})/\bar{\rho}\f$ and its
- * derivative near \f$\bar{\rho}=0\f$.
+ * derivative near \f$\bar{\rho}=0\f$; see the discussion above on
+ * evaluating sinc functions.
  *
  * ### dxbar_dsigma
  *

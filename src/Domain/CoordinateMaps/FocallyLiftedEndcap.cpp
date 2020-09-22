@@ -105,7 +105,7 @@ Endcap::Endcap(const std::array<double, 3>& center, double radius,
                "Cannot have zero radius");
         return radius;
       }()),
-      theta_(acos((z_plane - center_[2]) / radius_)) {
+      theta_max_(acos((z_plane - center_[2]) / radius_)) {
   ASSERT(z_plane != center[2],
          "Plane must intersect sphere at more than one point");
 }
@@ -118,8 +118,8 @@ std::array<tt::remove_cvref_wrap_t<T>, 3> Endcap::operator()(
   const return_type& ybar = source_coords[1];
   const return_type rhobar = sqrt(square(xbar) + square(ybar));
   const return_type sin_factor =
-      radius_ * Endcap_detail::sin_ax_over_x(rhobar, theta_);
-  return_type z = radius_ * cos(rhobar * theta_) + center_[2];
+      radius_ * Endcap_detail::sin_ax_over_x(rhobar, theta_max_);
+  return_type z = radius_ * cos(rhobar * theta_max_) + center_[2];
   return_type x = sin_factor * xbar + center_[0];
   return_type y = sin_factor * ybar + center_[1];
   return std::array<return_type, 3>{{std::move(x), std::move(y), std::move(z)}};
@@ -133,18 +133,18 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::jacobian(
   const return_type& ybar = source_coords[1];
   const return_type rhobar = sqrt(square(xbar) + square(ybar));
   const return_type sin_factor =
-      radius_ * Endcap_detail::sin_ax_over_x(rhobar, theta_);
+      radius_ * Endcap_detail::sin_ax_over_x(rhobar, theta_max_);
   const return_type d_sin_factor =
-      radius_ * Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_);
+      radius_ * Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_max_);
 
   auto jacobian_matrix =
       make_with_value<tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame>>(
           dereference_wrapper(source_coords[0]), 0.0);
 
   // dz/dxbar
-  get<2, 0>(jacobian_matrix) = -sin_factor * theta_ * xbar;
+  get<2, 0>(jacobian_matrix) = -sin_factor * theta_max_ * xbar;
   // dz/dybar
-  get<2, 1>(jacobian_matrix) = -sin_factor * theta_ * ybar;
+  get<2, 1>(jacobian_matrix) = -sin_factor * theta_max_ * ybar;
   // dx/dxbar
   get<0, 0>(jacobian_matrix) = d_sin_factor * square(xbar) + sin_factor;
   // dx/dybar
@@ -165,9 +165,9 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::inv_jacobian(
   const return_type& ybar = source_coords[1];
   const return_type rhobar = sqrt(square(xbar) + square(ybar));
   // Let q = sin(rhobar theta)/rhobar
-  const return_type q = Endcap_detail::sin_ax_over_x(rhobar, theta_);
+  const return_type q = Endcap_detail::sin_ax_over_x(rhobar, theta_max_);
   const return_type dlogrhobar_q =
-      Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_);
+      Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_max_);
   const return_type one_over_r_q = 1.0 / (q * radius_);
   const return_type tmp =
       one_over_r_q * dlogrhobar_q / (q + square(rhobar) * dlogrhobar_q);
@@ -189,8 +189,8 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::inv_jacobian(
 }
 
 boost::optional<std::array<double, 3>> Endcap::inverse(
-    const std::array<double, 3>& target_coords, const double sigma_in) const
-    noexcept {
+    const std::array<double, 3>& target_coords,
+    const double sigma_in) const noexcept {
   const double x = target_coords[0] - center_[0];
   const double y = target_coords[1] - center_[1];
   const double z = target_coords[2] - center_[2];
@@ -217,8 +217,8 @@ boost::optional<std::array<double, 3>> Endcap::inverse(
     return std::array<double, 3>{{0.0, 0.0, zbar}};
   }
 
-  // Note: theta_ cannot be zero for a nonsingular map.
-  const double rhobar = atan2(rho, z) / theta_;
+  // Note: theta_max_ cannot be zero for a nonsingular map.
+  const double rhobar = atan2(rho, z) / theta_max_;
 
   // Check if we are outside the range of the map.
   if (rhobar > 1.0 and not equal_within_roundoff(rhobar, 1.0)) {
@@ -282,12 +282,12 @@ std::array<tt::remove_cvref_wrap_t<T>, 3> Endcap::deriv_lambda_tilde(
 void Endcap::pup(PUP::er& p) noexcept {
   p | center_;
   p | radius_;
-  p | theta_;
+  p | theta_max_;
 }
 
 bool operator==(const Endcap& lhs, const Endcap& rhs) noexcept {
   return lhs.center_ == rhs.center_ and lhs.radius_ == rhs.radius_ and
-         lhs.theta_ == rhs.theta_;
+         lhs.theta_max_ == rhs.theta_max_;
 }
 
 bool operator!=(const Endcap& lhs, const Endcap& rhs) noexcept {
@@ -298,8 +298,9 @@ bool operator!=(const Endcap& lhs, const Endcap& rhs) noexcept {
 #define DTYPE(data) BOOST_PP_TUPLE_ELEM(0, data)
 
 #define INSTANTIATE(_, data)                                                  \
-  template std::array<tt::remove_cvref_wrap_t<DTYPE(data)>, 3> Endcap::       \
-  operator()(const std::array<DTYPE(data), 3>& source_coords) const noexcept; \
+  template std::array<tt::remove_cvref_wrap_t<DTYPE(data)>, 3>                \
+  Endcap::operator()(const std::array<DTYPE(data), 3>& source_coords)         \
+      const noexcept;                                                         \
   template tnsr::Ij<tt::remove_cvref_wrap_t<DTYPE(data)>, 3, Frame::NoFrame>  \
   Endcap::jacobian(const std::array<DTYPE(data), 3>& source_coords)           \
       const noexcept;                                                         \

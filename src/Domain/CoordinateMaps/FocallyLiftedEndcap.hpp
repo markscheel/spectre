@@ -303,10 +303,10 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  *
  * \f{align}
  * \frac{\partial q}{\partial x_0^0} &=
- * \frac{\bar{x}}{\bar{\rho}}\frac{dq}{d\bar{\rho}}
+ * \frac{\bar{x}}{\bar{\rho}R}\frac{dq}{d\bar{\rho}}
  * \left(\bar{\rho} \frac{dq}{d\bar{\rho}} + q\right)^{-1},\\
  * \frac{\partial q}{\partial x_0^1} &=
- * \frac{\bar{y}}{\bar{\rho}}\frac{dq}{d\bar{\rho}}
+ * \frac{\bar{y}}{\bar{\rho}R}\frac{dq}{d\bar{\rho}}
  * \left(\bar{\rho} \frac{dq}{d\bar{\rho}} + q\right)^{-1},
  * \f}
  *

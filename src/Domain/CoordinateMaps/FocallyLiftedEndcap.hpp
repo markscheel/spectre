@@ -229,9 +229,14 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * |P^i + (x^i - P^i) \tilde{\lambda} - C^i |^2 - R^2 = 0.
  * \f}
  *
- * In solving the quadratic, we choose the larger root if
- * \f$x^2>z_\mathrm{P}\f$ and the smaller root otherwise. We demand
- * that the root is greater than unity.  If there is no such root,
+ * In solving the quadratic, we demand a root that is positive and
+ * less than or equal to unity, since \f$x_0^i\f$ is always between
+ * the projection point and \f$x^i\f$. If there are two suitable
+ * roots, this means that the entire sphere lies between \f$P^i\f$ and
+ * \f$x^i\f$; in this case if \f$x^2 \geq z_\mathrm{P}\f$ we choose the
+ * larger root, otherwise we choose the smaller one: this gives
+ * us the root with \f$x_0^2 \geq z_\mathrm{P}\f$, the portion of the sphere
+ * that is the range of `Endcap`. If there is no suitable root,
  * this means that the point \f$x^i\f$ is not in the range of the map
  * so we return boost::none.
  *
@@ -415,7 +420,7 @@ class Endcap {
   friend bool operator==(const Endcap& lhs, const Endcap& rhs) noexcept;
   std::array<double, 3> center_{};
   double radius_{std::numeric_limits<double>::signaling_NaN()};
-  double theta_{std::numeric_limits<double>::signaling_NaN()};
+  double theta_max_{std::numeric_limits<double>::signaling_NaN()};
 };
 bool operator!=(const Endcap& lhs, const Endcap& rhs) noexcept;
 }  // namespace domain::CoordinateMaps::FocallyLiftedInnerMaps

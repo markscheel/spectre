@@ -126,6 +126,8 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * `inverse` takes \f$x_0^i\f$ and \f$\sigma\f$ as arguments, and
  * returns \f$(\bar{x},\bar{y},\bar{z})\f$, or boost::none if
  * \f$x_0^i\f$ or \f$\sigma\f$ are outside the range of the map.
+ * For example, if \f$x_0^i\f$ does not lie on the sphere,
+ * we return boost::none.
  *
  * The easiest to compute is \f$\bar{z}\f$, which is given by inverting
  * Eq. (4):
@@ -139,34 +141,19 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  *
  * To get \f$\bar{x}\f$ and \f$\bar{y}\f$,
  * we invert
- * Eqs (1--3).  Note that we have already demanded that
- * \f$x_0^i\f$ lies on the sphere, so therefore the inverse of Eqs. (1--3)
- * depends on \f$x_0^0\f$ and \f$x_0^1\f$ but not on \f$x_0^2\f$.
- * To compute the inverse, we start by finding
+ * Eqs (1--3).  If \f$x_0^0=x_0^1=0\f$, then \f$\bar{x}=\bar{y}=0\f$.
+ * Otherwise, we compute
  *
  * \f{align}
- * \upsilon \equiv \sin(\bar{\rho}\theta_\mathrm{max})
- *        &= \sqrt{\frac{(x_0^0-C^0)^2+(x_0^1-C^1)^2}{R^2}}.
+ *   \bar{\rho} = \theta_\mathrm{max}^{-1}
+ *   \tan^{-1}\left(\frac{\rho}{x_0^2-C^2}\right),
  * \f}
  *
- * Then we determine \f$\sin(\bar{\rho}\theta_\mathrm{max})/\bar{\rho}\f$
- * from
- *
- * \f{align*}
- * \frac{1}{\bar{\rho}}\sin(\bar{\rho}\theta_\mathrm{max})
- * &= \frac{\theta_\mathrm{max}\upsilon}{\arcsin(\upsilon)}\\
- * &\sim \theta_\mathrm{max}\left(1-\frac{\upsilon^2}{6}\right)
- * \qquad \hbox{(for small $\bar{\rho}$)},
- * \f}
- *
- * where we use the Taylor approximation only for small \f$\bar{\rho}\f$.
- * Finally, we have
+ * where \f$\rho^2 = (x_0^0-C^0)^2+(x_0^1-C^1)^2\f$. Then
  *
  * \f{align}
- * \bar{x} &= \frac{x_0^0-C^0}{R}\left(\frac{1}{\bar{\rho}}
-              \sin(\bar{\rho}\theta_\mathrm{max})\right)^{-1}\\
- * \bar{y} &= \frac{x_0^1-C^1}{R}\left(\frac{1}{\bar{\rho}}
-              \sin(\bar{\rho}\theta_\mathrm{max})\right)^{-1}.
+ * \bar{x} &= (x_0^0-C^0)\frac{\bar{\rho}}{\rho},\\
+ * \bar{y} &= (x_0^1-C^1)\frac{\bar{\rho}}{\rho}.
  * \f}
  *
  * Note that if \f$\bar{x}^2+\bar{y}^2 > 1\f$, the original point is outside
@@ -215,10 +202,35 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * Note that \f$\bar{x}\f$ and \f$\bar{y}\f$ can be considered to
  * depend only on \f$x_0^0\f$ and \f$x_0^1\f$ but not on \f$x_0^2\f$,
  * because the point \f$x_0^i\f$ is constrained to lie on a sphere of
- * radius \f$R\f$.  We will compute \f$\partial \bar{x}^i/\partial
- * x_0^k\f$ by differentiating Eqs. (8) and (9), but those equations
- * involve \f$\bar{\rho}\f$, so first we establish some relations
- * involving \f$\bar{\rho}\f$.  For ease of notation, we define
+ * radius \f$R\f$.  Note that there is an alternative way to compute
+ * Eqs. (8) and (9) using only \f$x_0^0\f$ and \f$x_0^1\f$. To do
+ * this, define
+ *
+ * \f{align}
+ * \upsilon \equiv \sin(\bar{\rho}\theta_\mathrm{max})
+ *        &= \sqrt{\frac{(x_0^0-C^0)^2+(x_0^1-C^1)^2}{R^2}}.
+ * \f}
+ *
+ * Then we can write
+ *
+ * \f{align}
+ * \frac{1}{\bar{\rho}}\sin(\bar{\rho}\theta_\mathrm{max})
+ * &= \frac{\theta_\mathrm{max}\upsilon}{\arcsin(\upsilon)},
+ * \f}
+ *
+ * so that
+ *
+ * \f{align}
+ * \bar{x} &= \frac{x_0^0-C^0}{R}\left(\frac{1}{\bar{\rho}}
+ *             \sin(\bar{\rho}\theta_\mathrm{max})\right)^{-1} \\
+ * \bar{y} &= \frac{x_0^1-C^1}{R}\left(\frac{1}{\bar{\rho}}
+ *             \sin(\bar{\rho}\theta_\mathrm{max})\right)^{-1}.
+ * \f}
+ *
+ * We will compute \f$\partial \bar{x}^i/\partial
+ * x_0^k\f$ by differentiating Eqs. (15) and (16).  Because those equations
+ * involve \f$\bar{\rho}\f$, we first establish some relations
+ * involving derivatives of \f$\bar{\rho}\f$.  For ease of notation, we define
  *
  * \f[
  * q \equiv \frac{\sin(\bar{\rho}\theta_\mathrm{max})}{\bar{\rho}}.
@@ -231,7 +243,7 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * \left(\bar{\rho} \frac{dq}{d\bar{\rho}} + q\right)^{-1},
  * \f]
  *
- * where \f$\upsilon\f$ is the quantity defined by Eq. (7).  Therefore
+ * where \f$\upsilon\f$ is the quantity defined by Eq. (13).  Therefore
  *
  * \f{align}
  * \frac{\partial q}{\partial x_0^0} &=
@@ -242,12 +254,12 @@ namespace domain::CoordinateMaps::FocallyLiftedInnerMaps {
  * \left(\bar{\rho} \frac{dq}{d\bar{\rho}} + q\right)^{-1},
  * \f}
  *
- * where we have differentiated Eq. (7), and where we have
- * used Eqs. (8) and (9) to eliminate \f$x_0^0\f$ and
+ * where we have differentiated Eq. (13), and where we have
+ * used Eqs. (15) and (16) to eliminate \f$x_0^0\f$ and
  * \f$x_0^1\f$ in favor of \f$\bar{x}\f$ and
  * \f$\bar{y}\f$ in the final result.
  *
- * By differentiating Eqs. (8) and (9), and using Eqs. (13) and (14), we
+ * By differentiating Eqs. (15) and (16), and using Eqs. (17) and (18), we
  * find
  *
  * \f{align*}

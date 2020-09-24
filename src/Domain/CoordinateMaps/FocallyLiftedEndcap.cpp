@@ -110,28 +110,28 @@ Endcap::Endcap(const std::array<double, 3>& center, double radius,
 template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, 3> Endcap::operator()(
     const std::array<T, 3>& source_coords) const noexcept {
-  using return_type = tt::remove_cvref_wrap_t<T>;
-  const return_type& xbar = source_coords[0];
-  const return_type& ybar = source_coords[1];
-  const return_type rhobar = sqrt(square(xbar) + square(ybar));
-  const return_type sin_factor =
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+  const ReturnType& xbar = source_coords[0];
+  const ReturnType& ybar = source_coords[1];
+  const ReturnType rhobar = sqrt(square(xbar) + square(ybar));
+  const ReturnType sin_factor =
       radius_ * Endcap_detail::sin_ax_over_x(rhobar, theta_max_);
-  return_type z = radius_ * cos(rhobar * theta_max_) + center_[2];
-  return_type x = sin_factor * xbar + center_[0];
-  return_type y = sin_factor * ybar + center_[1];
-  return std::array<return_type, 3>{{std::move(x), std::move(y), std::move(z)}};
+  ReturnType z = radius_ * cos(rhobar * theta_max_) + center_[2];
+  ReturnType x = sin_factor * xbar + center_[0];
+  ReturnType y = sin_factor * ybar + center_[1];
+  return std::array<ReturnType, 3>{{std::move(x), std::move(y), std::move(z)}};
 }
 
 template <typename T>
 tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::jacobian(
     const std::array<T, 3>& source_coords) const noexcept {
-  using return_type = tt::remove_cvref_wrap_t<T>;
-  const return_type& xbar = source_coords[0];
-  const return_type& ybar = source_coords[1];
-  const return_type rhobar = sqrt(square(xbar) + square(ybar));
-  const return_type sin_factor =
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+  const ReturnType& xbar = source_coords[0];
+  const ReturnType& ybar = source_coords[1];
+  const ReturnType rhobar = sqrt(square(xbar) + square(ybar));
+  const ReturnType sin_factor =
       radius_ * Endcap_detail::sin_ax_over_x(rhobar, theta_max_);
-  const return_type d_sin_factor =
+  const ReturnType d_sin_factor =
       radius_ * Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_max_);
 
   auto jacobian_matrix =
@@ -157,16 +157,16 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::jacobian(
 template <typename T>
 tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Endcap::inv_jacobian(
     const std::array<T, 3>& source_coords) const noexcept {
-  using return_type = tt::remove_cvref_wrap_t<T>;
-  const return_type& xbar = source_coords[0];
-  const return_type& ybar = source_coords[1];
-  const return_type rhobar = sqrt(square(xbar) + square(ybar));
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+  const ReturnType& xbar = source_coords[0];
+  const ReturnType& ybar = source_coords[1];
+  const ReturnType rhobar = sqrt(square(xbar) + square(ybar));
   // Let q = sin(rhobar theta)/rhobar
-  const return_type q = Endcap_detail::sin_ax_over_x(rhobar, theta_max_);
-  const return_type dlogrhobar_q =
+  const ReturnType q = Endcap_detail::sin_ax_over_x(rhobar, theta_max_);
+  const ReturnType dlogrhobar_q =
       Endcap_detail::dlogx_sin_ax_over_x(rhobar, theta_max_);
-  const return_type one_over_r_q = 1.0 / (q * radius_);
-  const return_type jacobian_factor =
+  const ReturnType one_over_r_q = 1.0 / (q * radius_);
+  const ReturnType jacobian_factor =
       one_over_r_q * dlogrhobar_q / (q + square(rhobar) * dlogrhobar_q);
 
   auto inv_jacobian_matrix =
@@ -238,22 +238,22 @@ tt::remove_cvref_wrap_t<T> Endcap::sigma(
 template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, 3> Endcap::deriv_sigma(
     const std::array<T, 3>& source_coords) const noexcept {
-  using return_type = tt::remove_cvref_wrap_t<T>;
-  return std::array<return_type, 3>{
-      {make_with_value<return_type>(dereference_wrapper(source_coords[0]), 0.0),
-       make_with_value<return_type>(dereference_wrapper(source_coords[0]), 0.0),
-       make_with_value<return_type>(dereference_wrapper(source_coords[0]),
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+  return std::array<ReturnType, 3>{
+      {make_with_value<ReturnType>(dereference_wrapper(source_coords[0]), 0.0),
+       make_with_value<ReturnType>(dereference_wrapper(source_coords[0]), 0.0),
+       make_with_value<ReturnType>(dereference_wrapper(source_coords[0]),
                                     0.5)}};
 }
 
 template <typename T>
 std::array<tt::remove_cvref_wrap_t<T>, 3> Endcap::dxbar_dsigma(
     const std::array<T, 3>& source_coords) const noexcept {
-  using return_type = tt::remove_cvref_wrap_t<T>;
-  return std::array<return_type, 3>{
-      {make_with_value<return_type>(dereference_wrapper(source_coords[0]), 0.0),
-       make_with_value<return_type>(dereference_wrapper(source_coords[0]), 0.0),
-       make_with_value<return_type>(dereference_wrapper(source_coords[0]),
+  using ReturnType = tt::remove_cvref_wrap_t<T>;
+  return std::array<ReturnType, 3>{
+      {make_with_value<ReturnType>(dereference_wrapper(source_coords[0]), 0.0),
+       make_with_value<ReturnType>(dereference_wrapper(source_coords[0]), 0.0),
+       make_with_value<ReturnType>(dereference_wrapper(source_coords[0]),
                                     2.0)}};
 }
 

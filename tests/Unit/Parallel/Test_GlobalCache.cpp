@@ -146,6 +146,13 @@ struct modify_number_of_legs {
   }
 };
 
+struct set_legs_from_other_animal {
+  static void apply(const gsl::not_null<std::unique_ptr<Animal>*> animal_local,
+                    const std::unique_ptr<Animal>& other_animal) {
+    (*animal_local)->set_number_of_legs(other_animal->number_of_legs());
+  }
+};
+
 template <class Metavariables>
 struct SingletonParallelComponent {
   using chare_type = Parallel::Algorithms::Singleton;
@@ -257,6 +264,11 @@ void TestArrayChare<Metavariables>::run_test_two() noexcept {
     // ... and make the arthropod into a spider.
     Parallel::mutate<animal, modify_number_of_legs>(global_cache_proxy_,
                                                     std::make_tuple<size_t>(8));
+
+    std::unique_ptr<Animal> new_arthropod = std::make_unique<Arthropod>(10);
+    auto tuple_args = std::make_tuple(std::move(new_arthropod));
+    Parallel::mutate<animal, set_legs_from_other_animal>(global_cache_proxy_,
+                                                         tuple_args);
     run_test_three();
   }
 }

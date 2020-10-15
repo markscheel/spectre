@@ -1636,6 +1636,8 @@ class MockRuntimeSystem {
   using GlobalCache = Parallel::GlobalCache<Metavariables>;
   using CacheTuple = tuples::tagged_tuple_from_typelist<
       Parallel::get_const_global_cache_tags<Metavariables>>;
+  using MutableCacheTuple = tuples::tagged_tuple_from_typelist<
+      Parallel::get_mutable_global_cache_tags<Metavariables>>;
 
   using mock_objects_tags =
       tmpl::transform<typename Metavariables::component_list,
@@ -1659,12 +1661,38 @@ class MockRuntimeSystem {
     });
   }
 
+  /// Construct from the tuple of GlobalCache objects and MutableGlobalCache
+  /// objects.
+  explicit MockRuntimeSystem(CacheTuple cache_contents,
+                             MutableCacheTuple mutable_cache_contents)
+      : mutable_cache_(std::move(mutable_cache_contents)),
+        cache_(std::move(cache_contents), &mutable_cache_) {
+    tmpl::for_each<typename Metavariables::component_list>([this](
+                                                               auto component) {
+      using Component = tmpl::type_from<decltype(component)>;
+      Parallel::get_parallel_component<Component>(cache_).set_data(
+          &tuples::get<MockDistributedObjectsTag<Component>>(local_algorithms_),
+          &tuples::get<InboxesTag<Component>>(inboxes_));
+    });
+  }
+
   /// Construct from the tuple of GlobalCache objects that might
   /// be in a different order.
   template <typename... Tags>
   explicit MockRuntimeSystem(tuples::TaggedTuple<Tags...> cache_contents)
       : MockRuntimeSystem(
             tuples::reorder<CacheTuple>(std::move(cache_contents))) {}
+
+  /// Construct from the tuple of GlobalCache and MutableGlobalCache
+  /// objects that might be in a different order.
+  template <typename... CacheTags, typename... MutableCacheTags>
+  explicit MockRuntimeSystem(
+      tuples::TaggedTuple<CacheTags...> cache_contents,
+      tuples::TaggedTuple<MutableCacheTags...> mutable_cache_contents)
+      : MockRuntimeSystem(
+            tuples::reorder<CacheTuple>(std::move(cache_contents)),
+            tuples::reorder<MutableCacheTuple>(
+                std::move(mutable_cache_contents))) {}
 
   /// Emplace a component that does not need to be initialized.
   template <typename Component, typename... Options>

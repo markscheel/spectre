@@ -87,8 +87,10 @@ auto make_initial_box(
 /// - Adds:
 ///   - `Tags::IndicesOfFilledInterpPoints<TemporalId>`
 ///   - `Tags::IndicesOfInvalidInterpPoints<TemporalId>`
+///   - `Tags::PendingTemporalIds<TemporalId>`
 ///   - `Tags::TemporalIds<TemporalId>`
 ///   - `Tags::CompletedTemporalIds<TemporalId>`
+///   - `Tags::AwaitingFunctionOfTimeUpdate`
 ///   - `Tags::InterpolatedVars<InterpolationTargetTag,TemporalId>`
 ///   - `::Tags::Variables<typename
 ///                   InterpolationTargetTag::vars_to_interpolate_to_target>`
@@ -102,8 +104,9 @@ struct InitializeInterpolationTarget {
   using return_tag_list_initial = tmpl::list<
       Tags::IndicesOfFilledInterpPoints<TemporalId>,
       Tags::IndicesOfInvalidInterpPoints<TemporalId>,
-      Tags::TemporalIds<TemporalId>,
+      Tags::PendingTemporalIds<TemporalId>, Tags::TemporalIds<TemporalId>,
       Tags::CompletedTemporalIds<TemporalId>,
+      Tags::AwaitingFunctionOfTimeUpdate,
       Tags::InterpolatedVars<InterpolationTargetTag, TemporalId>,
       ::Tags::Variables<
           typename InterpolationTargetTag::vars_to_interpolate_to_target>>;
@@ -131,6 +134,8 @@ struct InitializeInterpolationTarget {
             std::unordered_map<TemporalId, std::unordered_set<size_t>>{},
             std::unordered_map<TemporalId, std::unordered_set<size_t>>{},
             std::deque<TemporalId>{}, std::deque<TemporalId>{},
+            std::deque<TemporalId>{},
+            false,
             std::unordered_map<TemporalId,
                                Variables<typename InterpolationTargetTag::
                                              vars_to_interpolate_to_target>>{},

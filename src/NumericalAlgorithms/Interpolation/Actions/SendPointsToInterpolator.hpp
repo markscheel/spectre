@@ -13,8 +13,7 @@
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
 
-namespace intrp {
-namespace Actions {
+namespace intrp::Actions {
 /// \ingroup ActionsGroup
 /// \brief Sets up points on an `InterpolationTarget` at a new `temporal_id`
 /// and sends these points to an `Interpolator`.
@@ -43,8 +42,10 @@ struct SendPointsToInterpolator {
                     Parallel::GlobalCache<Metavariables>& cache,
                     const ArrayIndex& /*array_index*/,
                     const TemporalId& temporal_id) noexcept {
+    // Whoever calls SendPointsToInterpolator is responsible for
+    // ensuring that functions of time are up to date at temporal_id.
     auto coords = InterpolationTarget_detail::block_logical_coords<
-        InterpolationTargetTag>(box, tmpl::type_<Metavariables>{}, temporal_id);
+        InterpolationTargetTag>(box, cache, temporal_id);
     InterpolationTarget_detail::set_up_interpolation<InterpolationTargetTag>(
         make_not_null(&box), temporal_id, coords);
     auto& receiver_proxy =
@@ -54,5 +55,4 @@ struct SendPointsToInterpolator {
   }
 };
 
-}  // namespace Actions
-}  // namespace intrp
+}  // namespace intrp::Actions

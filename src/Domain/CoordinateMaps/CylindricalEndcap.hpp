@@ -82,7 +82,7 @@ namespace domain::CoordinateMaps {
  * angle \f$2\theta\f$ as shown in the above figure. Construct another
  * cone, the "invertibility cone", with apex \f$S\f$ chosen such that
  * the two cones intersect at right angles on the circle; thus the
- * opening angle of the invertibility cone is \f$2(\pi-\theta)\f$.  A
+ * opening angle of the invertibility cone is \f$\pi-2\theta\f$.  A
  * necessary condition for invertibility is that the projection point
  * \f$P\f$ lies inside the invertibility cone, but not between \f$S\f$
  * and sphere 1.  Placing the projection point \f$P\f$ to the right of

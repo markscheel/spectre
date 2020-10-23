@@ -83,11 +83,12 @@ CylindricalEndcap::CylindricalEndcap(const std::array<double, 3>& center_one,
 
   // Another necessary condition for invertibility is that proj_center
   // cannot lie between sphere_one and cone_new_apex.
-  const double proj_radius_one = sqrt(square(center_one[0] - proj_center[0]) +
-                                      square(center_one[1] - proj_center[1]) +
-                                      square(center_one[2] - proj_center[2]));
+  const double proj_radius_one_squared =
+      square(center_one[0] - proj_center[0]) +
+      square(center_one[1] - proj_center[1]) +
+      square(center_one[2] - proj_center[2]);
   ASSERT(proj_center[2] > cone_new_apex[2] or proj_center[2] < z_plane or
-             proj_radius_one < radius_one,
+             proj_radius_one_squared < square(radius_one),
          "The arguments passed into the CylindricalEndcap constructor "
          "yield a noninvertible map.");
 
@@ -126,10 +127,11 @@ CylindricalEndcap::CylindricalEndcap(const std::array<double, 3>& center_one,
          "CylindricalEndcap: The map has been tested only for the case when "
          "sphere_one is contained inside sphere_two");
 
-  const double proj_radius_two = sqrt(square(center_two[0] - proj_center[0]) +
-                                      square(center_two[1] - proj_center[1]) +
-                                      square(center_two[2] - proj_center[2]));
-  ASSERT(proj_radius_two < radius_two,
+  const double proj_radius_two_squared =
+      square(center_two[0] - proj_center[0]) +
+      square(center_two[1] - proj_center[1]) +
+      square(center_two[2] - proj_center[2]);
+  ASSERT(proj_radius_two_squared < square(radius_two),
          "CylindricalEndcap: The map has been tested only for the case when "
          "proj_center is contained inside sphere_two");
 

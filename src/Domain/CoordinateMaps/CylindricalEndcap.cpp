@@ -60,6 +60,8 @@ CylindricalEndcap::CylindricalEndcap(const std::array<double, 3>& center_one,
   const std::array<double, 3> cone_new_apex = {
       center_one[0], center_one[1], center_one[2] + radius_one / cos_theta};
   // Cone_new opens in the -z direction with opening angle 2*(pi/2-theta).
+  // Cone_new_apex is labeled 'S' in the 'Allowed Region' figure in
+  // CylindricalEndcap.hpp
 
   // A necessary condition for invertibility is that proj_center lies
   // either inside of cone_new or inside of the reflection of cone_new
@@ -91,10 +93,14 @@ CylindricalEndcap::CylindricalEndcap(const std::array<double, 3>& center_one,
 
   // Other sanity checks that may be relaxed if there is more logic
   // added and more unit tests to test these cases.
+  // We put these sanity checks in a separate place precisely because
+  // they may be relaxed in the future, whereas the above sanity checks
+  // are hard limits that shouldn't be touched.
 
   ASSERT(proj_center[2] < z_plane,
-         "CylindricalEndcap: The map hasn't been tested for this "
-         "configuration. The map may still be invertible, but further "
+         "CylindricalEndcap: The map hasn't been tested for the "
+         "case where proj_center is at smaller z than the z_plane. "
+         "The map may still be invertible, but further "
          "testing would be needed to ensure that jacobians are not "
          "ill-conditioned.");
 
@@ -127,7 +133,12 @@ CylindricalEndcap::CylindricalEndcap(const std::array<double, 3>& center_one,
          "CylindricalEndcap: The map has been tested only for the case when "
          "proj_center is contained inside sphere_two");
 
-  // Check if we are too close to singular.
+  // Check if we are too close to singular.  We do this check
+  // separately from the earlier similar check because this check may
+  // be changed in the future based on further testing and further
+  // logic that may be added (for example we may want to change the
+  // 0.95 to some other number), but the previous check (without the
+  // 0.95) is a hard limit that should always be obeyed.
   ASSERT(acos(abs(cos_alpha)) < abs(0.95 * asin(cos_theta)),
          "CylindricalEndcap: Parameters are close to where the map becomes "
          "non-invertible.  The map has not been tested for this case.");

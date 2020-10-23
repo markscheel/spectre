@@ -85,22 +85,34 @@ namespace domain::CoordinateMaps {
  * opening angle of the invertibility cone is \f$\pi-2\theta\f$.  A
  * necessary condition for invertibility is that the projection point
  * \f$P\f$ lies inside the invertibility cone, but not between \f$S\f$
- * and sphere 1.  Placing the projection point \f$P\f$ to the right of
- * \f$S\f$ (but inside the invertibility cone) is ok for
+ * and sphere 1.  (If \f$P\f$ does not obey this condition, then from the
+ * diagram one can find at least one line through \f$P\f$
+ * that twice intersects the surface of sphere 1 with \f$z>z_\mathrm{P}\f$;
+ * the inverse map is thus double-valued at those intersection points.)
+ * Placing the projection point \f$P\f$ to the
+ * right of \f$S\f$ (but inside the invertibility cone) is ok for
  * invertibility.
  *
  * In addition to invertibility and the two additional restrictions
  * already mentioned above, we demand a few more restrictions on the
- * map parameters to simplify the logic for the expected use cases, and
+ * map parameters to simplify the logic for the expected use cases and
  * to ensure that jacobians do not get too large. We demand:
  *
  * - \f$P\f$ is not too close to the edge of the invertibility cone.
+ *   Here we demand that the angle between \f$P\f$ and \f$S\f$
+ *   is less than \f$0.95*(\pi/2-\theta)\f$ (note that if this
+ *   angle is exactly \f$\pi/2-\theta\f$ it is exactly on the
+ *   invertibility cone); The 0.95 was chosen empirically based on
+ *   unit tests.
  * - \f$P\f$ is contained in sphere 2.
  * - \f$P\f$ is to the left of \f$z_\mathrm{P}\f$.
  * - \f$z_\mathrm{P}\f$ is not too close to the center or the edge of sphere 1.
+ *   Here we demand that \f$0.1 \leq \cos(\theta) \leq 0.9\f$, where
+ *   the values 0.1 and 0.9 were chosen empirically based on unit tests.
  * - If a line segment is drawn between \f$P\f$ and any point on the
- *   intersection circle, the angle between the line segment and
- *   the x-axis is smaller than \f$\pi/3\f$.
+ *   intersection circle (the circle where sphere 1 intersects the
+ *   plane \f$z=z_\mathrm{P}\f$), the angle between the line segment and
+ *   the z-axis is smaller than \f$\pi/3\f$.
  *
  */
 class CylindricalEndcap {

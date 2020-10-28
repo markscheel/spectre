@@ -12,6 +12,7 @@ spectre_target_sources(
   BinaryCompactObject.cpp
   Brick.cpp
   Cylinder.cpp
+  CylindricalBinaryCompactObject.cpp
   Disk.cpp
   FrustalCloak.cpp
   Interval.cpp
@@ -30,6 +31,7 @@ spectre_target_headers(
   HEADERS
   AlignedLattice.hpp
   BinaryCompactObject.hpp
+  CylindricalBinaryCompactObject.hpp
   Brick.hpp
   Cylinder.hpp
   Disk.hpp

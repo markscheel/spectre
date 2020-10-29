@@ -40,6 +40,14 @@ class Option;
 template <typename T>
 struct create_from_yaml;
 }  // namespace Options
+namespace domain::CoordinateMaps {
+template<typename Map1, typename Map2>
+class ProductOf2Maps;
+template<typename Map1, typename Map2, typename Map3>
+class ProductOf3Maps;
+class Affine;
+class Wedge2D;
+}  // namespace domain::CoordinateMaps
 /// \endcond
 
 /// \ingroup ComputationalDomainGroup
@@ -225,6 +233,35 @@ auto cyl_wedge_coordinate_maps(
     const std::vector<double>& height_partitioning = {}) noexcept
     -> std::vector<std::unique_ptr<
         domain::CoordinateMapBase<Frame::Logical, TargetFrame, 3>>>;
+
+/// \ingroup ComputationalDomainGroup
+/// Same as cyl_wedge_coordinate_maps, but only the center square blocks,
+/// for use_equiangular_map==false.
+///
+/// Returned as a vector of the coordinate maps so that they can
+/// be composed with other maps later.
+auto cyl_wedge_coord_map_center_blocks(
+    const double inner_radius, const double lower_bound,
+    const double upper_bound,
+    const std::vector<double>& height_partitioning = {}) noexcept
+    -> std::vector<domain::CoordinateMaps::ProductOf3Maps<
+        domain::CoordinateMaps::Affine, domain::CoordinateMaps::Affine,
+        domain::CoordinateMaps::Affine>>;
+
+/// \ingroup ComputationalDomainGroup
+/// Same as cyl_wedge_coordinate_maps, but only the surrounding wedge blocks,
+/// for use_equiangular_map==false.
+///
+/// Returned as a vector of the coordinate maps so that they can
+/// be composed with other maps later.
+auto cyl_wedge_coord_map_surrounding_blocks(
+    const double inner_radius, const double outer_radius,
+    const double lower_bound, const double upper_bound,
+    const double inner_circularity,
+    const std::vector<double>& radial_partitioning = {},
+    const std::vector<double>& height_partitioning = {}) noexcept
+    -> std::vector<domain::CoordinateMaps::ProductOf2Maps<
+        domain::CoordinateMaps::Wedge2D, domain::CoordinateMaps::Affine>>;
 
 /// \ingroup ComputationalDomainGroup
 /// \brief The corners for a cylindrical domain split into discs with radial

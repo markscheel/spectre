@@ -931,6 +931,109 @@ std::vector<std::array<size_t, 8>> corners_for_biradially_layered_domains(
   return corners;
 }
 
+std::vector<domain::CoordinateMaps::ProductOf3Maps<
+    domain::CoordinateMaps::Affine, domain::CoordinateMaps::Affine,
+    domain::CoordinateMaps::Affine>>
+cyl_wedge_coord_map_center_blocks(
+    const double inner_radius, const double lower_bound,
+    const double upper_bound,
+    const std::vector<double>& height_partitioning) noexcept {
+  using Affine = domain::CoordinateMaps::Affine;
+  using Affine3D =
+      domain::CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
+  std::vector<Affine3D> maps{};
+  double temp_lower_bound = lower_bound;
+  double temp_upper_bound{};
+  for (size_t layer = 0; layer < 1 + height_partitioning.size(); layer++) {
+    if (layer != height_partitioning.size()) {
+      temp_upper_bound = height_partitioning.at(layer);
+    } else {
+      temp_upper_bound = upper_bound;
+    }
+    maps.emplace_back(
+        Affine3D{Affine(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
+                        inner_radius / sqrt(2.0)),
+                 Affine(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
+                        inner_radius / sqrt(2.0)),
+                 Affine{-1.0, 1.0, temp_lower_bound, temp_upper_bound}});
+    if (layer != height_partitioning.size()) {
+      temp_lower_bound = height_partitioning.at(layer);
+    }
+  }
+  return maps;
+}
+
+std::vector<domain::CoordinateMaps::ProductOf2Maps<
+    domain::CoordinateMaps::Wedge2D, domain::CoordinateMaps::Affine>>
+cyl_wedge_coord_map_surrounding_blocks(
+    const double inner_radius, const double outer_radius,
+    const double lower_bound, const double upper_bound,
+    const double inner_circularity,
+    const std::vector<double>& radial_partitioning,
+    const std::vector<double>& height_partitioning) noexcept {
+  using Affine = domain::CoordinateMaps::Affine;
+  using Wedge2D = domain::CoordinateMaps::Wedge2D;
+  using Wedge3DPrism = domain::CoordinateMaps::ProductOf2Maps<Wedge2D, Affine>;
+  std::vector<Wedge3DPrism> maps{};
+  double temp_inner_circularity{};
+  double temp_inner_radius{};
+  double temp_outer_radius{};
+  double temp_lower_bound = lower_bound;
+  double temp_upper_bound{};
+  for (size_t layer = 0; layer < 1 + height_partitioning.size(); layer++) {
+    temp_inner_radius = inner_radius;
+    if (layer != height_partitioning.size()) {
+      temp_upper_bound = height_partitioning.at(layer);
+    } else {
+      temp_upper_bound = upper_bound;
+    }
+    temp_inner_circularity = inner_circularity;
+    for (size_t shell = 0; shell < 1 + radial_partitioning.size(); shell++) {
+      if (shell != radial_partitioning.size()) {
+        temp_outer_radius = radial_partitioning.at(shell);
+      } else {
+        temp_outer_radius = outer_radius;
+      }
+      maps.emplace_back(Wedge3DPrism{
+          Wedge2D{temp_inner_radius, temp_outer_radius, temp_inner_circularity,
+                  1.0,
+                  OrientationMap<2>{std::array<Direction<2>, 2>{
+                      {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
+                  false},
+          Affine{-1.0, 1.0, temp_lower_bound, temp_upper_bound}});
+      maps.emplace_back(Wedge3DPrism{
+          Wedge2D{temp_inner_radius, temp_outer_radius, temp_inner_circularity,
+                  1.0,
+                  OrientationMap<2>{std::array<Direction<2>, 2>{
+                      {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
+                  false},
+          Affine{-1.0, 1.0, temp_lower_bound, temp_upper_bound}});
+      maps.emplace_back(Wedge3DPrism{
+          Wedge2D{temp_inner_radius, temp_outer_radius, temp_inner_circularity,
+                  1.0,
+                  OrientationMap<2>{std::array<Direction<2>, 2>{
+                      {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
+                  false},
+          Affine{-1.0, 1.0, temp_lower_bound, temp_upper_bound}});
+      maps.emplace_back(Wedge3DPrism{
+          Wedge2D{temp_inner_radius, temp_outer_radius, temp_inner_circularity,
+                  1.0,
+                  OrientationMap<2>{std::array<Direction<2>, 2>{
+                      {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
+                  false},
+          Affine{-1.0, 1.0, temp_lower_bound, temp_upper_bound}});
+      temp_inner_circularity = 1.;
+      if (shell != radial_partitioning.size()) {
+        temp_inner_radius = radial_partitioning.at(shell);
+      }
+    }
+    if (layer != height_partitioning.size()) {
+      temp_lower_bound = height_partitioning.at(layer);
+    }
+  }
+  return maps;
+}
+
 template <typename TargetFrame>
 std::vector<
     std::unique_ptr<domain::CoordinateMapBase<Frame::Logical, TargetFrame, 3>>>

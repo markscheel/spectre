@@ -93,7 +93,8 @@ struct RegisterReductionNodeWithWritingNode {
                     const size_t caller_node_id) noexcept {
     if constexpr (tmpl::list_contains_v<
                       DbTagsList, Tags::NodesExpectedToContributeReductions>) {
-      const auto node_id = static_cast<size_t>(Parallel::my_node());
+      const auto node_id = static_cast<size_t>(Parallel::my_node(
+          typename ParallelComponent::chare_type::algorithm_type{}));
       ASSERT(node_id == 0, "Only node zero, not node "
                                << node_id
                                << ", should be called from another node");
@@ -151,7 +152,8 @@ struct RegisterReductionContributorWithObserverWriter {
                     const ArrayComponentId& id_of_caller) noexcept {
     if constexpr (tmpl::list_contains_v<
                       DbTagsList, Tags::ExpectedContributorsForObservations>) {
-      const auto node_id = static_cast<size_t>(Parallel::my_node());
+      const auto node_id = static_cast<size_t>(Parallel::my_node(
+          typename ParallelComponent::chare_type::algorithm_type{}));
       db::mutate<Tags::ExpectedContributorsForObservations>(
           make_not_null(&box),
           [&cache, &id_of_caller, &node_id, &observation_key](

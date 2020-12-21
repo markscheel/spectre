@@ -13,41 +13,46 @@ namespace Parallel {
  * \ingroup ParallelGroup
  * \brief Number of processing elements.
  */
-inline int number_of_procs() { return CkNumPes(); }
+template<typename DistributedObject>
+int number_of_procs(const DistributedObject& distributed_object) {
+  return distributed_object.number_of_procs();
+}
 
 /*!
  * \ingroup ParallelGroup
  * \brief %Index of my processing element.
  */
-inline int my_proc() { return CkMyPe(); }
+template<typename DistributedObject>
+int my_proc(const DistributedObject& distributed_object) {
+  return distributed_object.my_proc();
+}
 
 /*!
  * \ingroup ParallelGroup
  * \brief Number of nodes.
  */
-inline int number_of_nodes() { return CkNumNodes(); }
+template<typename DistributedObject>
+int number_of_nodes(const DistributedObject& distributed_object) {
+  return distributed_object.number_of_nodes();
+}
 
 /*!
  * \ingroup ParallelGroup
  * \brief %Index of my node.
  */
-inline int my_node() { return CkMyNode(); }
+template <typename DistributedObject>
+int my_node(const DistributedObject& distributed_object) {
+  return distributed_object.my_node();
+}
 
 /*!
  * \ingroup ParallelGroup
  * \brief Number of processing elements on the given node.
  */
-inline int procs_on_node(const int node_index) {
-  // When using the verbs-linux-x86_64 non-SMP build of Charm++ these
-  // functions have unused-parameter warnings. This is remedied by
-  // casting the integer to a void which results in no extra assembly
-  // code being generated. We use this instead of pragmas because we
-  // would require one pragma for GCC and one for clang, which would
-  // result in code duplication. Commenting out the variable
-  // nodeIndex gives compilation failures on most Charm++ builds since
-  // they actually use the variable. Charm++ plz...
-  static_cast<void>(node_index);
-  return CkNodeSize(node_index);
+template <typename DistributedObject>
+int procs_on_node(const int node_index,
+                  const DistributedObject& distributed_object) {
+  return distributed_object.procs_on_node(node_index);
 }
 
 /*!
@@ -55,33 +60,38 @@ inline int procs_on_node(const int node_index) {
  * \brief The local index of my processing element on my node.
  * This is in the interval 0, ..., procs_on_node(my_node()) - 1.
  */
-inline int my_local_rank() { return CkMyRank(); }
+template <typename DistributedObject>
+int my_local_rank(const DistributedObject& distributed_object) {
+  return distributed_object.my_local_rank();
+}
 
 /*!
  * \ingroup ParallelGroup
  * \brief %Index of first processing element on the given node.
  */
-inline int first_proc_on_node(const int node_index) {
-  static_cast<void>(node_index);
-  return CkNodeFirst(node_index);
+template <typename DistributedObject>
+int first_proc_on_node(const int node_index,
+                       const DistributedObject& distributed_object) {
+  return distributed_object.first_proc_on_node(node_index);
 }
 
 /*!
  * \ingroup ParallelGroup
  * \brief %Index of the node for the given processing element.
  */
-inline int node_of(const int proc_index) {
-  static_cast<void>(proc_index);
-  return CkNodeOf(proc_index);
+template <typename DistributedObject>
+int node_of(const int proc_index, const DistributedObject& distributed_object) {
+  return distributed_object.node_of(proc_index);
 }
 
 /*!
  * \ingroup ParallelGroup
  * \brief The local index for the given processing element on its node.
  */
-inline int local_rank_of(const int proc_index) {
-  static_cast<void>(proc_index);
-  return CkRankOf(proc_index);
+template <typename DistributedObject>
+int local_rank_of(const int proc_index,
+                  const DistributedObject& distributed_object) {
+  return distributed_object.local_rank_of(proc_index);
 }
 
 /*!

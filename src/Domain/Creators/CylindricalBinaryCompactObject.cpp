@@ -147,10 +147,8 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
                      ((1.0 - xi) * center_B_[2] + xi * center_A_[2]);
 
   // Number of blocks without the SphereEs
-  // Note: support for SphereEs will be added in the next PR,
-  // and then the ERROR below will be removed and replaced
-  // with code that changes the number of blocks.
   number_of_blocks_ = 46;
+  include_sphereE_blocks_ = false;
 
   // Add SphereE blocks if necessary.  Note that
   // https://arxiv.org/abs/1206.3015 has a mistake just above
@@ -169,6 +167,8 @@ CylindricalBinaryCompactObject::CylindricalBinaryCompactObject(
         << xi_min_sphere_e << ", but the value of xi is " << xi
         << ". Support for more general domains will be added in the near "
            "future");
+    include_sphereE_blocks_ = true;
+    number_of_blocks_ += 13;
   }
 
 }
@@ -203,26 +203,55 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const noexcept {
   // center_EB and radius_EB are the center and outer-radius of the
   // cylindered-sphere EB in Figure 20.
   //
+  // radius_EE is the outer-radius of the cylindered-sphere EE in Figure 20,
+  // whose center is center_EB.
+  //
+  // radius_ME is eq. A14 in the same paper, which is the radius of the
+  // circle where the EA sphere intersects the cutting plane.
+  //
   // radius_MB is eq. A16 or A23 in the paper (depending on whether
   // the EE spheres exist), and is the radius of the circle where the EB sphere
   // intersects the cutting plane.
-  const auto [center_EA, radius_EA, center_EB, radius_MB,
-              radius_EB] = [this]() noexcept {
+  const auto [center_EA, radius_EA, center_EB, radius_ME, radius_MB, radius_EB,
+              radius_EE] = [this]() noexcept {
     const std::array<double, 3> center_EB_l = {
         0.0, 0.0, center_B_[2] * cut_spheres_offset_factor_};
     std::array<double, 3> center_EA_l{};
     double radius_EA_l = std::numeric_limits<double>::signaling_NaN();
     double radius_EB_l = std::numeric_limits<double>::signaling_NaN();
+    double radius_EE_l = std::numeric_limits<double>::signaling_NaN();
+    double radius_ME_l = std::numeric_limits<double>::signaling_NaN();
     double radius_MB_l = std::numeric_limits<double>::signaling_NaN();
     const double radius_MB_factor =
         std::abs(cut_spheres_offset_factor_ * center_B_[2] - z_cutting_plane_);
-    radius_MB_l = radius_MB_factor;
-    center_EA_l = {0.0, 0.0, cut_spheres_offset_factor_ * center_A_[2]};
-    radius_EA_l = sqrt(square(center_EA_l[2] - z_cutting_plane_) +
-                       square(radius_MB_factor));
-    radius_EB_l = sqrt(2.0) * std::abs(center_EB_l[2] - z_cutting_plane_);
-    return std::make_tuple(center_EA_l, radius_EA_l, center_EB_l, radius_MB_l,
-                           radius_EB_l);
+    if (include_sphereE_blocks_) {
+      radius_ME_l = std::abs(cut_spheres_offset_factor_ * center_A_[2] -
+                             z_cutting_plane_);
+      radius_MB_l = radius_ME_l * std::max(0.4, radius_MB_factor / radius_ME_l);
+      ASSERT(radius_ME_l > radius_MB_l,
+             "Radius_ME=" << radius_ME_l << " should be greater than Radius_MB="
+                          << radius_MB_l);
+      center_EA_l = {
+          0.0, 0.0,
+          sphere_ea_offset_factor_ * cut_spheres_offset_factor_ * center_A_[2]};
+      radius_EA_l =
+          sqrt(square(center_EA_l[2] - z_cutting_plane_) + square(radius_ME_l));
+      radius_EB_l =
+          sqrt(square(radius_MB_l) + square(center_EB_l[2] - z_cutting_plane_));
+      radius_EE_l =
+          sqrt(square(radius_ME_l) + square(center_EB_l[2] - z_cutting_plane_));
+      ASSERT(radius_EE_l > radius_EB_l,
+             "Radius_EE=" << radius_EE_l << " should be greater than Radius_EB="
+                          << radius_EB_l);
+    } else {
+      radius_MB_l = radius_MB_factor;
+      center_EA_l = {0.0, 0.0, cut_spheres_offset_factor_ * center_A_[2]};
+      radius_EA_l = sqrt(square(center_EA_l[2] - z_cutting_plane_) +
+                         square(radius_MB_factor));
+      radius_EB_l = sqrt(2.0) * std::abs(center_EB_l[2] - z_cutting_plane_);
+    }
+    return std::make_tuple(center_EA_l, radius_EA_l, center_EB_l, radius_ME_l,
+                           radius_MB_l, radius_EB_l, radius_EE_l);
   }();
 
   // Construct vector<CoordMap>s that go from logical coordinates to
@@ -358,6 +387,38 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const noexcept {
           cylindrical_shell_lower_bound_z, cylindrical_shell_upper_bound_z,
           1.0);
 
+  // Lambda that takes a CylindricalFlatSide map and a
+  // DiscreteRotation map, composes it with the logical-to-cylinder
+  // maps, and adds it to the list of coordinate maps. Also adds
+  // boundary conditions if requested.
+  auto add_flat_side_to_list_of_maps =
+      [&coordinate_maps, &logical_to_cylindrical_shell_maps,
+       &boundary_conditions_all_blocks,
+       this](const CoordinateMaps::CylindricalFlatSide& side_map,
+             const CoordinateMaps::DiscreteRotation<3>& rotation_map) noexcept {
+        auto new_logical_to_cylindrical_shell_maps =
+            domain::make_vector_coordinate_map_base<Frame::Logical,
+                                                    Frame::Inertial, 3>(
+                logical_to_cylindrical_shell_maps, side_map, rotation_map);
+        coordinate_maps.insert(
+            coordinate_maps.end(),
+            std::make_move_iterator(
+                new_logical_to_cylindrical_shell_maps.begin()),
+            std::make_move_iterator(
+                new_logical_to_cylindrical_shell_maps.end()));
+
+        // inner_boundary_condition_ == nullptr means do not add
+        // any boundary conditions at all.
+        if (inner_boundary_condition_ != nullptr) {
+          for (size_t i = 0; i < 4; ++i) {
+            BcMap bcs{};
+            bcs[Direction<3>::upper_zeta()] =
+                inner_boundary_condition_->get_clone();
+            boundary_conditions_all_blocks.push_back(std::move(bcs));
+          }
+        }
+      };
+
   // Lambda that takes a CylindricalSide map and a DiscreteRotation
   // map, composes it with the logical-to-cylinder maps, and adds it
   // to the list of coordinate maps.  Also adds boundary conditions if
@@ -471,22 +532,101 @@ Domain<3> CylindricalBinaryCompactObject::create_domain() const noexcept {
           radius_MB, radius_B_),
       CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
 
-  // CB Filled Cylinder
-  // 5 blocks: 37 thru 41
-  add_endcap_to_list_of_maps(
-      CoordinateMaps::CylindricalEndcap(
-          flip_about_xy_plane(center_EB), make_array<3>(0.0),
-          flip_about_xy_plane(center_cutting_plane), radius_EB, outer_radius_,
-          -z_cut_EB),
-      CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis), false, true);
+  if (include_sphereE_blocks_) {
+    // Need to find z_cut_EE.
+    // Solve for it by noting that we have 3 equations.
+    // Eq.1:  (z_cut_EE - center_EB[2])^2 + rho_cut_EE^2 = radius_EE^2
+    // Eq.2:  (z_cut_EB - center_EB[2])^2 + rho_cut_EB^2 = radius_EB^2
+    // Eq.3:  rho_cut_EE/rho_cut_EB =
+    //        (z_cut_EE-z_cutting_plane)/(z_cut_EB-z_cutting_plane)
+    // where rho_cut_EE is the rho coordinate where z_cut_EE intersects
+    // sphere_EE, and same for rho_cut_EB.
+    //
+    // Eq.1 and Eq.2 come from demanding that the point at the
+    // intersection of z_cut and the corresponding sphere is at the correct
+    // radius from center_EB.
+    // Eq.3. Comes from demanding that the two cutting circles lie on the
+    // same cone.
+    //
+    // The above equations 1 and 3 give a quadratic equation
+    //  a y^2 + b y + c = 0
+    // where y = z_cut_EE - center_EB[2]
+    //       a = 1 + q
+    //       b = -2 q (z_cutting_plane - center_EB[2])
+    //       c = (z_cutting_plane- center_EB[2])^2 q - radius_EE^2
+    // and q = rho_cut_EB^2/(z_cut_EB-z_cutting_plane)^2
+    //
+    // We want the negative root, since z_cut_EE < center_EB[2].
+    const double q = (square(radius_EB) - square(z_cut_EB - center_EB[2])) /
+                     square(z_cut_EB - z_cutting_plane_);
+    const double a = 1.0 + q;
+    const double b = -2.0 * q * (z_cutting_plane_ - center_EB[2]);
+    const double c =
+        square(z_cutting_plane_ - center_EB[2]) * q - square(radius_EE);
+    const std::array<double, 2> y = real_roots(a, b, c);
+    const double z_cut_EE = y[0] + center_EB[2];
 
-  // CB Cylinder
-  // 4 blocks: 42 thru 45
-  add_side_to_list_of_maps(
-      CoordinateMaps::CylindricalSide(
-          center_EB, make_array<3>(0.0), center_cutting_plane, radius_EB,
-          outer_radius_, z_cut_EB, z_cutting_plane_),
-      CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis), false, true);
+    // CB Filled Cylinder
+    // 5 blocks: 37 thru 41
+    add_endcap_to_list_of_maps(
+        CoordinateMaps::CylindricalEndcap(
+            flip_about_xy_plane(center_EB), make_array<3>(0.0),
+            flip_about_xy_plane(center_cutting_plane), radius_EE, outer_radius_,
+            -z_cut_EE),
+        CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis), false,
+        true);
+
+    // CB Cylinder
+    // 4 blocks: 42 thru 45
+    add_side_to_list_of_maps(
+        CoordinateMaps::CylindricalSide(
+            center_EB, make_array<3>(0.0), center_cutting_plane, radius_EE,
+            outer_radius_, z_cut_EE, z_cutting_plane_),
+        CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis), false, true);
+
+    // EE Filled Cylinder
+    // 5 blocks: 46 thru 50
+    add_endcap_to_list_of_maps(
+        CoordinateMaps::CylindricalEndcap(
+            flip_about_xy_plane(center_EB), flip_about_xy_plane(center_EB),
+            flip_about_xy_plane(center_cutting_plane), radius_EB, radius_EE,
+            -z_cut_EB),
+        CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis));
+
+    // EE Cylinder
+    // 4 blocks: 51 thru 54
+    add_side_to_list_of_maps(
+        CoordinateMaps::CylindricalSide(center_EB, center_EB,
+                                        center_cutting_plane, radius_EB,
+                                        radius_EE, z_cut_EB, z_cutting_plane_),
+        CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
+
+    // ME Cylinder
+    // 4 blocks: 55 thru 58
+    add_flat_side_to_list_of_maps(
+        CoordinateMaps::CylindricalFlatSide(center_cutting_plane, center_A_,
+                                            center_A_, radius_MB, radius_ME,
+                                            radius_A_),
+        CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis));
+  } else {
+    // CB Filled Cylinder
+    // 5 blocks: 37 thru 41
+    add_endcap_to_list_of_maps(
+        CoordinateMaps::CylindricalEndcap(
+            flip_about_xy_plane(center_EB), make_array<3>(0.0),
+            flip_about_xy_plane(center_cutting_plane), radius_EB, outer_radius_,
+            -z_cut_EB),
+        CoordinateMaps::DiscreteRotation<3>(rotate_to_minus_x_axis), false,
+        true);
+
+    // CB Cylinder
+    // 4 blocks: 42 thru 45
+    add_side_to_list_of_maps(
+        CoordinateMaps::CylindricalSide(
+            center_EB, make_array<3>(0.0), center_cutting_plane, radius_EB,
+            outer_radius_, z_cut_EB, z_cutting_plane_),
+        CoordinateMaps::DiscreteRotation<3>(rotate_to_x_axis), false, true);
+  }
 
   Domain<3> domain{std::move(coordinate_maps),
                    std::move(boundary_conditions_all_blocks)};

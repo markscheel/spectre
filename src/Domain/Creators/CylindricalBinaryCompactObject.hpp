@@ -277,13 +277,18 @@ class CylindricalBinaryCompactObject : public DomainCreator<3> {
   // to the value 0.99 used in SpEC, so that we reproduce SpEC's
   // domain decomposition.
   double cut_spheres_offset_factor_{0.99};
+  // sphere_ea_offset_factor_ is the factor of 0.9 that appears in
+  // Eq. (A.11) of https://arxiv.org/abs/1206.3015.
+  // sphere_ea_offset_factor_ gives the x-offset of the center of SphereEA
+  // from the origin.  A different choice could be made, but here we
+  // fix sphere_ea_offset_factor_ to 0.9 to reproduce SpEC's domain
+  // decomposition.
+  double sphere_ea_offset_factor_{0.9};
   // z_cutting_plane_ is x_C in Eq. (A.9) of
   // https://arxiv.org/abs/1206.3015 (but rotated to the z-axis).
   double z_cutting_plane_{};
-  // number_of_blocks_ could be eliminated or just set to its
-  // constant value of 46. But this value will change with the
-  // next PR that adds support for domains with unequal-sized objects.
   size_t number_of_blocks_{};
+  bool include_sphereE_blocks_{false};
   std::unique_ptr<domain::creators::time_dependence::TimeDependence<3>>
       time_dependence_;
   std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>

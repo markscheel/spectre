@@ -6,8 +6,11 @@
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "DataStructures/Variables.hpp"
 #include "DataStructures/VariablesTag.hpp"
+#include "Domain/CoordinateMaps/Transform.hpp"
 #include "Domain/ElementLogicalCoordinates.hpp"
+#include "Domain/FunctionsOfTime/FunctionOfTime.hpp"
 #include "Domain/Tags.hpp"
+#include "Domain/TagsTimeDependent.hpp"
 #include "NumericalAlgorithms/Interpolation/IrregularInterpolant.hpp"
 #include "NumericalAlgorithms/Interpolation/Tags.hpp"
 #include "Parallel/GlobalCache.hpp"
@@ -31,20 +34,37 @@ namespace intrp {
 
 namespace interpolator_detail {
 
+namespace detail {
+template <typename Tag, typename Frame>
+using any_index_in_frame_impl =
+    TensorMetafunctions::any_index_in_frame<typename Tag::type, Frame>;
+}  // namespace detail
+
+// Returns true if any of the tensors in TagList have any of their
+// indices in the given frame.
+template <typename TagList, typename Frame>
+constexpr bool any_index_in_frame_v =
+    tmpl::any<TagList, tmpl::bind<detail::any_index_in_frame_impl, tmpl::_1,
+                                  Frame>>::value;
+
 // Interpolates data onto a set of points desired by an InterpolationTarget.
 template <typename InterpolationTargetTag, typename Metavariables,
           typename DbTags>
 void interpolate_data(
     const gsl::not_null<db::DataBox<DbTags>*> box,
+    Parallel::GlobalCache<Metavariables>& cache,
     const typename Metavariables::temporal_id::type& temporal_id) noexcept {
-  db::mutate_apply<tmpl::list<Tags::InterpolatedVarsHolders<Metavariables>>,
-                   tmpl::list<Tags::VolumeVarsInfo<Metavariables>>>(
-      [&temporal_id](
-          const gsl::not_null<
-              typename Tags::InterpolatedVarsHolders<Metavariables>::type*>
+  db::mutate_apply<
+      tmpl::list<::intrp::Tags::InterpolatedVarsHolders<Metavariables>>,
+      tmpl::list<::intrp::Tags::VolumeVarsInfo<Metavariables>,
+                 domain::Tags::Domain<Metavariables::volume_dim>>>(
+      [&cache, &temporal_id](
+          const gsl::not_null<typename ::intrp::Tags::InterpolatedVarsHolders<
+              Metavariables>::type*>
               holders,
-          const typename Tags::VolumeVarsInfo<Metavariables>::type&
-              volume_vars_info) noexcept {
+          const typename ::intrp::Tags::VolumeVarsInfo<Metavariables>::type&
+              volume_vars_info,
+          const Domain<Metavariables::volume_dim>& domain) noexcept {
         auto& interp_info =
             get<Vars::HolderTag<InterpolationTargetTag, Metavariables>>(
                 *holders)
@@ -86,12 +106,72 @@ void interpolate_data(
             // of compute items in
             // InterpolationTargetTag::compute_items_on_source.
 
-            auto new_box = db::create<
-                db::AddSimpleTags<::Tags::Variables<
-                    typename Metavariables::interpolator_source_vars>>,
-                db::AddComputeTags<
-                    typename InterpolationTargetTag::compute_items_on_source>>(
-                volume_info.vars);
+            // If interpolator_source_vars and
+            // vars_to_interpolate_to_target are in different frames,
+            // then we need to compute Jacobians and add them to the
+            // temporary DataBox.
+            //
+            // Currently the only case we need to care about is if
+            // interpolator_source_vars are in the Inertial frame and
+            // vars_to_interpolate_to_target are in the Grid frame.
+            auto new_box = [&cache, &domain, &element_id,
+                            &temporal_id, &volume_info]() noexcept {
+              if constexpr (any_index_in_frame_v<typename Metavariables::
+                                                     interpolator_source_vars,
+                                                 Frame::Inertial> and
+                            any_index_in_frame_v<
+                                typename InterpolationTargetTag::
+                                    vars_to_interpolate_to_target,
+                                Frame::Grid>) {
+                // The functions of time are always guaranteed to be
+                // up-to-date here, because they are guaranteed to be
+                // up-to-date before calling SendPointsToInterpolator
+                // (which is guaranteed to be called before
+                // interpolate_data is called).
+                const auto& functions_of_time =
+                    get<domain::Tags::FunctionsOfTime>(cache);
+                const auto& block = domain.blocks().at(element_id.block_id());
+                ElementMap<3, ::Frame::Grid> map_logical_to_grid{
+                    element_id,
+                    block.moving_mesh_logical_to_grid_map().get_clone()};
+                const auto invjac_logical_to_grid =
+                    map_logical_to_grid.inv_jacobian(
+                        logical_coordinates(volume_info.mesh));
+                const auto jac_grid_to_inertial =
+                    block.moving_mesh_grid_to_inertial_map().jacobian(
+                        map_logical_to_grid(
+                            logical_coordinates(volume_info.mesh)),
+                        temporal_id.step_time().value(), functions_of_time);
+                return db::create<
+                    db::AddSimpleTags<
+                        ::Tags::Variables<
+                            typename Metavariables::interpolator_source_vars>,
+                        transform::Tags::Jacobian<Metavariables::volume_dim,
+                                                  ::Frame::Grid,
+                                                  ::Frame::Inertial>,
+                        transform::Tags::InverseJacobian<
+                            Metavariables::volume_dim, ::Frame::Logical,
+                            ::Frame::Grid>,
+                        domain::Tags::Mesh<Metavariables::volume_dim>>,
+                    db::AddComputeTags<typename InterpolationTargetTag::
+                                           compute_items_on_source>>(
+                    volume_info.vars, jac_grid_to_inertial,
+                    invjac_logical_to_grid, volume_info.mesh);
+              } else {
+                // Avoid compiler warning for variables that are unused
+                // in this 'if constexpr' branch.
+                (void)cache;
+                (void)domain;
+                (void)element_id;
+                (void)temporal_id;
+                return db::create<
+                    db::AddSimpleTags<::Tags::Variables<
+                        typename Metavariables::interpolator_source_vars>>,
+                    db::AddComputeTags<typename InterpolationTargetTag::
+                                           compute_items_on_source>>(
+                    volume_info.vars);
+              }
+            }();
 
             Variables<
                 typename InterpolationTargetTag::vars_to_interpolate_to_target>
@@ -138,7 +218,7 @@ void try_to_interpolate(
   }
 
   interpolator_detail::interpolate_data<InterpolationTargetTag, Metavariables>(
-      box, temporal_id);
+      box, *cache, temporal_id);
 
   // Send interpolated data only if interpolation has been done on all
   // of the local elements.
@@ -158,10 +238,11 @@ void try_to_interpolate(
 
     // Clear interpolated data, since we don't need it anymore.
     db::mutate<Tags::InterpolatedVarsHolders<Metavariables>>(
-        box, [&temporal_id](
-                 const gsl::not_null<typename Tags::InterpolatedVarsHolders<
-                     Metavariables>::type*>
-                     holders_l) noexcept {
+        box,
+        [&temporal_id](
+            const gsl::not_null<
+                typename Tags::InterpolatedVarsHolders<Metavariables>::type*>
+                holders_l) noexcept {
           get<Vars::HolderTag<InterpolationTargetTag, Metavariables>>(
               *holders_l)
               .infos.erase(temporal_id);

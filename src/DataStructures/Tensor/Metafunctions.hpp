@@ -119,4 +119,27 @@ using remove_first_index =
 template <typename NewType, typename Tensor>
 using swap_type =
     ::Tensor<NewType, typename Tensor::symmetry, typename Tensor::index_list>;
+
+namespace detail {
+
+template <typename T, typename Frame>
+using frame_is_the_same = std::is_same<typename T::Frame, Frame>;
+
+template <typename Tensor>
+struct tensor_frame_impl {
+  using frame_of_first_index =
+      typename tmpl::front<typename Tensor::index_list>::Frame;
+  using all_indices_are_the_same_frame =
+      tmpl::all<typename Tensor::index_list,
+                tmpl::bind<frame_is_the_same, tmpl::_1, frame_of_first_index>>;
+  using type = tmpl::conditional_t<all_indices_are_the_same_frame::value,
+                                   frame_of_first_index, tmpl::no_such_type_>;
+};
+}  // namespace detail
+
+/// \ingroup TensorGroup
+/// \brief Return the frame of the Tensor, or tmpl::no_such_type_ if
+/// different indices of the Tensor are in different frames.
+template <typename Tensor>
+using frame_t = typename detail::tensor_frame_impl<Tensor>::type;
 }  // namespace TensorMetafunctions

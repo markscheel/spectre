@@ -135,6 +135,7 @@ struct tensor_frame_impl {
   using type = tmpl::conditional_t<all_indices_are_the_same_frame::value,
                                    frame_of_first_index, tmpl::no_such_type_>;
 };
+
 }  // namespace detail
 
 /// \ingroup TensorGroup
@@ -142,4 +143,19 @@ struct tensor_frame_impl {
 /// different indices of the Tensor are in different frames.
 template <typename Tensor>
 using frame_t = typename detail::tensor_frame_impl<Tensor>::type;
+
+/// \ingroup TensorGroup
+/// \brief Return tmpl::true_type if any indices of the Tensor are in the
+/// frame Frame.
+template <typename Tensor, typename Frame>
+using any_index_in_frame =
+    tmpl::any<typename Tensor::index_list,
+              tmpl::bind<detail::frame_is_the_same, tmpl::_1, Frame>>;
+
+/// \ingroup TensorGroup
+/// \brief Return true if any indices of the Tensor are in the
+/// frame Frame.
+template <typename Tensor, typename Frame>
+constexpr bool any_index_in_frame_v = any_index_in_frame<Tensor, Frame>::value;
+
 }  // namespace TensorMetafunctions

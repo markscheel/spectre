@@ -28,6 +28,7 @@ spectre_target_sources(
   Identity.cpp
   Rotation.cpp
   SpecialMobius.cpp
+  Transform.cpp
   Wedge.cpp
   )
 
@@ -63,6 +64,7 @@ spectre_target_headers(
   SpecialMobius.hpp
   Tags.hpp
   TimeDependentHelpers.hpp
+  Transform.hpp
   Wedge.hpp
   )
 

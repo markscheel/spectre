@@ -31,6 +31,28 @@ void to_different_frame(
   }
 }
 
+template <size_t VolumeDim, typename SrcFrame, typename DestFrame>
+void first_index_to_different_frame(
+    const gsl::not_null<tnsr::ijj<DataVector, VolumeDim, DestFrame>*> dest,
+    const Tensor<DataVector, tmpl::integral_list<std::int32_t, 2, 1, 1>,
+                 index_list<SpatialIndex<VolumeDim, UpLo::Lo, SrcFrame>,
+                            SpatialIndex<VolumeDim, UpLo::Lo, DestFrame>,
+                            SpatialIndex<VolumeDim, UpLo::Lo, DestFrame>>>& src,
+    const Jacobian<DataVector, VolumeDim, DestFrame, SrcFrame>&
+        jacobian) noexcept {
+  destructive_resize_components(dest, src.begin()->size());
+  for (size_t i = 0; i < VolumeDim; ++i) {
+    for (size_t j = i; j < VolumeDim; ++j) {  // symmetry
+      for (size_t k = 0; k < VolumeDim; ++k) {
+        dest->get(k, i, j) = jacobian.get(0, k) * src.get(0, i, j);
+        for (size_t p = 1; p < VolumeDim; ++p) {
+          dest->get(k, i, j) += jacobian.get(p, k) * src.get(p, i, j);
+        }
+      }
+    }
+  }
+}
+
 }  // namespace transform
 
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
@@ -48,6 +70,21 @@ GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Grid),
                         (Frame::Inertial))
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Inertial),
                         (Frame::Grid))
+#undef INSTANTIATE
+
+#define INSTANTIATE(_, data)                                                  \
+  template void transform::first_index_to_different_frame(                    \
+      const gsl::not_null<tnsr::ijj<DataVector, DIM(data), DESTFRAME(data)>*> \
+          dest,                                                               \
+      const Tensor<                                                           \
+          DataVector, tmpl::integral_list<std::int32_t, 2, 1, 1>,             \
+          index_list<SpatialIndex<DIM(data), UpLo::Lo, SRCFRAME(data)>,       \
+                     SpatialIndex<DIM(data), UpLo::Lo, DESTFRAME(data)>,      \
+                     SpatialIndex<DIM(data), UpLo::Lo, DESTFRAME(data)>>>&    \
+          src,                                                                \
+      const Jacobian<DataVector, DIM(data), DESTFRAME(data), SRCFRAME(data)>& \
+          jacobian) noexcept;
+GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Logical), (Frame::Grid))
 
 #undef DIM
 #undef SRCFRAME

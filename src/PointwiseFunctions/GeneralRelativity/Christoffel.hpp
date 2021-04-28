@@ -45,6 +45,34 @@ tnsr::abb<DataType, SpatialDim, Frame, Index> christoffel_first_kind(
     const tnsr::abb<DataType, SpatialDim, Frame, Index>& d_metric) noexcept;
 // @}
 
+// @{
+/*!
+ * \ingroup GeneralRelativityGroup
+ * \brief Computes Christoffel symbol of the second kind from derivative of
+ * metric and the inverse metric.
+ *
+ * \details Computes Christoffel symbol \f$\Gamma^a_{bc}\f$ as:
+ * \f$ \Gamma^d_{ab} = \frac{1}{2} g^{cd} (\partial_a g_{bc} + \partial_b g_{ac}
+ *  -  \partial_c g_{ab}) \f$
+ * where \f$g_{bc}\f$ is either a spatial or spacetime metric.
+ *
+ * Avoids the extra memory allocation that occurs by computing the
+ * Christoffel symbol of the first kind and then raising the index.
+ */
+template <size_t SpatialDim, typename Frame, IndexType Index, typename DataType>
+void christoffel_second_kind(
+    gsl::not_null<tnsr::Abb<DataType, SpatialDim, Frame, Index>*> christoffel,
+    const tnsr::abb<DataType, SpatialDim, Frame, Index>& d_metric,
+    const tnsr::AA<DataType, SpatialDim, Frame, Index>&
+        inverse_metric) noexcept;
+
+template <size_t SpatialDim, typename Frame, IndexType Index, typename DataType>
+tnsr::Abb<DataType, SpatialDim, Frame, Index> christoffel_second_kind(
+    const tnsr::abb<DataType, SpatialDim, Frame, Index>& d_metric,
+    const tnsr::AA<DataType, SpatialDim, Frame, Index>&
+        inverse_metric) noexcept;
+// @}
+
 namespace Tags {
 /// Compute item for spatial Christoffel symbols of the first kind
 /// \f$\Gamma_{ijk}\f$ computed from the first derivative of the

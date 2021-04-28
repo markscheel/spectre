@@ -11,6 +11,8 @@
 #include <random>
 #include <vector>
 
+#include "ApparentHorizons/ComputeHorizonVolumeQuantities.hpp"
+#include "ApparentHorizons/ComputeHorizonVolumeQuantities.tpp"
 #include "ApparentHorizons/ComputeItems.hpp"  // IWYU pragma: keep
 #include "ApparentHorizons/FastFlow.hpp"
 #include "ApparentHorizons/Strahlkorper.hpp"
@@ -205,23 +207,7 @@ template <typename PostHorizonFindCallback, typename IsTimeDependent,
 struct MockMetavariables {
   static constexpr bool use_time_dependent_maps = IsTimeDependent::value;
   struct AhA {
-    using compute_items_on_source = tmpl::conditional_t<
-        std::is_same_v<TargetFrame, Frame::Inertial>,
-        tmpl::list<
-            ah::Tags::InverseSpatialMetricCompute<3, Frame::Inertial>,
-            ah::Tags::ExtrinsicCurvatureCompute<3, Frame::Inertial>,
-            ah::Tags::SpatialChristoffelSecondKindCompute<3, Frame::Inertial>>,
-        tmpl::list<
-            ah::Tags::InverseSpatialMetricCompute<3, Frame::Inertial>,
-            ah::Tags::ExtrinsicCurvatureCompute<3, Frame::Inertial>,
-            ah::Tags::ExtrinsicCurvatureTransform<3, Frame::Inertial,
-                                                  TargetFrame>,
-            gr::Tags::SpatialMetricCompute<3, Frame::Inertial, DataVector>,
-            ah::Tags::SpatialMetricTransform<3, Frame::Inertial, TargetFrame>,
-            gr::Tags::DetAndInverseSpatialMetricCompute<3, TargetFrame,
-                                                        DataVector>,
-            ah::Tags::SpatialChristoffelSecondKindFromMetricCompute<
-                3, TargetFrame>>>;
+    using compute_vars_to_interpolate = ah::ComputeHorizonVolumeQuantities;
     using vars_to_interpolate_to_target =
         tmpl::list<gr::Tags::InverseSpatialMetric<3, TargetFrame>,
                    gr::Tags::ExtrinsicCurvature<3, TargetFrame>,

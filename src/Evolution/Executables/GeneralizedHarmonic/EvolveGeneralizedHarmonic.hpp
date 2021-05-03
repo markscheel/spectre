@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "ApparentHorizons/ComputeHorizonVolumeQuantities.hpp"
+#include "ApparentHorizons/ComputeHorizonVolumeQuantities.tpp"
 #include "ApparentHorizons/ComputeItems.hpp"
 #include "ApparentHorizons/Tags.hpp"
 #include "DataStructures/DataBox/Tag.hpp"
@@ -175,11 +177,7 @@ struct EvolutionMetavars {
   struct AhA {
     using tags_to_observe =
         tmpl::list<StrahlkorperGr::Tags::AreaCompute<frame>>;
-    using compute_items_on_source = tmpl::list<
-        gr::Tags::SpatialMetricCompute<volume_dim, frame, DataVector>,
-        ah::Tags::InverseSpatialMetricCompute<volume_dim, frame>,
-        ah::Tags::ExtrinsicCurvatureCompute<volume_dim, frame>,
-        ah::Tags::SpatialChristoffelSecondKindCompute<volume_dim, frame>>;
+    using compute_vars_to_interpolate = ah::ComputeHorizonVolumeQuantities;
     using vars_to_interpolate_to_target =
         tmpl::list<gr::Tags::SpatialMetric<volume_dim, frame, DataVector>,
                    gr::Tags::InverseSpatialMetric<volume_dim, frame>,

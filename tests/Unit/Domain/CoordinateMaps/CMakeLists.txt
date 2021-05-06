@@ -22,6 +22,7 @@ set(LIBRARY_SOURCES
   Test_SpecialMobius.cpp
   Test_Tags.cpp
   Test_TimeDependentHelpers.cpp
+  Test_Transform.cpp
   Test_Wedge2D.cpp
   Test_Wedge3D.cpp
   )

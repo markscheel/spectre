@@ -32,6 +32,17 @@ void to_different_frame(
 }
 
 template <size_t VolumeDim, typename SrcFrame, typename DestFrame>
+auto to_different_frame(const tnsr::ii<DataVector, VolumeDim, SrcFrame>& src,
+                        const Jacobian<DataVector, VolumeDim, DestFrame,
+                                       SrcFrame>& jacobian) noexcept
+    -> tnsr::ii<DataVector, VolumeDim, DestFrame> {
+  auto dest =
+      make_with_value<tnsr::ii<DataVector, VolumeDim, DestFrame>>(src, 0.);
+  to_different_frame(make_not_null(&dest), src, jacobian);
+  return dest;
+}
+
+template <size_t VolumeDim, typename SrcFrame, typename DestFrame>
 void first_index_to_different_frame(
     const gsl::not_null<tnsr::ijj<DataVector, VolumeDim, DestFrame>*> dest,
     const Tensor<DataVector, tmpl::integral_list<std::int32_t, 2, 1, 1>,
@@ -53,6 +64,20 @@ void first_index_to_different_frame(
   }
 }
 
+template <size_t VolumeDim, typename SrcFrame, typename DestFrame>
+auto first_index_to_different_frame(
+    const Tensor<DataVector, tmpl::integral_list<std::int32_t, 2, 1, 1>,
+                 index_list<SpatialIndex<VolumeDim, UpLo::Lo, SrcFrame>,
+                            SpatialIndex<VolumeDim, UpLo::Lo, DestFrame>,
+                            SpatialIndex<VolumeDim, UpLo::Lo, DestFrame>>>& src,
+    const Jacobian<DataVector, VolumeDim, DestFrame, SrcFrame>&
+        jacobian) noexcept -> tnsr::ijj<DataVector, VolumeDim, DestFrame> {
+  auto dest =
+      make_with_value<tnsr::ijj<DataVector, VolumeDim, DestFrame>>(src, 0.);
+  first_index_to_different_frame(make_not_null(&dest), src, jacobian);
+  return dest;
+}
+
 }  // namespace transform
 
 #define DIM(data) BOOST_PP_TUPLE_ELEM(0, data)
@@ -65,7 +90,12 @@ void first_index_to_different_frame(
           dest,                                                               \
       const tnsr::ii<DataVector, DIM(data), SRCFRAME(data)>& src,             \
       const Jacobian<DataVector, DIM(data), DESTFRAME(data), SRCFRAME(data)>& \
-          jacobian) noexcept;
+          jacobian) noexcept;                                                 \
+  template auto transform::to_different_frame(                                \
+      const tnsr::ii<DataVector, DIM(data), SRCFRAME(data)>& src,             \
+      const Jacobian<DataVector, DIM(data), DESTFRAME(data), SRCFRAME(data)>& \
+          jacobian) noexcept                                                  \
+      ->tnsr::ii<DataVector, DIM(data), DESTFRAME(data)>;
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Grid),
                         (Frame::Inertial))
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Inertial),
@@ -83,7 +113,17 @@ GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Inertial),
                      SpatialIndex<DIM(data), UpLo::Lo, DESTFRAME(data)>>>&    \
           src,                                                                \
       const Jacobian<DataVector, DIM(data), DESTFRAME(data), SRCFRAME(data)>& \
-          jacobian) noexcept;
+          jacobian) noexcept;                                                 \
+  template auto transform::first_index_to_different_frame(                    \
+      const Tensor<                                                           \
+          DataVector, tmpl::integral_list<std::int32_t, 2, 1, 1>,             \
+          index_list<SpatialIndex<DIM(data), UpLo::Lo, SRCFRAME(data)>,       \
+                     SpatialIndex<DIM(data), UpLo::Lo, DESTFRAME(data)>,      \
+                     SpatialIndex<DIM(data), UpLo::Lo, DESTFRAME(data)>>>&    \
+          src,                                                                \
+      const Jacobian<DataVector, DIM(data), DESTFRAME(data), SRCFRAME(data)>& \
+          jacobian) noexcept                                                  \
+      ->tnsr::ijj<DataVector, DIM(data), DESTFRAME(data)>;
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (Frame::Logical), (Frame::Grid))
 
 #undef DIM

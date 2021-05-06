@@ -13,7 +13,7 @@ class DataVector;
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "Utilities/Gsl.hpp"
 
-/// Holds functions and tags related to transforming between frames.
+/// Holds functions related to transforming between frames.
 namespace transform {
 
 /// Transforms tensor to different frame.  Note that
@@ -53,16 +53,5 @@ auto first_index_to_different_frame(
                             SpatialIndex<VolumeDim, UpLo::Lo, DestFrame>>>& src,
     const Jacobian<DataVector, VolumeDim, DestFrame, SrcFrame>&
         jacobian) noexcept -> tnsr::ijj<DataVector, VolumeDim, DestFrame>;
-
-namespace Tags {
-template <size_t VolumeDim, typename SrcFrame, typename DestFrame>
-struct Jacobian : db::SimpleTag {
-  using type = ::Jacobian<DataVector, VolumeDim, SrcFrame, DestFrame>;
-};
-template <size_t VolumeDim, typename SrcFrame, typename DestFrame>
-struct InverseJacobian : db::SimpleTag {
-  using type = ::InverseJacobian<DataVector, VolumeDim, SrcFrame, DestFrame>;
-};
-}  // namespace Tags
 
 }  // namespace transform

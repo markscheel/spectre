@@ -12,7 +12,6 @@ class DataVector;
 #include "DataStructures/DataBox/Tag.hpp"
 #include "DataStructures/Tensor/EagerMath/DeterminantAndInverse.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
-#include "Domain/CoordinateMaps/Transform.hpp"
 #include "Evolution/Systems/GeneralizedHarmonic/Tags.hpp"
 #include "PointwiseFunctions/GeneralRelativity/Christoffel.hpp"
 #include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
@@ -73,43 +72,6 @@ struct ExtrinsicCurvatureCompute : gr::Tags::ExtrinsicCurvature<Dim, Frame>,
                                    gr::Tags::InverseSpatialMetric<Dim, Frame>>;
   using base = gr::Tags::ExtrinsicCurvature<Dim, Frame>;
 };
-
-template <size_t Dim, typename SrcFrame, typename DestFrame>
-struct ExtrinsicCurvatureTransform
-    : gr::Tags::ExtrinsicCurvature<Dim, DestFrame>,
-      db::ComputeTag {
-  static constexpr auto function = static_cast<void (*)(
-      gsl::not_null<tnsr::ii<DataVector, Dim, DestFrame>*>,
-      const tnsr::ii<DataVector, Dim, SrcFrame>& src,
-      const Jacobian<DataVector, Dim, DestFrame, SrcFrame>&) noexcept>(
-      &transform::to_different_frame<Dim, SrcFrame, DestFrame>);
-
-  using return_type = tnsr::ii<DataVector, Dim, DestFrame>;
-
-  using argument_tags =
-      tmpl::list<gr::Tags::ExtrinsicCurvature<Dim, SrcFrame>,
-                 transform::Tags::Jacobian<Dim, DestFrame, SrcFrame>>;
-  using base = gr::Tags::ExtrinsicCurvature<Dim, DestFrame>;
-};
-
-template <size_t Dim, typename SrcFrame, typename DestFrame>
-struct SpatialMetricTransform
-    : gr::Tags::SpatialMetric<Dim, DestFrame>,
-      db::ComputeTag {
-  static constexpr auto function = static_cast<void (*)(
-      gsl::not_null<tnsr::ii<DataVector, Dim, DestFrame>*>,
-      const tnsr::ii<DataVector, Dim, SrcFrame>& src,
-      const Jacobian<DataVector, Dim, DestFrame, SrcFrame>&) noexcept>(
-      &transform::to_different_frame<Dim, SrcFrame, DestFrame>);
-
-  using return_type = tnsr::ii<DataVector, Dim, DestFrame>;
-
-  using argument_tags =
-      tmpl::list<gr::Tags::SpatialMetric<Dim, SrcFrame>,
-                 transform::Tags::Jacobian<Dim, DestFrame, SrcFrame>>;
-  using base = gr::Tags::SpatialMetric<Dim, DestFrame>;
-};
-
 template <size_t Dim, typename Frame>
 struct SpatialChristoffelSecondKindCompute
     : ::gr::Tags::SpatialChristoffelSecondKind<Dim, Frame>,
@@ -130,47 +92,6 @@ struct SpatialChristoffelSecondKindCompute
                                    gr::Tags::InverseSpatialMetric<Dim, Frame>>;
   using base = ::gr::Tags::SpatialChristoffelSecondKind<Dim, Frame>;
 };
-
-template <size_t Dim, typename Frame>
-struct SpatialChristoffelSecondKindFromMetricCompute
-    : ::gr::Tags::SpatialChristoffelSecondKind<Dim, Frame>,
-      db::ComputeTag {
-  using return_type = tnsr::Ijj<DataVector, Dim, Frame>;
-  static void function(
-      const gsl::not_null<tnsr::Ijj<DataVector, Dim, Frame>*> result,
-      const tnsr::ii<DataVector, Dim, Frame>& lower_spatial_metric,
-      const tnsr::II<DataVector, Dim, Frame>& upper_spatial_metric,
-      const InverseJacobian<DataVector, Dim, ::Frame::Logical, Frame>&
-          inverse_jacobian,
-      const Mesh<Dim>& mesh) noexcept {
-    destructive_resize_components(result, lower_spatial_metric.begin()->size());
-    auto logical_deriv_spatial_metric =
-        logical_partial_derivative(lower_spatial_metric, mesh);
-    tnsr::ijj<DataVector, Dim, Frame> deriv_spatial_metric(
-        mesh.number_of_grid_points(), 0.0);
-    for (size_t i = 0; i < Dim; ++i) {
-      for (size_t j = i; j < Dim; ++j) {  // Symmetry
-        for (size_t k = 0; k < Dim; ++k) {
-          for (size_t p = 0; p < Dim; ++p) {
-            deriv_spatial_metric.get(k, i, j) +=
-                logical_deriv_spatial_metric.get(p, i, j) *
-                inverse_jacobian.get(p, k);
-          }
-        }
-      }
-    }
-    raise_or_lower_first_index(result,
-                               gr::christoffel_first_kind(deriv_spatial_metric),
-                               upper_spatial_metric);
-  }
-  using argument_tags =
-      tmpl::list<gr::Tags::SpatialMetric<Dim, Frame>,
-                 gr::Tags::InverseSpatialMetric<Dim, Frame>,
-                 transform::Tags::InverseJacobian<Dim, ::Frame::Logical, Frame>,
-                 domain::Tags::Mesh<Dim>>;
-  using base = ::gr::Tags::SpatialChristoffelSecondKind<Dim, Frame>;
-};
-
 // }@
 }  // namespace Tags
 }  // namespace ah

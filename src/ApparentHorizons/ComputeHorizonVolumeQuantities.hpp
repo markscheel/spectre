@@ -5,10 +5,7 @@
 
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "DataStructures/Variables.hpp"
-#include "Evolution/Systems/GeneralizedHarmonic/TagsDeclarations.hpp"
-#include "PointwiseFunctions/GeneralRelativity/TagsDeclarations.hpp"
 #include "Utilities/Gsl.hpp"
-#include "Utilities/TMPL.hpp"
 
 /// \cond
 class DataVector;
@@ -26,20 +23,16 @@ namespace ah {
 /// For the dual-frame case, takes the Jacobians and does numerical
 /// derivatives.
 struct ComputeHorizonVolumeQuantities {
-  using src_tags =
-      tmpl::list<gr::Tags::SpacetimeMetric<3, Frame::Inertial>,
-                 GeneralizedHarmonic::Tags::Pi<3, Frame::Inertial>,
-                 GeneralizedHarmonic::Tags::Phi<3, Frame::Inertial>>;
   // Single-frame case
-  template <typename DestTagList>
+  template <typename SrcTagList, typename DestTagList>
   static void apply(const gsl::not_null<Variables<DestTagList>*> target_vars,
-                    const Variables<src_tags>& src_vars,
+                    const Variables<SrcTagList>& src_vars,
                     const Mesh<3>& mesh) noexcept;
   // Dual-frame case
-  template <typename DestTagList, typename TargetFrame>
+  template <typename SrcTagList, typename DestTagList, typename TargetFrame>
   static void apply(
       const gsl::not_null<Variables<DestTagList>*> target_vars,
-      const Variables<src_tags>& src_vars, const Mesh<3>& mesh,
+      const Variables<SrcTagList>& src_vars, const Mesh<3>& mesh,
       const Jacobian<DataVector, 3, TargetFrame, Frame::Inertial>& jacobian,
       const InverseJacobian<DataVector, 3, Frame::Logical, TargetFrame>&
           inverse_jacobian) noexcept;

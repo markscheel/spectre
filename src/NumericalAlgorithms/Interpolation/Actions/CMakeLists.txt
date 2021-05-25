@@ -5,6 +5,7 @@ spectre_target_headers(
   ${LIBRARY}
   INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/src
   HEADERS
+  AddExpiringTemporalIdToInterpolationTarget.hpp
   ElementInitInterpPoints.hpp
   ElementReceiveInterpPoints.hpp
   InterpolateToTarget.hpp

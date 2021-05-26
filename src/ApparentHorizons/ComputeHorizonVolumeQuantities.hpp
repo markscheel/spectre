@@ -16,12 +16,18 @@ class Mesh;
 namespace ah {
 
 /// Given the generalized harmonic variables in the volume, computes
-/// the upper 3-metric, lower extrinsic curvature, and 3-Christoffel
-/// symbol of the second kind.  These are the variables needed by the
-/// horizon finder on the volume.
+/// the quantities that will be interpolated onto an apparent horizon.
+///
+/// SrcTagList and DestTagList have limited flexibility, and their
+/// restrictions are static_asserted inside the apply functions.  The
+/// lack of complete flexibility is intentional, because most
+/// computations (e.g. for observers) should be done only on the
+/// horizon surface (i.e. after interpolation) as opposed to in the
+/// volume; only those computations that require data in the volume
+/// (e.g. volume numerical derivatives) should be done here.
 ///
 /// For the dual-frame case, takes the Jacobians and does numerical
-/// derivatives.
+/// derivatives in order to avoid Hessians.
 struct ComputeHorizonVolumeQuantities {
   // Single-frame case
   template <typename SrcTagList, typename DestTagList>

@@ -14,6 +14,8 @@
 #include "NumericalAlgorithms/Interpolation/Tags.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
+#include "Parallel/Printf.hpp"
+#include "Utilities/PrettyType.hpp"
 #include "Utilities/TaggedTuple.hpp"
 
 namespace intrp {
@@ -89,6 +91,14 @@ struct AddTemporalIdsToInterpolationTarget {
         Parallel::simple_action<
             Actions::VerifyTemporalIdsAndSendPoints<InterpolationTargetTag>>(
             my_proxy);
+        Parallel::printf(
+            "AddTemporalIdsToInterpolationTarget: Scheduled "
+            "VerifyTemporalIdsAndSendPoints for target %s at time = %lf",
+            pretty_type::short_name<InterpolationTargetTag>(),
+            db::get<Tags::PendingTemporalIds<TemporalId>>(box)
+                .front()
+                .step_time()
+                .value());
       }
     } else {
       // InterpolationTarget is not sequential. So everything in

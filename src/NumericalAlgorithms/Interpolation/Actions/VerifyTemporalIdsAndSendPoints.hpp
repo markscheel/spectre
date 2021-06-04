@@ -8,7 +8,9 @@
 #include "NumericalAlgorithms/Interpolation/Tags.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
+#include "Parallel/Printf.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/PrettyType.hpp"
 
 namespace intrp::Actions {
 
@@ -53,7 +55,12 @@ void verify_temporal_ids_and_send_points_time_independent(
       Parallel::simple_action<
           Actions::SendPointsToInterpolator<InterpolationTargetTag>>(
           my_proxy, new_temporal_ids.front());
-    }
+      Parallel::printf(
+          "VerifyTemporalIdsAndSendPoints: Scheduled "
+          "SendPointsToInterpolator for target %s at time = %lf",
+          pretty_type::short_name<InterpolationTargetTag>(),
+          new_temporal_ids.front().step_time().value());
+   }
   } else {
     // Non-sequential: start interpolation for all new_temporal_ids.
     auto& my_proxy = Parallel::get_parallel_component<ParallelComponent>(cache);

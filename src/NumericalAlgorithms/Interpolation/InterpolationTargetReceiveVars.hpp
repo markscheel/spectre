@@ -16,8 +16,10 @@
 #include "NumericalAlgorithms/Interpolation/InterpolationTargetDetail.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
+#include "Parallel/Printf.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/Literals.hpp"
+#include "Utilities/PrettyType.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
@@ -94,14 +96,29 @@ struct InterpolationTargetReceiveVars {
       // All the valid points have been interpolated.
       if (InterpolationTarget_detail::call_callback<InterpolationTargetTag>(
               make_not_null(&box), make_not_null(&cache), temporal_id)) {
+        Parallel::printf(
+            "InterpolationTargetReceiveVars: Cleaning up target %s at time = "
+            "%lf",
+            pretty_type::short_name<InterpolationTargetTag>(),
+            temporal_id.step_time().value());
         InterpolationTarget_detail::clean_up_interpolation_target<
             InterpolationTargetTag>(make_not_null(&box), temporal_id);
+        Parallel::printf(
+            "InterpolationTargetReceiveVars: Cleaned up target %s at time = "
+            "%lf",
+            pretty_type::short_name<InterpolationTargetTag>(),
+            temporal_id.step_time().value());
         auto& interpolator_proxy =
             Parallel::get_parallel_component<Interpolator<Metavariables>>(
                 cache);
         Parallel::simple_action<
             Actions::CleanUpInterpolator<InterpolationTargetTag>>(
             interpolator_proxy, temporal_id);
+        Parallel::printf(
+            "InterpolationTargetReceiveVars: Scheduled CleanUpInterpolator for "
+            "target %s at time = %lf",
+            pretty_type::short_name<InterpolationTargetTag>(),
+            temporal_id.step_time().value());
 
         // If we have a sequential target, and there are further
         // temporal_ids, begin interpolation for the next one.
@@ -116,6 +133,11 @@ struct InterpolationTargetReceiveVars {
             Parallel::simple_action<
                 SendPointsToInterpolator<InterpolationTargetTag>>(
                 my_proxy, temporal_ids.front());
+            Parallel::printf(
+                "InterpolationTargetReceiveVars: Scheduled "
+                "SendPointsToInterpolator for target %s at time = %lf",
+                pretty_type::short_name<InterpolationTargetTag>(),
+                temporal_ids.front().step_time().value());
           } else if (not db::get<Tags::PendingTemporalIds<TemporalId>>(box)
                              .empty()) {
             auto& my_proxy = Parallel::get_parallel_component<
@@ -123,6 +145,19 @@ struct InterpolationTargetReceiveVars {
                 cache);
             Parallel::simple_action<Actions::VerifyTemporalIdsAndSendPoints<
                 InterpolationTargetTag>>(my_proxy);
+            Parallel::printf(
+                "InterpolationTargetReceiveVars: Scheduled "
+                "VerifyTemporalIdsAndSendPoints for target %s at time = %lf",
+                pretty_type::short_name<InterpolationTargetTag>(),
+                db::get<Tags::PendingTemporalIds<TemporalId>>(box)
+                    .front()
+                    .step_time()
+                    .value());
+          } else {
+            Parallel::printf(
+                "InterpolationTargetReceiveVars: Exiting without scheduling "
+                "any new interpolation for target %s",
+                pretty_type::short_name<InterpolationTargetTag>());
           }
         }
       }

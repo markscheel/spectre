@@ -7,7 +7,9 @@
 
 #include "DataStructures/DataBox/DataBox.hpp"
 #include "DataStructures/Variables.hpp"
+#include "Parallel/Printf.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/PrettyType.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
@@ -75,6 +77,10 @@ struct CleanUpInterpolator {
               .temporal_ids_when_data_has_been_interpolated.insert(temporal_id);
         });
 
+    Parallel::printf("CleanUpInterpolator: %s: Cleaned up at time = %lf",
+                     pretty_type::short_name<InterpolationTargetTag>(),
+                     temporal_id.step_time().value());
+
     // If we don't need any of the volume data anymore for this
     // temporal_id, we will remove them.
     bool this_temporal_id_is_done = true;
@@ -93,6 +99,11 @@ struct CleanUpInterpolator {
     // We don't need any more volume data for this temporal_id,
     // so remove it.
     if (this_temporal_id_is_done) {
+      Parallel::printf(
+          "CleanUpINterpolator: %s: Volume data being cleaned up at time = %lf",
+          pretty_type::short_name<InterpolationTargetTag>(),
+          temporal_id.step_time().value());
+
       db::mutate<Tags::VolumeVarsInfo<Metavariables>>(
           make_not_null(&box),
           [&temporal_id](const gsl::not_null<
@@ -116,6 +127,9 @@ struct CleanUpInterpolator {
                           temporal_id);
                 });
           });
+      Parallel::printf(
+          "%s: Volume data done being cleaned up (time now invalid)",
+          pretty_type::short_name<InterpolationTargetTag>());
     }
   }
 };

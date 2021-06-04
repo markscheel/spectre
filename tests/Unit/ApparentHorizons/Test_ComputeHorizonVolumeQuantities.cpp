@@ -5,8 +5,22 @@
 
 #include "ApparentHorizons/ComputeHorizonVolumeQuantities.hpp"
 #include "ApparentHorizons/ComputeHorizonVolumeQuantities.tpp"
+#include "Domain/Creators/Brick.hpp"
+#include "Domain/ElementMap.hpp"
+#include "Domain/LogicalCoordinates.hpp"
+#include "Domain/Structure/ElementId.hpp"
+#include "Domain/Structure/InitialElementIds.hpp"
+#include "NumericalAlgorithms/LinearOperators/PartialDerivatives.hpp"
+#include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
 #include "NumericalAlgorithms/Spectral/Mesh.hpp"
-
+#include "PointwiseFunctions/AnalyticSolutions/GeneralRelativity/KerrSchild.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Christoffel.hpp"
+#include "PointwiseFunctions/GeneralRelativity/ExtrinsicCurvature.hpp"
+#include "PointwiseFunctions/GeneralRelativity/GeneralizedHarmonic/Phi.hpp"
+#include "PointwiseFunctions/GeneralRelativity/GeneralizedHarmonic/Pi.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Ricci.hpp"
+#include "PointwiseFunctions/GeneralRelativity/SpacetimeMetric.hpp"
+#include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 namespace {
 template <typename SrcTags, typename DestTags>
 void test_compute_horizon_volume_quantities_time_independent() {
@@ -15,13 +29,14 @@ void test_compute_horizon_volume_quantities_time_independent() {
   // Create a brick offset from the origin, so a KerrSchild solution
   // doesn't have a singularity or horizon in the domain.
   const domain::creators::Brick domain_creator(
-      {{3.1, 3.2, 3.3}}, {{4.1, 4.2, 4.3}}, 0, number_of_grid_points);
+      {{3.1, 3.2, 3.3}}, {{4.1, 4.2, 4.3}}, {{0, 0, 0}},
+      {{number_of_grid_points, number_of_grid_points, number_of_grid_points}});
   const auto domain = domain_creator.create_domain();
   ASSERT(domain.blocks().size() == 1, "Expected a Domain with one block");
 
   const auto element_ids = initial_element_ids(
       domain.blocks()[0].id(),
-      domain_creator->initial_refinement_levels()[domain.blocks()[0].id()]);
+      domain_creator.initial_refinement_levels()[domain.blocks()[0].id()]);
   ASSERT(element_ids.size() == 1, "Expected a Domain with only one element");
 
   // Set up coordinates
@@ -83,9 +98,9 @@ void test_compute_horizon_volume_quantities_time_independent() {
     // this is only a test, we just create new Variables and copy.
 
     // vars to be differentiated
-    using tags_before_differentiation =
+    using phi_tag_list =
         tmpl::list<::GeneralizedHarmonic::Tags::Phi<3, ::Frame::Inertial>>;
-    Variables<tags_before_differentiation> vars_before_differentiation(
+    Variables<phi_tag_list> vars_before_differentiation(
         mesh.number_of_grid_points());
     get<::GeneralizedHarmonic::Tags::Phi<3, ::Frame::Inertial>>(
         vars_before_differentiation) =
@@ -94,11 +109,8 @@ void test_compute_horizon_volume_quantities_time_independent() {
     // differentiate
     const auto inv_jacobian =
         map_logical_to_inertial.inv_jacobian(logical_coordinates(mesh));
-    using tags_after_differentiation = tmpl::list<
-        Tags::deriv<GeneralizedHarmonic::Tags::Phi<3, Frame::Inertial>,
-                    tmpl::size_t<3>, Frame::Inertial>>;
     const auto vars_after_differentiation =
-        partial_derivatives<tags_after_differentiation>(
+        partial_derivatives<phi_tag_list>(
             vars_before_differentiation, mesh, inv_jacobian);
 
     // copy to src_vars.
@@ -111,34 +123,37 @@ void test_compute_horizon_volume_quantities_time_independent() {
 
   // Compute dest_vars
   Variables<DestTags> dest_vars(mesh.number_of_grid_points());
-  ComputeHorizonVolumeQuantities::apply(make_not_null(&dest_vars), src_vars,
-                                        mesh);
+  ah::ComputeHorizonVolumeQuantities::apply(make_not_null(&dest_vars), src_vars,
+                                            mesh);
 
   // Now make sure that dest vars are correct.
   const auto expected_christoffel_second_kind = raise_or_lower_first_index(
       gr::christoffel_first_kind(d_g), determinant_and_inverse(g).second);
-  CHECK_ITERABLE_APPROX(
-      expected_christoffel_second_kind,
+  const auto& christoffel_second_kind =
       get<gr::Tags::SpatialChristoffelSecondKind<3, Frame::Inertial>>(
-          dest_vars));
+          dest_vars);
+  CHECK_ITERABLE_APPROX(expected_christoffel_second_kind,
+                        christoffel_second_kind);
 
   const auto expected_extrinsic_curvature =
       gr::extrinsic_curvature(lapse, shift, d_shift, g, dt_g, d_g);
-  CHECK_ITERABLE_APPROX(
-      expected_extrinsic_curvature,
-      get<gr::Tags::ExtrinsicCurvature<3, Frame::Inertial>>(dest_vars));
+  const auto& extrinsic_curvature =
+      get<gr::Tags::ExtrinsicCurvature<3, Frame::Inertial>>(dest_vars);
+  CHECK_ITERABLE_APPROX(expected_extrinsic_curvature, extrinsic_curvature);
 
   if constexpr (tmpl::list_contains_v<
                     DestTags, gr::Tags::SpatialMetric<3, Frame::Inertial>>) {
-    CHECK_ITERABLE_APPROX(
-        g, get<gr::Tags::SpatialMetric<3, Frame::Inertial>>(dest_vars));
+    const auto& spatial_metric =
+        get<gr::Tags::SpatialMetric<3, Frame::Inertial>>(dest_vars);
+    CHECK_ITERABLE_APPROX(g, spatial_metric);
   }
 
   if constexpr (tmpl::list_contains_v<DestTags, gr::Tags::InverseSpatialMetric<
                                                     3, Frame::Inertial>>) {
-    CHECK_ITERABLE_APPROX(
-        determinant_and_inverse(g).second,
-        get<gr::Tags::InverseSpatialMetric<3, Frame::Inertial>>(dest_vars));
+    const auto& inv_spatial_metric =
+        get<gr::Tags::InverseSpatialMetric<3, Frame::Inertial>>(dest_vars);
+    CHECK_ITERABLE_APPROX(determinant_and_inverse(g).second,
+                          inv_spatial_metric);
   }
 
   if constexpr (tmpl::list_contains_v<
@@ -147,9 +162,9 @@ void test_compute_horizon_volume_quantities_time_independent() {
     // Compute derivative of christoffel_2nd_kind, which is different
     // from how Ricci is computed in ComputeHorizonVolumeQuantities, but
     // which should give the same result to numerical truncation error.
-    using tags_before_deriv =
+    using christoffel_tags =
         tmpl::list<gr::Tags::SpatialChristoffelSecondKind<3, Frame::Inertial>>;
-    Variables<tags_before_deriv> vars_before_deriv(
+    Variables<christoffel_tags> vars_before_deriv(
         mesh.number_of_grid_points());
     get<gr::Tags::SpatialChristoffelSecondKind<3, Frame::Inertial>>(
         vars_before_deriv) =
@@ -158,10 +173,7 @@ void test_compute_horizon_volume_quantities_time_independent() {
 
     const auto inv_jacobian =
         map_logical_to_inertial.inv_jacobian(logical_coordinates(mesh));
-    using tags_after_deriv = tmpl::list<::Tags::deriv<
-        gr::Tags::SpatialChristoffelSecondKind<3, Frame::Inertial>,
-        tmpl::size_t<3>, Frame::Inertial>>;
-    const auto vars_after_deriv = partial_derivatives<tags_after_deriv>(
+    const auto vars_after_deriv = partial_derivatives<christoffel_tags>(
         vars_before_deriv, mesh, inv_jacobian);
     const auto expected_ricci = gr::ricci_tensor(
         get<gr::Tags::SpatialChristoffelSecondKind<3, Frame::Inertial>>(
@@ -169,9 +181,12 @@ void test_compute_horizon_volume_quantities_time_independent() {
         get<::Tags::deriv<
             gr::Tags::SpatialChristoffelSecondKind<3, Frame::Inertial>,
             tmpl::size_t<3>, Frame::Inertial>>(vars_after_deriv));
-    CHECK_ITERABLE_APPROX(
-        expected_ricci,
-        get<gr::Tags::SpatialRicci<3, Frame::Inertial>>(dest_vars));
+    const auto& ricci =
+        get<gr::Tags::SpatialRicci<3, Frame::Inertial>>(dest_vars);
+    // Use a more forgiving local_approx because this test should agree
+    // to truncation error not roundoff, because it has numerical derivs.
+    Approx local_approx = Approx::custom().epsilon(1.e-5).scale(1.);
+    CHECK_ITERABLE_CUSTOM_APPROX(expected_ricci, ricci, local_approx);
   }
 }
 

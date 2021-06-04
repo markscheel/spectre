@@ -12,7 +12,9 @@
 #include "NumericalAlgorithms/Interpolation/Tags.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
+#include "Parallel/Printf.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/PrettyType.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
 
@@ -134,6 +136,11 @@ void try_to_interpolate(
   // If we don't yet have any points for this InterpolationTarget at
   // this temporal_id, we should exit (we can't interpolate anyway).
   if (vars_infos.count(temporal_id) == 0) {
+    Parallel::printf(
+        "TryToInterpolate: We don't have points yet for target %s at time = "
+        "%lf so we are exiting",
+        pretty_type::short_name<InterpolationTargetTag>(),
+        temporal_id.step_time().value());
     return;
   }
 

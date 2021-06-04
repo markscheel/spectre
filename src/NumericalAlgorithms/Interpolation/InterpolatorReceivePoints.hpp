@@ -12,7 +12,9 @@
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "NumericalAlgorithms/Interpolation/InterpolatedVars.hpp"
 #include "NumericalAlgorithms/Interpolation/TryToInterpolate.hpp"
+#include "Parallel/Printf.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/PrettyType.hpp"
 #include "Utilities/Requires.hpp"
 #include "Utilities/TaggedTuple.hpp"
 
@@ -74,13 +76,15 @@ struct ReceivePoints {
           IdPair<domain::BlockId,
                  tnsr::I<double, VolumeDim, typename ::Frame::Logical>>>>&&
           block_logical_coords) noexcept {
+    Parallel::printf("ReceivePoints: Called for target %s at time = %lf",
+                     pretty_type::short_name<InterpolationTargetTag>(),
+                     temporal_id.step_time().value());
     db::mutate<intrp::Tags::InterpolatedVarsHolders<Metavariables>>(
         make_not_null(&box),
-        [
-          &temporal_id, &block_logical_coords
-        ](const gsl::not_null<
-            typename intrp::Tags::InterpolatedVarsHolders<Metavariables>::type*>
-              vars_holders) noexcept {
+        [&temporal_id, &block_logical_coords](
+            const gsl::not_null<typename intrp::Tags::InterpolatedVarsHolders<
+                Metavariables>::type*>
+                vars_holders) noexcept {
           auto& vars_infos =
               get<intrp::Vars::HolderTag<InterpolationTargetTag,
                                          Metavariables>>(*vars_holders)

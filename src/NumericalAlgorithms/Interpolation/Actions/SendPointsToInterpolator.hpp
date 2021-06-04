@@ -9,7 +9,9 @@
 #include "NumericalAlgorithms/Interpolation/InterpolationTargetDetail.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
+#include "Parallel/Printf.hpp"
 #include "Utilities/Gsl.hpp"
+#include "Utilities/PrettyType.hpp"
 #include "Utilities/TMPL.hpp"
 
 namespace intrp {
@@ -50,6 +52,11 @@ struct SendPointsToInterpolator {
         Parallel::get_parallel_component<Interpolator<Metavariables>>(cache);
     Parallel::simple_action<Actions::ReceivePoints<InterpolationTargetTag>>(
         receiver_proxy, temporal_id, std::move(coords));
+    Parallel::printf(
+        "SendPointsToInterpolator: Scheduled "
+        "ReceivePoints for target %s at time = %lf",
+        pretty_type::short_name<InterpolationTargetTag>(),
+        temporal_id.step_time().value());
   }
 };
 

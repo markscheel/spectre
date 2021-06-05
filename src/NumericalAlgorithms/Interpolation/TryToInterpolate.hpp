@@ -152,6 +152,11 @@ void try_to_interpolate(
   const auto& num_elements = db::get<Tags::NumberOfElements>(*box);
   if (vars_infos.at(temporal_id)
           .interpolation_is_done_for_these_elements.size() == num_elements) {
+    Parallel::printf(
+        "TryToInterpolate: Target %s: we have interpolated on %d of the %d "
+        "elements at time = %lf!\n",
+        pretty_type::short_name<InterpolationTargetTag>(), num_elements,
+        num_elements, temporal_id.step_time().value());
     // Send data to InterpolationTarget, but only if the list of points is
     // non-empty.
     if (not vars_infos.at(temporal_id).global_offsets.empty()) {
@@ -161,6 +166,18 @@ void try_to_interpolate(
       Parallel::simple_action<
           Actions::InterpolationTargetReceiveVars<InterpolationTargetTag>>(
           receiver_proxy, info.vars, info.global_offsets, temporal_id);
+      Parallel::printf(
+          "TryToInterpolate: Target %s: scheduled "
+          "InterpolationTargetReceiveVars at time = %lf!\n",
+          pretty_type::short_name<InterpolationTargetTag>(),
+          temporal_id.step_time().value());
+    } else {
+      Parallel::printf(
+          "TryToInterpolate: Target %s: NOT SCHEDULING "
+          "InterpolationTargetReceiveVars at time = %lf because our list of "
+          "points is empty!\n",
+          pretty_type::short_name<InterpolationTargetTag>(),
+          temporal_id.step_time().value());
     }
 
     // Clear interpolated data, since we don't need it anymore.
@@ -173,6 +190,14 @@ void try_to_interpolate(
               *holders_l)
               .infos.erase(temporal_id);
         });
+  } else {
+    Parallel::printf(
+        "TryToInterpolate: Target %s: we have interpolated on %d of the %d "
+        "elements at time = %lf so wait till the next call before proceeding\n",
+        pretty_type::short_name<InterpolationTargetTag>(),
+        vars_infos.at(temporal_id)
+            .interpolation_is_done_for_these_elements.size(),
+        num_elements, temporal_id.step_time().value());
   }
 }
 

@@ -160,7 +160,23 @@ struct InterpolationTargetReceiveVars {
                 pretty_type::short_name<InterpolationTargetTag>());
           }
         }
+      } else {
+        Parallel::printf(
+            "InterpolationTargetReceiveVars: Target %s at time = %lf. We have "
+            "all the points on the target, we did interpolation, but no "
+            "cleanup yet because we still have more iterations to do at this "
+            "time.  Exiting.\n",
+            pretty_type::short_name<InterpolationTargetTag>(),
+            temporal_id.step_time().value());
       }
+    } else {
+      Parallel::printf(
+          "InterpolationTargetReceiveVars: Target %s at time = %lf, do not yet "
+          "have all the points on the target, "
+          "so we are exiting. Expecting another element to call us with more "
+          "points.\n",
+          pretty_type::short_name<InterpolationTargetTag>(),
+          temporal_id.step_time().value());
     }
   }
 };

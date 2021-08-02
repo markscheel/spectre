@@ -13,6 +13,7 @@
 #include "DataStructures/DataBox/TagName.hpp"
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tensor/EagerMath/Magnitude.hpp"
+#include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "PointwiseFunctions/GeneralRelativity/TagsDeclarations.hpp"  // IWYU pragma: keep
 #include "Utilities/ForceInline.hpp"
@@ -35,6 +36,12 @@ struct FastFlow : db::SimpleTag {
 template <typename Frame>
 struct PreviousStrahlkorper : db::SimpleTag {
   using type = ::Strahlkorper<Frame>;
+};
+/// Tag for holding the inertial-frame Strahlkorper,
+/// when the apparent horizon is found in a frame other than the
+/// inertial frame.
+struct InertialStrahlkorper : db::SimpleTag {
+  using type = ::Strahlkorper<::Frame::Inertial>;
 };
 }  // namespace ah::Tags
 

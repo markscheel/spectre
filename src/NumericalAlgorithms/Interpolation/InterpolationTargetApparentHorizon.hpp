@@ -141,19 +141,30 @@ template <typename InterpolationTargetTag, typename Frame>
 struct ApparentHorizon {
   using const_global_cache_tags =
       tmpl::list<Tags::ApparentHorizon<InterpolationTargetTag, Frame>>;
-  using initialization_tags =
-      tmpl::append<StrahlkorperTags::items_tags<Frame>,
-                   tmpl::list<::ah::Tags::FastFlow,
-                              logging::Tags::Verbosity<InterpolationTargetTag>,
-                              ::ah::Tags::PreviousStrahlkorper<Frame>>,
-                   StrahlkorperTags::compute_items_tags<Frame>>;
+  using initialization_tags = tmpl::append<
+      StrahlkorperTags::items_tags<Frame>,
+      std::conditional_t<
+          std::is_same_v<Frame, ::Frame::Inertial>,
+          tmpl::list<::ah::Tags::FastFlow,
+                     logging::Tags::Verbosity<InterpolationTargetTag>,
+                     ::ah::Tags::PreviousStrahlkorper<Frame>>,
+          tmpl::list<::ah::Tags::FastFlow,
+                     logging::Tags::Verbosity<InterpolationTargetTag>,
+                     ::ah::Tags::PreviousStrahlkorper<Frame>,
+                     ::ah::Tags::InertialStrahlkorper>>,
+      StrahlkorperTags::compute_items_tags<Frame>>;
   using is_sequential = std::true_type;
   using frame = Frame;
 
-  using simple_tags =
+  using simple_tags = std::conditional_t<
+      std::is_same_v<Frame, ::Frame::Inertial>,
       tmpl::push_back<StrahlkorperTags::items_tags<Frame>, ::ah::Tags::FastFlow,
                       logging::Tags::Verbosity<InterpolationTargetTag>,
-                      ::ah::Tags::PreviousStrahlkorper<Frame>>;
+                      ::ah::Tags::PreviousStrahlkorper<Frame>>,
+      tmpl::push_back<StrahlkorperTags::items_tags<Frame>, ::ah::Tags::FastFlow,
+                      logging::Tags::Verbosity<InterpolationTargetTag>,
+                      ::ah::Tags::PreviousStrahlkorper<Frame>,
+                      ::ah::Tags::InertialStrahlkorper>>;
   using compute_tags = typename StrahlkorperTags::compute_items_tags<Frame>;
 
   template <typename DbTags, typename Metavariables>
@@ -167,9 +178,16 @@ struct ApparentHorizon {
     // Put Strahlkorper and its ComputeItems, FastFlow,
     // and verbosity into a new DataBox.
     // Put the initial guess also into PreviousStrahlkorper.
+    if constexpr (std::is_same_v<Frame, ::Frame::Inertial>) {
     Initialization::mutate_assign<simple_tags>(
         box, options.initial_guess, options.fast_flow, options.verbosity,
         options.initial_guess);
+    } else {
+      // Default-initialize InertialStrahlkorper.
+      Initialization::mutate_assign<simple_tags>(
+          box, options.initial_guess, options.fast_flow, options.verbosity,
+          options.initial_guess, Strahlkorper<::Frame::Inertial>{});
+    }
   }
 
   template <typename Metavariables, typename DbTags, typename TemporalId>

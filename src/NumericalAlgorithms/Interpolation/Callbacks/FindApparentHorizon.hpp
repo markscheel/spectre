@@ -248,6 +248,11 @@ struct FindApparentHorizon {
           },
           box);
 
+      // Compute InertialStrahlkorper if necessary.
+      if constexpr (not std::is_same_v<Frame, ::Frame::Inertial>) {
+        // NOT DONE YET;
+      }
+
       InterpolationTargetTag::post_horizon_find_callback::apply(*box, *cache,
                                                                 temporal_id);
     }

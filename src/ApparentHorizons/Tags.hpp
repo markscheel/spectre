@@ -6,6 +6,7 @@
 #include <string>
 
 #include "ApparentHorizons/Strahlkorper.hpp"
+#include "ApparentHorizons/StrahlkorperFunctions.hpp"
 #include "ApparentHorizons/StrahlkorperGr.hpp"
 #include "ApparentHorizons/TagsDeclarations.hpp"  // IWYU pragma: keep
 #include "ApparentHorizons/TagsTypeAliases.hpp"
@@ -67,8 +68,10 @@ template <typename Frame>
 struct ThetaPhiCompute : ThetaPhi<Frame>, db::ComputeTag {
   using base = ThetaPhi<Frame>;
   using return_type = aliases::ThetaPhi<Frame>;
-  static void function(gsl::not_null<aliases::ThetaPhi<Frame>*> theta_phi,
-                       const ::Strahlkorper<Frame>& strahlkorper) noexcept;
+  static constexpr auto function = static_cast<void (*)(
+      const gsl::not_null<tnsr::i<DataVector, 2, ::Frame::Spherical<Frame>>*>,
+      const ::Strahlkorper<Frame>&) noexcept>(
+      &::StrahlkorperFunctions::compute_theta_phi<Frame>);
   using argument_tags = tmpl::list<Strahlkorper<Frame>>;
 };
 /// @}

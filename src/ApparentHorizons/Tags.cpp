@@ -17,16 +17,6 @@
 namespace StrahlkorperTags {
 
 template <typename Frame>
-void ThetaPhiCompute<Frame>::function(
-    const gsl::not_null<aliases::ThetaPhi<Frame>*> theta_phi,
-    const ::Strahlkorper<Frame>& strahlkorper) noexcept {
-  auto temp = strahlkorper.ylm_spherepack().theta_phi_points();
-  destructive_resize_components(theta_phi, temp[0].size());
-  get<0>(*theta_phi) = temp[0];
-  get<1>(*theta_phi) = temp[1];
-}
-
-template <typename Frame>
 void RhatCompute<Frame>::function(
     const gsl::not_null<aliases::OneForm<Frame>*> r_hat,
     const aliases::ThetaPhi<Frame>& theta_phi) noexcept {
@@ -263,7 +253,6 @@ void TangentsCompute<Frame>::function(
 
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(0, data)
 #define INSTANTIATE(_, data)                                             \
-  template struct StrahlkorperTags::ThetaPhiCompute<FRAME(data)>;        \
   template struct StrahlkorperTags::RhatCompute<FRAME(data)>;            \
   template struct StrahlkorperTags::JacobianCompute<FRAME(data)>;        \
   template struct StrahlkorperTags::InvJacobianCompute<FRAME(data)>;     \

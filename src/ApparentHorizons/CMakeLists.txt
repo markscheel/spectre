@@ -12,6 +12,7 @@ spectre_target_sources(
   FastFlow.cpp
   SpherepackIterator.cpp
   Strahlkorper.cpp
+  StrahlkorperFunctions.cpp
   StrahlkorperGr.cpp
   Tags.cpp
   YlmSpherepack.cpp
@@ -29,6 +30,7 @@ spectre_target_headers(
   FastFlow.hpp
   SpherepackIterator.hpp
   Strahlkorper.hpp
+  StrahlkorperFunctions.hpp
   StrahlkorperGr.hpp
   Tags.hpp
   TagsDeclarations.hpp

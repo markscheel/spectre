@@ -15,6 +15,7 @@ spectre_target_sources(
   StrahlkorperCoordsInDifferentFrame.cpp
   StrahlkorperFunctions.cpp
   StrahlkorperGr.cpp
+  StrahlkorperInDifferentFrame.cpp
   Tags.cpp
   YlmSpherepack.cpp
   YlmSpherepackHelper.cpp
@@ -34,6 +35,7 @@ spectre_target_headers(
   StrahlkorperCoordsInDifferentFrame.hpp
   StrahlkorperFunctions.hpp
   StrahlkorperGr.hpp
+  StrahlkorperInDifferentFrame.cpp
   Tags.hpp
   TagsDeclarations.hpp
   TagsTypeAliases.hpp

@@ -247,6 +247,39 @@ void fuzzy_test_block_and_element_logical_coordinates_unrefined(
                           block_coords[s]);
   }
 
+  // Map to distorted coords
+  const auto distorted_coords = [&n_pts, &domain, &block_ids, &block_coords,
+                                 &time, &functions_of_time]() {
+    tnsr::I<DataVector, Dim, Frame::Distorted> coords(n_pts);
+    for (size_t s = 0; s < n_pts; ++s) {
+      tnsr::I<double, Dim, Frame::Distorted> coord_one_point{};
+      if (domain.blocks()[block_ids[s]].is_time_dependent()) {
+        coord_one_point =
+            domain.blocks()[block_ids[s]].moving_mesh_grid_to_distorted_map()(
+                domain.blocks()[block_ids[s]].moving_mesh_logical_to_grid_map()(
+                    block_coords[s]),
+                time, functions_of_time);
+      } else {
+        coord_one_point =
+            domain.blocks()[block_ids[s]].stationary_map()(block_coords[s]);
+      }
+      for (size_t d = 0; d < Dim; ++d) {
+        coords.get(d)[s] = coord_one_point.get(d);
+      }
+    }
+    return coords;
+  }();
+
+  auto block_logical_result = block_logical_coordinates(
+      domain, distorted_coords, time, functions_of_time);
+  test_serialization(block_logical_result);
+
+  for (size_t s = 0; s < n_pts; ++s) {
+    CHECK(block_logical_result[s].value().id.get_index() == block_ids[s]);
+    CHECK_ITERABLE_APPROX(block_logical_result[s].value().data,
+                          block_coords[s]);
+  }
+
   // Map to grid coords
   const auto grid_coords = [&n_pts, &domain, &block_ids, &block_coords]() {
     tnsr::I<DataVector, Dim, Frame::Grid> coords(n_pts);

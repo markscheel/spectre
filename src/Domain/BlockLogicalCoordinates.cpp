@@ -42,14 +42,24 @@ std::vector<block_logical_coord_holder<Dim>> block_logical_coordinates(
     // the smallest block_id).
     for (const auto& block : domain.blocks()) {
       if (block.is_time_dependent()) {
-        if constexpr (std::is_same_v<Frame, ::Frame::Inertial>) {
-          // Point is in the inertial frame, so we need to map to the grid
-          // frame and then the logical frame.
-          const auto moving_inv =
-              block.moving_mesh_grid_to_inertial_map().inverse(
+        if constexpr (std::is_same_v<Frame, ::Frame::Inertial> or
+                      std::is_same_v<Frame, ::Frame::Distorted>) {
+          const auto moving_inv = [&block, &x_frame, &time,
+                                   &functions_of_time]() {
+            if constexpr (std::is_same_v<Frame, ::Frame::Inertial>) {
+              // Point is in the inertial frame, so we need to map to the grid
+              // frame and then the logical frame.
+              return block.moving_mesh_grid_to_inertial_map().inverse(
                   x_frame, time, functions_of_time);
+            } else if constexpr (std::is_same_v<Frame, ::Frame::Distorted>) {
+              // Point is in the distorted frame, so we need to map to the grid
+              // frame and then the logical frame.
+              return block.moving_mesh_grid_to_distorted_map().inverse(
+                  x_frame, time, functions_of_time);
+            }
+          }();
           if (not moving_inv.has_value()) {
-            continue;
+            continue;  // Not in this block
           }
           // logical to grid map is time-independent.
           const auto inv = block.moving_mesh_logical_to_grid_map().inverse(
@@ -59,14 +69,18 @@ std::vector<block_logical_coord_holder<Dim>> block_logical_coordinates(
           } else {
             continue;  // Not in this block
           }
-        } else {  // frame is different than ::Frame::Inertial
+        } else {
+          // Frame is different than ::Frame::Inertial or
+          // ::Frame::Distorted.
+          //
           // Currently 'time' is unused in this branch.
           // To make the compiler happy, need to trick it to think that
           // 'time' is used.
-          (void) time;
-          // Currently we only support Grid and Inertial frames in the
-          // block, so make sure Frame is ::Frame::Grid. (The
-          // Inertial case was handled above.)
+          (void)time;
+          // Currently we only support Grid, Distorted and Inertial
+          // frames in the block, so make sure Frame is
+          // ::Frame::Grid. (The Inertial and Distorted cases were handled
+          // above.)
           static_assert(std::is_same_v<Frame, ::Frame::Grid>,
                         "Cannot convert from given frame to Grid frame");
 
@@ -88,13 +102,15 @@ std::vector<block_logical_coord_holder<Dim>> block_logical_coordinates(
             continue;  // Not in this block
           }
         } else {
-          // If the map is time-independent, then the grid and
-          // inertial frames are the same.  So if we are in the grid frame,
-          // convert to the inertial frame.  Otherwise throw a static_assert.
-          // Once we support more frames (e.g. distorted) this logic will
-          // change.
-          static_assert(std::is_same_v<Frame, ::Frame::Grid>,
-                        "Cannot convert from given frame to Grid frame");
+          // If the map is time-independent, then the grid, distorted,
+          // and inertial frames are the same.  So if the coordinates
+          // are given in the grid or distorted frames, convert to the
+          // inertial frame (by copying) to get an object of the
+          // correct type.  If the coordinates are given in any other
+          // frame, something is wrong so we static_assert.
+          static_assert(std::is_same_v<Frame, ::Frame::Grid> or
+                            std::is_same_v<Frame, ::Frame::Distorted>,
+                        "Expected either Grid or Distorted frame");
           tnsr::I<double, Dim, ::Frame::Inertial> x_inertial(0.0);
           for (size_t d = 0; d < Dim; ++d) {
             x_inertial.get(d) = x_frame.get(d);
@@ -138,7 +154,7 @@ std::vector<block_logical_coord_holder<Dim>> block_logical_coordinates(
       const functions_of_time_type& functions_of_time);
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3),
-                        (::Frame::Inertial, ::Frame::Grid))
+                        (::Frame::Inertial, ::Frame::Grid, ::Frame::Distorted))
 
 #undef FRAME
 #undef DIM

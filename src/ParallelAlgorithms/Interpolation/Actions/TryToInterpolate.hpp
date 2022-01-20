@@ -4,6 +4,9 @@
 #pragma once
 
 #include "DataStructures/DataBox/DataBox.hpp"
+#include "DataStructures/DataVector.hpp"
+#include "DataStructures/Tensor/Tensor.hpp"
+#include "DataStructures/Tensor/TypeAliases.hpp"
 #include "DataStructures/Variables.hpp"
 #include "DataStructures/VariablesTag.hpp"
 #include "Domain/ElementLogicalCoordinates.hpp"
@@ -132,7 +135,7 @@ void interpolate_data(
                                   typename InterpolationTargetTag::
                                       vars_to_interpolate_to_target,
                                   Frame::Grid>) {
-                  // Need to do frame transformations.
+                  // Need to do frame transformations for inertial frame.
 
                   // The functions of time are always guaranteed to be
                   // up-to-date here, because they are guaranteed to be
@@ -159,6 +162,75 @@ void interpolate_data(
                       make_not_null(&vars_to_interpolate),
                       volume_info.vars_from_element, volume_info.mesh,
                       jac_grid_to_inertial, invjac_logical_to_grid);
+                } else if constexpr (
+                    any_index_in_frame_v<
+                        typename Metavariables::interpolator_source_vars,
+                        Frame::Distorted> and
+                    any_index_in_frame_v<typename InterpolationTargetTag::
+                                             vars_to_interpolate_to_target,
+                                         Frame::Grid>) {
+                  // Need to do frame transformations for distorted frame.
+
+                  // The functions of time are always guaranteed to be
+                  // up-to-date here, because they are guaranteed to be
+                  // up-to-date before calling SendPointsToInterpolator
+                  // (which is guaranteed to be called before
+                  // interpolate_data is called).
+                  const auto& functions_of_time =
+                      get<domain::Tags::FunctionsOfTime>(cache);
+                  const auto& block = domain.blocks().at(element_id.block_id());
+                  ElementMap<3, ::Frame::Grid> map_logical_to_grid{
+                      element_id,
+                      block.moving_mesh_logical_to_grid_map().get_clone()};
+                  const auto invjac_logical_to_distorted =
+                      [&map_logical_to_grid, &volume_info, &block, &temporal_id,
+                       &functions_of_time]() {
+                        const auto invjac_logical_to_grid =
+                            map_logical_to_grid.inv_jacobian(
+                                logical_coordinates(volume_info.mesh));
+                        const auto invjac_grid_to_distorted =
+                            block.moving_mesh_grid_to_distorted_map()
+                                .inv_jacobian(
+                                    map_logical_to_grid(
+                                        logical_coordinates(volume_info.mesh)),
+                                    InterpolationTarget_detail::
+                                        evaluate_temporal_id_for_expiration(
+                                            temporal_id),
+                                    functions_of_time);
+                        InverseJacobian<DataVector, 3, ::Frame::Logical,
+                                        ::Frame::Distorted>
+                            invjac(get<0, 0>(invjac_logical_to_grid).size(),
+                                   0.0);
+                        for (size_t i_logical = 0; i_logical < 3; ++i_logical) {
+                          for (size_t j_distorted = 0; j_distorted < 3;
+                               ++j_distorted) {
+                            for (size_t k_grid = 0; k_grid < 3; ++k_grid) {
+                              invjac.get(i_logical, j_distorted) +=
+                                  invjac_logical_to_grid.get(i_logical,
+                                                             k_grid) *
+                                  invjac_grid_to_distorted.get(k_grid,
+                                                               j_distorted);
+                            }
+                          }
+                        }
+                        return invjac;
+                      }();
+                  const auto jac_distorted_to_inertial =
+                      block.moving_mesh_distorted_to_inertial_map().jacobian(
+                          block.moving_mesh_grid_to_distorted_map()(
+                              map_logical_to_grid(
+                                  logical_coordinates(volume_info.mesh)),
+                              InterpolationTarget_detail::
+                                  evaluate_temporal_id_for_expiration(
+                                      temporal_id),
+                              functions_of_time),
+                          InterpolationTarget_detail::
+                              evaluate_temporal_id_for_expiration(temporal_id),
+                          functions_of_time);
+                  InterpolationTargetTag::compute_vars_to_interpolate::apply(
+                      make_not_null(&vars_to_interpolate),
+                      volume_info.vars_from_element, volume_info.mesh,
+                      jac_distorted_to_inertial, invjac_logical_to_distorted);
                 } else {
                   InterpolationTargetTag::compute_vars_to_interpolate::apply(
                       make_not_null(&vars_to_interpolate),

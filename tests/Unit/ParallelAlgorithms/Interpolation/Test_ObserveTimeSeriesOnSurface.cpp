@@ -34,6 +34,7 @@
 #include "IO/H5/AccessType.hpp"
 #include "IO/H5/Dat.hpp"
 #include "IO/H5/File.hpp"
+#include "IO/Logging/Verbosity.hpp"
 #include "IO/Observer/Initialize.hpp"
 #include "IO/Observer/ObserverComponent.hpp"
 #include "IO/Observer/Tags.hpp"
@@ -274,12 +275,12 @@ SPECTRE_TEST_CASE(
   using obs_writer = MockObserverWriter<metavars>;
 
   // Options for all InterpolationTargets.
-  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_A(10, {{0.0, 0.0, 0.0}},
-                                                        1.0, {{0.0, 0.0, 0.0}});
-  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_B(10, {{0.0, 0.0, 0.0}},
-                                                        2.0, {{0.0, 0.0, 0.0}});
-  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_C(10, {{0.0, 0.0, 0.0}},
-                                                        1.5, {{0.0, 0.0, 0.0}});
+  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_A(
+      10, {{0.0, 0.0, 0.0}}, 1.0, {{0.0, 0.0, 0.0}}, Verbosity::Quiet);
+  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_B(
+      10, {{0.0, 0.0, 0.0}}, 2.0, {{0.0, 0.0, 0.0}}, Verbosity::Quiet);
+  intrp::OptionHolders::KerrHorizon kerr_horizon_opts_C(
+      10, {{0.0, 0.0, 0.0}}, 1.5, {{0.0, 0.0, 0.0}}, Verbosity::Quiet);
   const auto domain_creator =
       domain::creators::Shell(0.9, 4.9, 1, {{5, 5}}, false);
   tuples::TaggedTuple<observers::Tags::ReductionFileName,

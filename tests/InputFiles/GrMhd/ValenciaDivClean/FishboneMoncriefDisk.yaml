@@ -125,3 +125,4 @@ InterpolationTargets:
     Mass: *BhMass
     DimensionlessSpin: [0.0, 0.0, *BhDimlessSpin]
     ThetaVariesFastest: true
+    Verbosity: Quiet

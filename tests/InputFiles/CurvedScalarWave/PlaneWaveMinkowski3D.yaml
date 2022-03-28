@@ -114,6 +114,7 @@ InterpolationTargets:
     Lmax: 10
     Center: [0., 0., 0.]
     Radius: 1.
+    Verbosity: Quiet
 
 Observers:
   VolumeFileName: "PlaneWaveMinkowski3DVolume"

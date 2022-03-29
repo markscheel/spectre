@@ -199,6 +199,9 @@ Observers:
   VolumeFileName: "GhBinaryBlackHoleVolumeData"
   ReductionFileName: "GhBinaryBlackHoleReductionData"
 
+Interpolator:
+  Verbosity: Quiet
+
 ApparentHorizons:
   AhA:
     InitialGuess:

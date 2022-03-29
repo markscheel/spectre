@@ -217,10 +217,11 @@ struct mock_interpolation_target {
   using metavariables = Metavariables;
   using chare_type = ActionTesting::MockSingletonChare;
   using array_index = size_t;
-  using const_global_cache_tags =
+  using const_global_cache_tags = tmpl::push_back<
       Parallel::get_const_global_cache_tags_from_actions<tmpl::list<
           typename InterpolationTargetTag::compute_target_points,
-          typename InterpolationTargetTag::post_interpolation_callback>>;
+          typename InterpolationTargetTag::post_interpolation_callback>>,
+      logging::Tags::Verbosity<intrp::OptionTags::Interpolator>>;
   using mutable_global_cache_tags =
       tmpl::conditional_t<metavariables::use_time_dependent_maps,
                           tmpl::list<domain::Tags::FunctionsOfTimeInitialize>,
@@ -331,9 +332,10 @@ void test_apparent_horizon(const gsl::not_null<size_t*> test_horizon_called,
             0.0, std::array<double, 3>({{0.01, 0.02, 0.03}})));
     tuples::TaggedTuple<
         domain::Tags::Domain<3>,
-        typename ::intrp::Tags::ApparentHorizon<typename metavars::AhA, Frame>>
+        typename ::intrp::Tags::ApparentHorizon<typename metavars::AhA, Frame>,
+        logging::Tags::Verbosity<intrp::OptionTags::Interpolator>>
         tuple_of_opts{std::move(domain_creator->create_domain()),
-                      std::move(apparent_horizon_opts)};
+                      std::move(apparent_horizon_opts), Verbosity::Quiet};
     runner_ptr = std::make_unique<ActionTesting::MockRuntimeSystem<metavars>>(
         std::move(tuple_of_opts), domain_creator->functions_of_time(),
         std::vector<size_t>{3, 2});
@@ -346,9 +348,10 @@ void test_apparent_horizon(const gsl::not_null<size_t*> test_horizon_called,
 
     tuples::TaggedTuple<
         domain::Tags::Domain<3>,
-        typename ::intrp::Tags::ApparentHorizon<typename metavars::AhA, Frame>>
+        typename ::intrp::Tags::ApparentHorizon<typename metavars::AhA, Frame>,
+        logging::Tags::Verbosity<intrp::OptionTags::Interpolator>>
         tuple_of_opts{std::move(domain_creator->create_domain()),
-                      std::move(apparent_horizon_opts)};
+                      std::move(apparent_horizon_opts), Verbosity::Quiet};
 
     runner_ptr = std::make_unique<ActionTesting::MockRuntimeSystem<metavars>>(
         std::move(tuple_of_opts), tuples::TaggedTuple<>{},

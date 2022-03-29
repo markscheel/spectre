@@ -162,6 +162,9 @@ Observers:
   VolumeFileName: "GhKerrSchildVolume"
   ReductionFileName: "GhKerrSchildReductions"
 
+Interpolator:
+  Verbosity: Quiet
+
 ApparentHorizons:
   AhA:
     InitialGuess:

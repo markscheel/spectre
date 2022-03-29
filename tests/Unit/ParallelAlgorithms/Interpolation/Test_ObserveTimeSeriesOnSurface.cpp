@@ -161,6 +161,8 @@ struct MockInterpolator {
   using metavariables = Metavariables;
   using chare_type = ActionTesting::MockGroupChare;
   using array_index = size_t;
+  using const_global_cache_tags =
+      tmpl::list<logging::Tags::Verbosity<intrp::OptionTags::Interpolator>>;
   using phase_dependent_action_list = tmpl::list<
       Parallel::PhaseActions<
           typename Metavariables::Phase, Metavariables::Phase::Initialization,
@@ -287,10 +289,11 @@ SPECTRE_TEST_CASE(
                       ::intrp::Tags::KerrHorizon<metavars::SurfaceA>,
                       domain::Tags::Domain<3>,
                       ::intrp::Tags::KerrHorizon<metavars::SurfaceB>,
-                      ::intrp::Tags::KerrHorizon<metavars::SurfaceC>>
+                      ::intrp::Tags::KerrHorizon<metavars::SurfaceC>,
+                      logging::Tags::Verbosity<intrp::OptionTags::Interpolator>>
       tuple_of_opts{h5_file_prefix, kerr_horizon_opts_A,
                     domain_creator.create_domain(), kerr_horizon_opts_B,
-                    kerr_horizon_opts_C};
+                    kerr_horizon_opts_C,Verbosity::Quiet};
 
   // Three mock nodes, with 2, 1, and 3 mock cores.
   ActionTesting::MockRuntimeSystem<metavars> runner{

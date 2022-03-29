@@ -91,4 +91,7 @@ EventsAndTriggers:
         Values: [2]
   : - Completion
 
+Interpolator:
+  Verbosity: Quiet
+
 EventsAndDenseTriggers:

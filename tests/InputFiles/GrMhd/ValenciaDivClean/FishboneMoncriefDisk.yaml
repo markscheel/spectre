@@ -118,6 +118,9 @@ Observers:
   VolumeFileName: "ValenciaDivCleanFishboneMoncriefDiskVolume"
   ReductionFileName: "ValenciaDivCleanFishboneMoncriefDiskReductions"
 
+Interpolator:
+  Verbosity: Quiet
+
 InterpolationTargets:
   KerrHorizon:
     Lmax: 10

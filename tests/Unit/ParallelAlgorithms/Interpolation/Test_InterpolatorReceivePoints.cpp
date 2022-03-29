@@ -21,6 +21,7 @@
 #include "Domain/Structure/BlockId.hpp"
 #include "Domain/Tags.hpp"
 #include "Framework/ActionTesting.hpp"
+#include "IO/Logging/Verbosity.hpp"
 #include "Parallel/Actions/SetupDataBox.hpp"
 #include "Parallel/PhaseDependentActionList.hpp"  // IWYU pragma: keep
 #include "ParallelAlgorithms/Interpolation/Actions/InitializeInterpolationTarget.hpp"
@@ -40,7 +41,6 @@
 #include "Utilities/StdHelpers.hpp"
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
-
 // IWYU pragma: no_include <boost/variant/get.hpp>
 
 namespace intrp::Actions {
@@ -106,8 +106,8 @@ struct mock_interpolation_target {
   using component_being_mocked =
       intrp::InterpolationTarget<Metavariables, InterpolationTargetTag>;
   using const_global_cache_tags =
-      tmpl::list<domain::Tags::Domain<Metavariables::volume_dim>>;
-
+      tmpl::list<domain::Tags::Domain<Metavariables::volume_dim>,
+                 logging::Tags::Verbosity<InterpolationTargetTag>>;
   using phase_dependent_action_list = tmpl::list<
       Parallel::PhaseActions<
           typename Metavariables::Phase, Metavariables::Phase::Initialization,
@@ -130,6 +130,8 @@ struct mock_interpolator {
   using metavariables = Metavariables;
   using chare_type = ActionTesting::MockArrayChare;
   using array_index = size_t;
+  using const_global_cache_tags =
+      tmpl::list<logging::Tags::Verbosity<intrp::OptionTags::Interpolator>>;
 
   using phase_dependent_action_list = tmpl::list<
       Parallel::PhaseActions<
@@ -144,6 +146,14 @@ struct mock_interpolator {
   using component_being_mocked = void;  // not needed.
 };
 
+template <typename InterpolationTargetTag>
+struct mock_compute_target_points {
+  using simple_tags =
+      tmpl::list<logging::Tags::Verbosity<InterpolationTargetTag>>;
+  using const_global_cache_tags =
+      tmpl::list<logging::Tags::Verbosity<InterpolationTargetTag>>;
+};
+
 struct Metavariables {
   struct InterpolationTargetA {
     using temporal_id = ::Tags::TimeStepId;
@@ -154,7 +164,8 @@ struct Metavariables {
     // InterpolationTargets must have compute_target_points defined.
     // But for this test, compute_target_points is not actually used
     // so we can just define it to be any random type. Choose void.
-    using compute_target_points = void;
+    using compute_target_points =
+        mock_compute_target_points<InterpolationTargetA>;
   };
   using interpolator_source_vars = tmpl::list<gr::Tags::Lapse<DataVector>>;
   using interpolation_target_tags = tmpl::list<InterpolationTargetA>;
@@ -176,8 +187,13 @@ SPECTRE_TEST_CASE("Unit.NumericalAlgorithms.Interpolator.ReceivePoints",
   const auto domain_creator =
       domain::creators::Shell(0.9, 4.9, 1, {{7, 7}}, false);
 
-  ActionTesting::MockRuntimeSystem<metavars> runner{
-      {domain_creator.create_domain()}};
+  tuples::TaggedTuple<
+      domain::Tags::Domain<3>,
+      logging::Tags::Verbosity<typename metavars::InterpolationTargetA>,
+      logging::Tags::Verbosity<intrp::OptionTags::Interpolator>>
+      tuple_of_opts{domain_creator.create_domain(), Verbosity::Quiet,
+                    Verbosity::Quiet};
+  ActionTesting::MockRuntimeSystem<metavars> runner{std::move(tuple_of_opts)};
   ActionTesting::set_phase(make_not_null(&runner),
                            metavars::Phase::Initialization);
   ActionTesting::emplace_component<interp_component>(&runner, 0);

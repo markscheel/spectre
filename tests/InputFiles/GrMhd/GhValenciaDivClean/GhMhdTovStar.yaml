@@ -172,6 +172,9 @@ EventsAndTriggers:
         Values: [3]
   : - Completion
 
+Interpolator:
+  Verbosity: Quiet
+
 Observers:
   VolumeFileName: "GhMhdTovStarVolume"
   ReductionFileName: "GhMhdTovStarReductions"

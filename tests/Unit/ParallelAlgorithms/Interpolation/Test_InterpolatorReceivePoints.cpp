@@ -128,7 +128,7 @@ struct mock_interpolation_target {
 template <typename Metavariables>
 struct mock_interpolator {
   using metavariables = Metavariables;
-  using chare_type = ActionTesting::MockArrayChare;
+  using chare_type = ActionTesting::MockGroupChare;
   using array_index = size_t;
   using const_global_cache_tags =
       tmpl::list<logging::Tags::Verbosity<intrp::OptionTags::Interpolator>>;
@@ -143,7 +143,7 @@ struct mock_interpolator {
                          intrp::Tags::InterpolatedVarsHolders<Metavariables>>>>,
       Parallel::PhaseActions<typename Metavariables::Phase,
                              Metavariables::Phase::Testing, tmpl::list<>>>;
-  using component_being_mocked = void;  // not needed.
+  using component_being_mocked = intrp::Interpolator<Metavariables>;
 };
 
 template <typename InterpolationTargetTag>

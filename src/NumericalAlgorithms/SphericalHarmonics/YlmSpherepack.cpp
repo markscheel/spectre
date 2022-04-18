@@ -70,7 +70,16 @@ YlmSpherepack::YlmSpherepack(const size_t l_max, const size_t m_max)
   calculate_interpolation_data();
 }
 
+size_t YlmSpherepack::phys_to_spec_buffer_size() const {
+  return 2 * n_theta_ * n_phi_;
+}
+
+size_t YlmSpherepack::spec_to_phys_buffer_size() const {
+  return 2 * n_theta_ * n_phi_;
+}
+
 void YlmSpherepack::phys_to_spec_impl(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const gsl::not_null<double*> spectral_coefs,
     const gsl::not_null<const double*> collocation_values,
     const size_t physical_stride, const size_t physical_offset,
@@ -81,7 +90,12 @@ void YlmSpherepack::phys_to_spec_impl(
     ASSERT(physical_stride == spectral_stride, "invalid call");
     work_size *= spectral_stride;
   }
-  auto& work = memory_pool_.get(work_size);
+  if (UNLIKELY(buffer->size()<work_size)) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << work_size << ". Here n_theta = " << n_theta_
+                            << " and n_phi = " << n_phi_);
+  }
+
   double* const a = spectral_coefs;
   // clang-tidy: 'do not use pointer arithmetic'.
   double* const b =
@@ -99,15 +113,15 @@ void YlmSpherepack::phys_to_spec_impl(
          static_cast<int>(n_phi_), a, b, static_cast<int>(m_max_ + 1),
          static_cast<int>(l_max_ + 1), static_cast<int>(m_max_ + 1),
          static_cast<int>(l_max_ + 1), work_phys_to_spec.data(),
-         static_cast<int>(work_phys_to_spec.size()), work.data(),
-         static_cast<int>(work_size), &err);
+         static_cast<int>(work_phys_to_spec.size()), buffer->data(),
+         static_cast<int>(buffer->size()), &err);
   if (UNLIKELY(err != 0)) {
     ERROR("shags error " << err << " in YlmSpherepack");
   }
-  memory_pool_.free(work);
 }
 
 void YlmSpherepack::spec_to_phys_impl(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const gsl::not_null<double*> collocation_values,
     const gsl::not_null<const double*> spectral_coefs,
     const size_t spectral_stride, const size_t spectral_offset,
@@ -118,7 +132,12 @@ void YlmSpherepack::spec_to_phys_impl(
     ASSERT(physical_stride == spectral_stride, "invalid call");
     work_size *= spectral_stride;
   }
-  auto& work = memory_pool_.get(work_size);
+  if (UNLIKELY(buffer->size()<work_size)) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << work_size << ". Here n_theta = " << n_theta_
+                            << " and n_phi = " << n_phi_);
+  }
+
   // 'a' and 'b' are Spherepack's coefficient arrays.
   const double* const a = spectral_coefs;
   // clang-tidy: 'do not use pointer arithmetic'.
@@ -138,85 +157,150 @@ void YlmSpherepack::spec_to_phys_impl(
          static_cast<int>(n_phi_), a, b, static_cast<int>(m_max_ + 1),
          static_cast<int>(l_max_ + 1), static_cast<int>(m_max_ + 1),
          static_cast<int>(l_max_ + 1), work_scalar_spec_to_phys.data(),
-         static_cast<int>(work_scalar_spec_to_phys.size()), work.data(),
-         static_cast<int>(work_size), &err);
+         static_cast<int>(work_scalar_spec_to_phys.size()), buffer->data(),
+         static_cast<int>(buffer->size()), &err);
   if (UNLIKELY(err != 0)) {
     ERROR("shsgs error " << err << " in YlmSpherepack");
   }
-  memory_pool_.free(work);
 }
 
-DataVector YlmSpherepack::phys_to_spec(const DataVector& collocation_values,
-                                       const size_t physical_stride,
-                                       const size_t physical_offset) const {
+DataVector YlmSpherepack::phys_to_spec(
+    const gsl::not_null<gsl::span<double>*> buffer,
+    const DataVector& collocation_values, const size_t physical_stride,
+    const size_t physical_offset) const {
   ASSERT(collocation_values.size() == physical_size() * physical_stride,
          "Sizes don't match: " << collocation_values.size() << " vs "
                                << physical_size() * physical_stride);
   DataVector result(spectral_size());
-  phys_to_spec_impl(result.data(), collocation_values.data(), physical_stride,
+  phys_to_spec_impl(buffer,
+                    result.data(), collocation_values.data(), physical_stride,
                     physical_offset, 1, 0, false);
   return result;
 }
 
-DataVector YlmSpherepack::spec_to_phys(const DataVector& spectral_coefs,
-                                       const size_t spectral_stride,
-                                       const size_t spectral_offset) const {
+DataVector YlmSpherepack::spec_to_phys(
+    const gsl::not_null<gsl::span<double>*> buffer,
+    const DataVector& spectral_coefs, const size_t spectral_stride,
+    const size_t spectral_offset) const {
   ASSERT(spectral_coefs.size() == spectral_size() * spectral_stride,
          "Sizes don't match: " << spectral_coefs.size() << " vs "
                                << spectral_size() * spectral_stride);
   DataVector result(physical_size());
-  spec_to_phys_impl(result.data(), spectral_coefs.data(), spectral_stride,
-                    spectral_offset, 1, 0, false);
+  spec_to_phys_impl(buffer, result.data(), spectral_coefs.data(),
+                    spectral_stride, spectral_offset, 1, 0, false);
   return result;
 }
 
+size_t YlmSpherepack::phys_to_spec_all_offsets_buffer_size(
+    size_t stride) const {
+  return 2 * n_theta_ * n_phi_ * stride;
+}
+
+size_t YlmSpherepack::spec_to_phys_all_offsets_buffer_size(
+    size_t stride) const {
+  return 2 * n_theta_ * n_phi_ * stride;
+}
+
 DataVector YlmSpherepack::phys_to_spec_all_offsets(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const DataVector& collocation_values, const size_t stride) const {
   ASSERT(collocation_values.size() == physical_size() * stride,
          "Sizes don't match: " << collocation_values.size() << " vs "
                                << physical_size() * stride);
   DataVector result(spectral_size() * stride);
-  phys_to_spec_impl(result.data(), collocation_values.data(), stride, 0, stride,
-                    0, true);
+  phys_to_spec_impl(buffer, result.data(), collocation_values.data(), stride, 0,
+                    stride, 0, true);
   return result;
 }
 
 DataVector YlmSpherepack::spec_to_phys_all_offsets(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const DataVector& spectral_coefs, const size_t stride) const {
   ASSERT(spectral_coefs.size() == spectral_size() * stride,
          "Sizes don't match: " << spectral_coefs.size() << " vs "
                                << spectral_size() * stride);
   DataVector result(physical_size() * stride);
-  spec_to_phys_impl(result.data(), spectral_coefs.data(), stride, 0, stride, 0,
-                    true);
+  spec_to_phys_impl(buffer, result.data(), spectral_coefs.data(), stride, 0,
+                    stride, 0, true);
   return result;
 }
 
+size_t YlmSpherepack::gradient_buffer_size() const {
+  return spectral_size() +
+         std::max(phys_to_spec_buffer_size(),
+                  gradient_from_coefs_impl_buffer_size(false, 1));
+}
+
+size_t YlmSpherepack::gradient_from_coefs_buffer_size() const {
+  return gradient_from_coefs_impl_buffer_size(false, 1);
+}
+
 void YlmSpherepack::gradient(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const std::array<double*, 2>& df,
     const gsl::not_null<const double*> collocation_values,
     const size_t physical_stride, const size_t physical_offset) const {
-  auto& f_k = memory_pool_.get(spectral_size());
-  phys_to_spec_impl(f_k.data(), collocation_values, physical_stride,
-                    physical_offset, 1, 0, false);
-  gradient_from_coefs_impl(df, f_k.data(), 1, 0, physical_stride,
+  if (UNLIKELY(buffer->size() < gradient_buffer_size())) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << gradient_buffer_size() << ". Here n_theta = "
+                            << n_theta_ << " and n_phi = " << n_phi_);
+  }
+  gsl::span<double> phys_to_spec_buffer = gsl::make_span(
+      buffer->data() + spectral_size(), phys_to_spec_buffer_size());
+  phys_to_spec_impl(make_not_null(&phys_to_spec_buffer), buffer->data(),
+                    collocation_values, physical_stride, physical_offset, 1, 0,
+                    false);
+  gsl::span<double> gradient_from_coefs_impl_buffer =
+      gsl::make_span(buffer->data() + spectral_size(),
+                     gradient_from_coefs_impl_buffer_size(false, 1));
+  gradient_from_coefs_impl(make_not_null(&gradient_from_coefs_impl_buffer), df,
+                           buffer->data(), 1, 0, physical_stride,
                            physical_offset, false);
-  memory_pool_.free(f_k);
+}
+
+size_t YlmSpherepack::gradient_all_offsets_buffer_size(
+    const size_t stride) const {
+  return stride * spectral_size() +
+         std::max(phys_to_spec_all_offsets_buffer_size(stride),
+                  gradient_from_coefs_impl_buffer_size(true, stride));
 }
 
 void YlmSpherepack::gradient_all_offsets(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const std::array<double*, 2>& df,
     const gsl::not_null<const double*> collocation_values,
     const size_t stride) const {
   const size_t spectral_stride = stride;
-  auto& f_k = memory_pool_.get(spectral_stride * spectral_size());
-  phys_to_spec_impl(f_k.data(), collocation_values, stride, 0, spectral_stride,
-                    0, true);
-  gradient_from_coefs_impl(df, f_k.data(), spectral_stride, 0, stride, 0, true);
-  memory_pool_.free(f_k);
+  if (UNLIKELY(buffer->size() < gradient_all_offsets_buffer_size(stride))) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << gradient_all_offsets_buffer_size(stride)
+                            << ". Here n_theta = " << n_theta_
+                            << " and n_phi = " << n_phi_);
+  }
+  gsl::span<double> phys_to_spec_buffer =
+      gsl::make_span(buffer->data() + stride * spectral_size(),
+                     phys_to_spec_all_offsets_buffer_size(stride));
+  phys_to_spec_impl(make_not_null(&phys_to_spec_buffer), buffer->data(),
+                    collocation_values, stride, 0, spectral_stride, 0, true);
+  gsl::span<double> gradient_from_coefs_impl_buffer =
+      gsl::make_span(buffer->data() + stride * spectral_size(),
+                     gradient_from_coefs_impl_buffer_size(true, stride));
+  gradient_from_coefs_impl(make_not_null(&gradient_from_coefs_impl_buffer), df,
+                           buffer->data(), spectral_stride, 0, stride, 0, true);
+}
+
+size_t YlmSpherepack::gradient_from_coefs_impl_buffer_size(
+    const bool loop_over_offset, const size_t stride) const {
+  const size_t l1 = m_max_ + 1;
+  size_t work_size = n_theta_ * (3 * n_phi_ + 2 * l1 + 1);
+  if (loop_over_offset) {
+    work_size *= stride;
+  }
+  return work_size;
 }
 
 void YlmSpherepack::gradient_from_coefs_impl(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const std::array<double*, 2>& df,
     const gsl::not_null<const double*> spectral_coefs,
     const size_t spectral_stride, const size_t spectral_offset,
@@ -225,6 +309,13 @@ void YlmSpherepack::gradient_from_coefs_impl(
   ASSERT((not loop_over_offset) or spectral_stride == physical_stride,
          "physical and spectral strides must be equal "
          "for loop_over_offset=true");
+  const size_t expected_buffer_size =
+      gradient_from_coefs_impl_buffer_size(loop_over_offset, spectral_stride);
+  if (UNLIKELY(buffer->size() < expected_buffer_size)) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << expected_buffer_size << ". Here n_theta = "
+                            << n_theta_ << " and n_phi = " << n_phi_);
+  }
 
   const size_t l1 = m_max_ + 1;
   const double* const f_k = spectral_coefs;
@@ -236,7 +327,6 @@ void YlmSpherepack::gradient_from_coefs_impl(
   if (loop_over_offset) {
     work_size *= spectral_stride;
   }
-  auto& work = memory_pool_.get(work_size);
   int err = 0;
   const int effective_physical_offset =
       loop_over_offset ? -1 : int(physical_offset);
@@ -249,42 +339,54 @@ void YlmSpherepack::gradient_from_coefs_impl(
           df[1], static_cast<int>(n_theta_), static_cast<int>(n_phi_), a, b,
           static_cast<int>(l1), static_cast<int>(n_theta_),
           work_vector_spec_to_phys.data(),
-          static_cast<int>(work_vector_spec_to_phys.size()), work.data(),
-          static_cast<int>(work_size), &err);
+          static_cast<int>(work_vector_spec_to_phys.size()), buffer->data(),
+          static_cast<int>(buffer->size()), &err);
   if (UNLIKELY(err != 0)) {
     ERROR("gradgs error " << err << " in YlmSpherepack");
   }
-  memory_pool_.free(work);
 }
 
 YlmSpherepack::FirstDeriv YlmSpherepack::gradient(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const DataVector& collocation_values, const size_t physical_stride,
     const size_t physical_offset) const {
   ASSERT(collocation_values.size() == physical_size() * physical_stride,
          "Sizes don't match: " << collocation_values.size() << " vs "
                                << physical_size() * physical_stride);
-  auto& f_k = memory_pool_.get(spectral_size());
-  phys_to_spec_impl(f_k.data(), collocation_values.data(), physical_stride,
-                    physical_offset, 1, 0, false);
+  if (UNLIKELY(buffer->size() < gradient_buffer_size())) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << gradient_buffer_size() << ". Here n_theta = "
+                            << n_theta_ << " and n_phi = " << n_phi_);
+  }
+  gsl::span<double> phys_to_spec_buffer = gsl::make_span(
+      buffer->data() + spectral_size(), phys_to_spec_buffer_size());
+  phys_to_spec_impl(make_not_null(&phys_to_spec_buffer), buffer->data(),
+                    collocation_values.data(), physical_stride, physical_offset,
+                    1, 0, false);
   FirstDeriv result(physical_size());
   std::array<double*, 2> temp = {{result.get(0).data(), result.get(1).data()}};
-  gradient_from_coefs_impl(temp, f_k.data(), 1, 0, 1, 0, false);
-  memory_pool_.free(f_k);
+  gsl::span<double> gradient_from_coefs_impl_buffer =
+      gsl::make_span(buffer->data() + spectral_size(),
+                     gradient_from_coefs_impl_buffer_size(false, 1));
+  gradient_from_coefs_impl(make_not_null(&gradient_from_coefs_impl_buffer),
+                           temp, buffer->data(), 1, 0, 1, 0, false);
   return result;
 }
 
 YlmSpherepack::FirstDeriv YlmSpherepack::gradient_all_offsets(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const DataVector& collocation_values, const size_t stride) const {
   ASSERT(collocation_values.size() == physical_size() * stride,
          "Sizes don't match: " << collocation_values.size() << " vs "
                                << physical_size() * stride);
   FirstDeriv result(physical_size() * stride);
   std::array<double*, 2> temp = {{result.get(0).data(), result.get(1).data()}};
-  gradient_all_offsets(temp, collocation_values.data(), stride);
+  gradient_all_offsets(buffer, temp, collocation_values.data(), stride);
   return result;
 }
 
 YlmSpherepack::FirstDeriv YlmSpherepack::gradient_from_coefs(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const DataVector& spectral_coefs, const size_t spectral_stride,
     const size_t spectral_offset) const {
   ASSERT(spectral_coefs.size() == spectral_size() * spectral_stride,
@@ -292,46 +394,87 @@ YlmSpherepack::FirstDeriv YlmSpherepack::gradient_from_coefs(
                                << spectral_size() * spectral_stride);
   FirstDeriv result(physical_size());
   std::array<double*, 2> temp = {{result.get(0).data(), result.get(1).data()}};
-  gradient_from_coefs_impl(temp, spectral_coefs.data(), spectral_stride,
+  gradient_from_coefs_impl(buffer, temp, spectral_coefs.data(), spectral_stride,
                            spectral_offset, 1, 0, false);
   return result;
 }
 
+size_t YlmSpherepack::gradient_from_coefs_all_offsets_buffer_size(
+    const size_t stride) const {
+  return gradient_from_coefs_impl_buffer_size(true, stride);
+}
+
 YlmSpherepack::FirstDeriv YlmSpherepack::gradient_from_coefs_all_offsets(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const DataVector& spectral_coefs, const size_t stride) const {
   ASSERT(spectral_coefs.size() == spectral_size() * stride,
          "Sizes don't match: " << spectral_coefs.size() << " vs "
                                << spectral_size() * stride);
+  const size_t expected_buffer_size =
+      gradient_from_coefs_all_offsets_buffer_size(stride);
+  if (UNLIKELY(buffer->size() < expected_buffer_size)) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << expected_buffer_size << ". Here n_theta = "
+                            << n_theta_ << " and n_phi = " << n_phi_);
+  }
   FirstDeriv result(physical_size() * stride);
   std::array<double*, 2> temp = {{result.get(0).data(), result.get(1).data()}};
-  gradient_from_coefs_impl(temp, spectral_coefs.data(), stride, 0, stride, 0,
-                           true);
+  gradient_from_coefs_impl(buffer, temp, spectral_coefs.data(), stride, 0,
+                           stride, 0, true);
   return result;
 }
 
+size_t YlmSpherepack::scalar_laplacian_buffer_size() const {
+  return spectral_size() + std::max(phys_to_spec_buffer_size(),
+                                    scalar_laplacian_from_coefs_buffer_size());
+}
+
 void YlmSpherepack::scalar_laplacian(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const gsl::not_null<double*> scalar_laplacian,
     const gsl::not_null<const double*> collocation_values,
     const size_t physical_stride, const size_t physical_offset) const {
-  auto& f_k = memory_pool_.get(spectral_size());
-  phys_to_spec(f_k.data(), collocation_values, physical_stride, physical_offset,
-               1, 0);
-  scalar_laplacian_from_coefs(scalar_laplacian, f_k.data(), 1, 0,
-                              physical_stride, physical_offset);
-  memory_pool_.free(f_k);
+  if (UNLIKELY(buffer->size() < scalar_laplacian_buffer_size())) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << scalar_laplacian_buffer_size()
+                            << ". Here n_theta = " << n_theta_
+                            << " and n_phi = " << n_phi_);
+  }
+  gsl::span<double> phys_to_spec_buffer = gsl::make_span(
+      buffer->data() + spectral_size(), phys_to_spec_buffer_size());
+  phys_to_spec(make_not_null(&phys_to_spec_buffer), buffer->data(),
+               collocation_values, physical_stride, physical_offset, 1, 0);
+
+  gsl::span<double> scalar_laplacian_from_coefs_buffer =
+      gsl::make_span(buffer->data() + spectral_size(),
+                     scalar_laplacian_from_coefs_buffer_size());
+  scalar_laplacian_from_coefs(
+      make_not_null(&scalar_laplacian_from_coefs_buffer), scalar_laplacian,
+      buffer->data(), 1, 0, physical_stride, physical_offset);
+}
+
+size_t YlmSpherepack::scalar_laplacian_from_coefs_buffer_size() const {
+  const size_t l1 = m_max_ + 1;
+  const size_t work_size = n_theta_ * (3 * n_phi_ + 2 * l1 + 1);
+  return work_size;
 }
 
 void YlmSpherepack::scalar_laplacian_from_coefs(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const gsl::not_null<double*> scalar_laplacian,
     const gsl::not_null<const double*> spectral_coefs,
     const size_t spectral_stride, const size_t spectral_offset,
     const size_t physical_stride, const size_t physical_offset) const {
+  if (UNLIKELY(buffer->size() < scalar_laplacian_from_coefs_buffer_size())) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << scalar_laplacian_from_coefs_buffer_size()
+                            << ". Here n_theta = " << n_theta_
+                            << " and n_phi = " << n_phi_);
+  }
   const size_t l1 = m_max_ + 1;
   const double* const a = spectral_coefs;
   // clang-tidy: 'do not use pointer arithmetic'.
   const double* const b = a + l1 * n_theta_ * spectral_stride;  // NOLINT
-  const size_t work_size = n_theta_ * (3 * n_phi_ + 2 * l1 + 1);
-  auto& work = memory_pool_.get(work_size);
   int err = 0;
   auto& work_scalar_spec_to_phys = storage_.work_scalar_spec_to_phys;
   slapgs_(static_cast<int>(physical_stride), static_cast<int>(spectral_stride),
@@ -340,34 +483,35 @@ void YlmSpherepack::scalar_laplacian_from_coefs(
           scalar_laplacian, static_cast<int>(n_theta_),
           static_cast<int>(n_phi_), a, b, static_cast<int>(l1),
           static_cast<int>(n_theta_), work_scalar_spec_to_phys.data(),
-          static_cast<int>(work_scalar_spec_to_phys.size()), work.data(),
-          static_cast<int>(work_size), &err);
+          static_cast<int>(work_scalar_spec_to_phys.size()), buffer->data(),
+          static_cast<int>(buffer->size()), &err);
   if (UNLIKELY(err != 0)) {
     ERROR("slapgs error " << err << " in YlmSpherepack");
   }
-  memory_pool_.free(work);
 }
 
-DataVector YlmSpherepack::scalar_laplacian(const DataVector& collocation_values,
-                                           const size_t physical_stride,
-                                           const size_t physical_offset) const {
+DataVector YlmSpherepack::scalar_laplacian(
+    const gsl::not_null<gsl::span<double>*> buffer,
+    const DataVector& collocation_values, const size_t physical_stride,
+    const size_t physical_offset) const {
   ASSERT(collocation_values.size() == physical_size() * physical_stride,
          "Sizes don't match: " << collocation_values.size() << " vs "
                                << physical_size() * physical_stride);
   DataVector result(physical_size());
-  scalar_laplacian(result.data(), collocation_values.data(), physical_stride,
-                   physical_offset);
+  scalar_laplacian(buffer, result.data(), collocation_values.data(),
+                   physical_stride, physical_offset);
   return result;
 }
 
 DataVector YlmSpherepack::scalar_laplacian_from_coefs(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const DataVector& spectral_coefs, const size_t spectral_stride,
     const size_t spectral_offset) const {
   ASSERT(spectral_coefs.size() == spectral_size() * spectral_stride,
          "Sizes don't match: " << spectral_coefs.size() << " vs "
                                << spectral_size() * spectral_stride);
   DataVector result(physical_size());
-  scalar_laplacian_from_coefs(result.data(), spectral_coefs.data(),
+  scalar_laplacian_from_coefs(buffer, result.data(), spectral_coefs.data(),
                               spectral_stride, spectral_offset);
   return result;
 }
@@ -386,10 +530,22 @@ std::array<DataVector, 2> YlmSpherepack::theta_phi_points() const {
   return result;
 }
 
+size_t YlmSpherepack::second_derivative_buffer_size() const {
+  return 7 * physical_size() + gradient_buffer_size();
+}
+
 void YlmSpherepack::second_derivative(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const std::array<double*, 2>& df, const gsl::not_null<SecondDeriv*> ddf,
     const gsl::not_null<const double*> collocation_values,
     const size_t physical_stride, const size_t physical_offset) const {
+  if (UNLIKELY(buffer->size() < second_derivative_buffer_size())) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << second_derivative_buffer_size()
+                            << ". Here n_theta = " << n_theta_
+                            << " and n_phi = " << n_phi_);
+  }
+  // Initialize trig functions at collocation points
   auto& cos_theta = storage_.cos_theta;
   auto& sin_theta = storage_.sin_theta;
   auto& sin_phi = storage_.sin_phi;
@@ -398,14 +554,17 @@ void YlmSpherepack::second_derivative(
   auto& cosec_theta = storage_.cosec_theta;
 
   // Get first derivatives
-  gradient(df, collocation_values, physical_stride, physical_offset);
+  gsl::span<double> gradient_buffer = gsl::make_span(
+      buffer->data() + 7 * physical_size(), gradient_buffer_size());
+  gradient(make_not_null(&gradient_buffer), df, collocation_values,
+           physical_stride, physical_offset);
 
   // Now get Cartesian derivatives.
 
   // First derivative
   std::vector<double*> dfc(3, nullptr);
   for (size_t i = 0; i < 3; ++i) {
-    dfc[i] = memory_pool_.get(physical_size()).data();
+    dfc[i] = buffer->data() + i * physical_size();
   }
   for (size_t j = 0, s = 0; j < n_phi_; ++j) {
     for (size_t i = 0; i < n_theta_; ++i, ++s) {
@@ -421,13 +580,22 @@ void YlmSpherepack::second_derivative(
 
   // Take derivatives of Cartesian derivatives to get second derivatives.
   std::vector<std::array<double*, 2>> ddfc(3, {{nullptr, nullptr}});
+  // next_memory are the next memory locations that will be available
+  // in the buffer for storing ddfc.  They are chosen carefully so as
+  // to not overwrite any memory too early.  For example, ddfc[1][0]
+  // (the third entry in the list, so the third time the inner j loop
+  // is accessed) corresponds to buffer location 0 because at that
+  // point the previous contents of buffer 0 (which is dfc[0]) is no
+  // longer needed, having been used in the gradient call.  We can
+  // eliminate this tricky memory logic by allocating slightly more memory in
+  // the buffer (9 * physical_size instead of 7 * physical_size).
+  const std::vector<size_t> next_memory = {{3,4,0,5,1,6}};
+  size_t n = 0;
   for (size_t i = 0; i < 3; ++i) {
-    for (size_t j = 0; j < 2; ++j) {
-      gsl::at(ddfc[i], j) = memory_pool_.get(physical_size()).data();
+    for (size_t j = 0; j < 2; ++j, ++n) {
+      gsl::at(ddfc[i], j) = buffer->data() + next_memory[n] * physical_size();
     }
-    gradient(ddfc[i], dfc[i], 1, 0);
-    // Here we free the storage for dfc[i], so we can reuse it in ddfc.
-    memory_pool_.free(dfc[i]);
+    gradient(make_not_null(&gradient_buffer), ddfc[i], dfc[i], 1, 0);
   }
 
   // Combine into Pfaffian second derivatives
@@ -447,16 +615,11 @@ void YlmSpherepack::second_derivative(
           sin_theta[i] * ddfc[2][0][s];
     }
   }
-
-  for (size_t i = 0; i < 3; ++i) {
-    for (size_t j = 0; j < 2; ++j) {
-      memory_pool_.free(gsl::at(ddfc[i], j));
-    }
-  }
 }
 
 std::pair<YlmSpherepack::FirstDeriv, YlmSpherepack::SecondDeriv>
 YlmSpherepack::first_and_second_derivative(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const DataVector& collocation_values) const {
   ASSERT(collocation_values.size() == physical_size(),
          "Sizes don't match: " << collocation_values.size() << " vs "
@@ -466,7 +629,8 @@ YlmSpherepack::first_and_second_derivative(
       std::forward_as_tuple(physical_size()));
   std::array<double*, 2> temp = {
       {std::get<0>(result).get(0).data(), std::get<0>(result).get(1).data()}};
-  second_derivative(temp, &std::get<1>(result), collocation_values.data());
+  second_derivative(buffer, temp, &std::get<1>(result),
+                    collocation_values.data());
   return result;
 }
 
@@ -539,8 +703,13 @@ YlmSpherepack::InterpolationInfo<T> YlmSpherepack::set_up_interpolation_info(
                            target_points);
 }
 
+size_t YlmSpherepack::interpolate_buffer_size() const {
+  return spectral_size() + phys_to_spec_buffer_size();
+}
+
 template <typename T>
 void YlmSpherepack::interpolate(
+    const gsl::not_null<gsl::span<double>*> buffer,
     const gsl::not_null<T*> result,
     const gsl::not_null<const double*> collocation_values,
     const InterpolationInfo<T>& interpolation_info,
@@ -548,11 +717,16 @@ void YlmSpherepack::interpolate(
   ASSERT(get_size(*result) == interpolation_info.size(),
          "Size mismatch: " << get_size(*result) << ","
                            << interpolation_info.size());
-  auto& f_k = memory_pool_.get(spectral_size());
-  phys_to_spec(f_k.data(), collocation_values, physical_stride, physical_offset,
-               1, 0);
-  interpolate_from_coefs(result, f_k, interpolation_info);
-  memory_pool_.free(f_k);
+  if (UNLIKELY(buffer->size() < interpolate_buffer_size())) {
+    ERROR("Buffer size is " << buffer->size() << " but it must be at least "
+                            << interpolate_buffer_size() << ". Here n_theta = "
+                            << n_theta_ << " and n_phi = " << n_phi_);
+  }
+  gsl::span<double> phys_to_spec_buffer = gsl::make_span(
+      buffer->data() + spectral_size(), phys_to_spec_buffer_size());
+  phys_to_spec(make_not_null(&phys_to_spec_buffer), buffer->data(),
+               collocation_values, physical_stride, physical_offset, 1, 0);
+  interpolate_from_coefs(result, *buffer, interpolation_info);
 }
 
 template <typename T, typename R>
@@ -654,13 +828,14 @@ void YlmSpherepack::interpolate_from_coefs(
 }
 
 template <typename T>
-T YlmSpherepack::interpolate(const DataVector& collocation_values,
+T YlmSpherepack::interpolate(const gsl::not_null<gsl::span<double>*> buffer,
+                             const DataVector& collocation_values,
                              const std::array<T, 2>& target_points) const {
   ASSERT(collocation_values.size() == physical_size(),
          "Sizes don't match: " << collocation_values.size() << " vs "
                                << physical_size());
   auto result = make_with_value<T>(target_points[0], 0.);
-  interpolate<T>(make_not_null(&result), collocation_values.data(),
+  interpolate<T>(buffer, make_not_null(&result), collocation_values.data(),
                  set_up_interpolation_info<T>(target_points));
   return result;
 }
@@ -911,6 +1086,7 @@ bool operator!=(const YlmSpherepack& lhs, const YlmSpherepack& rhs) {
   YlmSpherepack::set_up_interpolation_info(                                  \
       const std::array<DTYPE(data), 2>& target_points) const;                \
   template void YlmSpherepack::interpolate(                                  \
+      const gsl::not_null<gsl::span<double>*> buffer,                        \
       gsl::not_null<DTYPE(data)*> result, gsl::not_null<const double*>,      \
       const YlmSpherepack::InterpolationInfo<DTYPE(data)>&, size_t, size_t)  \
       const;                                                                 \
@@ -919,7 +1095,8 @@ bool operator!=(const YlmSpherepack& lhs, const YlmSpherepack& rhs) {
       const YlmSpherepack::InterpolationInfo<DTYPE(data)>&, size_t, size_t)  \
       const;                                                                 \
   template DTYPE(data) YlmSpherepack::interpolate(                           \
-      const DataVector&, const std::array<DTYPE(data), 2>&) const;           \
+      const gsl::not_null<gsl::span<double>*> buffer, const DataVector&,     \
+      const std::array<DTYPE(data), 2>&) const;                              \
   template DTYPE(data) YlmSpherepack::interpolate_from_coefs(                \
       const DataVector&, const std::array<DTYPE(data), 2>&) const;
 

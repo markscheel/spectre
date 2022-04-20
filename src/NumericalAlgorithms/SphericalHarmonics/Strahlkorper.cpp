@@ -39,7 +39,13 @@ Strahlkorper<Frame>::Strahlkorper(
       ylm_(l_max, m_max),
       // clang-tidy: do not std::move trivially constructable types
       center_(std::move(center)),  // NOLINT
-      strahlkorper_coefs_(ylm_.phys_to_spec(radius_at_collocation_points)) {
+      strahlkorper_coefs_([&radius_at_collocation_points, this]() {
+        DataVector data_vector(ylm_.phys_to_spec_buffer_size());
+        auto storage = gsl::make_span(data_vector.data(),
+                                      data_vector.size());
+        return ylm_.phys_to_spec(make_not_null(&storage),
+                                 radius_at_collocation_points);
+      }()) {
   ASSERT(radius_at_collocation_points.size() == ylm_.physical_size(),
          "Bad size " << radius_at_collocation_points.size() << ", expected "
                      << ylm_.physical_size());

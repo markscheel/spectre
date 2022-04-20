@@ -189,6 +189,13 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Shape::jacobian(
     }
   }
 
+  // Allocate a buffer here for extended_ylm.
+  DataVector extended_ylm_storage(
+      std::max(extended_ylm.interpolate_buffer_size(),
+               extended_ylm.gradient_from_coefs_buffer_size()));
+  auto extended_ylm_buffer =
+      gsl::make_span(extended_ylm_storage.data(), extended_ylm_storage.size());
+
   // Re-use allocation
   auto& distorted_radii = get<0>(theta_phis);
   extended_ylm.interpolate_from_coefs(make_not_null(&distorted_radii),
@@ -197,8 +204,8 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Shape::jacobian(
   // YlmSpherePack. We can't interpolate these directly as they are not smooth
   // across the poles, so we convert them to the Cartesian gradients first,
   // which are smooth.
-  const auto angular_gradient =
-      extended_ylm.gradient_from_coefs(extended_coefs);
+  const auto angular_gradient = extended_ylm.gradient_from_coefs(
+      make_not_null(&extended_ylm_buffer), extended_coefs);
 
   tnsr::i<DataVector, 3, Frame::Inertial> cartesian_gradient(
       extended_ylm.physical_size());
@@ -236,13 +243,16 @@ tnsr::Ij<tt::remove_cvref_wrap_t<T>, 3, Frame::NoFrame> Shape::jacobian(
 
   // interpolate the cartesian gradient to the thetas and phis of the
   // `source_coords`
-  extended_ylm.interpolate(make_not_null(&target_gradient_x),
+  extended_ylm.interpolate(make_not_null(&extended_ylm_buffer),
+                           make_not_null(&target_gradient_x),
                            get<0>(cartesian_gradient).data(),
                            interpolation_info);
-  extended_ylm.interpolate(make_not_null(&target_gradient_y),
+  extended_ylm.interpolate(make_not_null(&extended_ylm_buffer),
+                           make_not_null(&target_gradient_y),
                            get<1>(cartesian_gradient).data(),
                            interpolation_info);
-  extended_ylm.interpolate(make_not_null(&target_gradient_z),
+  extended_ylm.interpolate(make_not_null(&extended_ylm_buffer),
+                           make_not_null(&target_gradient_z),
                            get<2>(cartesian_gradient).data(),
                            interpolation_info);
 

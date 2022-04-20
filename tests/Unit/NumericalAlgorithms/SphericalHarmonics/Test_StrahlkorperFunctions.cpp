@@ -34,9 +34,13 @@ void test_radius_and_derivs() {
     expected_radius[s] += radius;
   }
 
-  const DataVector strahlkorper_radius{
-      get(StrahlkorperFunctions::radius(strahlkorper))};
-  CHECK_ITERABLE_APPROX(strahlkorper_radius, expected_radius);
+  DataVector buffer(std::max(
+      {strahlkorper.ylm_spherepack().spec_to_phys_buffer_size(),
+       strahlkorper.ylm_spherepack().gradient_buffer_size(),
+       strahlkorper.ylm_spherepack().second_derivative_buffer_size()}));
+  const auto strahlkorper_radius =
+      StrahlkorperFunctions::radius(make_not_null(&buffer), strahlkorper);
+  CHECK_ITERABLE_APPROX(get(strahlkorper_radius), expected_radius);
 
    // Test derivative of radius
   const auto theta_phi = strahlkorper.ylm_spherepack().theta_phi_points();
@@ -64,8 +68,8 @@ void test_radius_and_derivs() {
   CHECK_ITERABLE_APPROX(
       expected_dx_radius,
       StrahlkorperFunctions::cartesian_derivs_of_scalar(
-          StrahlkorperFunctions::radius(strahlkorper), strahlkorper,
-          StrahlkorperFunctions::radius(strahlkorper),
+          make_not_null(&buffer), strahlkorper_radius, strahlkorper,
+          strahlkorper_radius,
           StrahlkorperFunctions::inv_jacobian(
               StrahlkorperFunctions::theta_phi(strahlkorper))));
 
@@ -110,8 +114,8 @@ void test_radius_and_derivs() {
   CHECK_ITERABLE_APPROX(
       expected_d2x_radius,
       StrahlkorperFunctions::cartesian_second_derivs_of_scalar(
-          StrahlkorperFunctions::radius(strahlkorper), strahlkorper,
-          StrahlkorperFunctions::radius(strahlkorper),
+          make_not_null(&buffer), strahlkorper_radius, strahlkorper,
+          strahlkorper_radius,
           StrahlkorperFunctions::inv_jacobian(
               StrahlkorperFunctions::theta_phi(strahlkorper)),
           StrahlkorperFunctions::inv_hessian(
@@ -127,7 +131,7 @@ void test_radius_and_derivs() {
   CHECK_ITERABLE_APPROX(
       expected_laplacian,
       get(StrahlkorperFunctions::laplacian_of_scalar(
-          StrahlkorperFunctions::radius(strahlkorper), strahlkorper,
+          make_not_null(&buffer), strahlkorper_radius, strahlkorper,
           StrahlkorperFunctions::theta_phi(strahlkorper))));
 }
 
@@ -257,6 +261,10 @@ void test_cartesian_coords() {
   const auto strahlkorper =
       create_strahlkorper_y11(y11_amplitude, radius, center);
 
+  DataVector buffer(strahlkorper.ylm_spherepack().spec_to_phys_buffer_size());
+  const auto strahlkorper_radius =
+      StrahlkorperFunctions::radius(make_not_null(&buffer), strahlkorper);
+
   const auto theta_phi = strahlkorper.ylm_spherepack().theta_phi_points();
   const auto& theta = theta_phi[0];
   const auto& phi = theta_phi[1];
@@ -276,7 +284,7 @@ void test_cartesian_coords() {
   CHECK_ITERABLE_APPROX(
       expected_cartesian_coords,
       StrahlkorperFunctions::cartesian_coords<Frame::Inertial>(
-          strahlkorper, StrahlkorperFunctions::radius(strahlkorper),
+          strahlkorper, strahlkorper_radius,
           StrahlkorperFunctions::rhat(
               StrahlkorperFunctions::theta_phi(strahlkorper))));
 }
@@ -290,6 +298,12 @@ void test_normals() {
 
   const auto theta_phi = strahlkorper.ylm_spherepack().theta_phi_points();
   const auto n_pts = theta_phi[0].size();
+
+  DataVector buffer(
+      std::max(strahlkorper.ylm_spherepack().spec_to_phys_buffer_size(),
+               strahlkorper.ylm_spherepack().gradient_buffer_size()));
+  const auto strahlkorper_radius =
+      StrahlkorperFunctions::radius(make_not_null(&buffer), strahlkorper);
 
   // Test surface_tangents
   StrahlkorperTags::aliases ::Jacobian<Frame::Inertial>
@@ -318,7 +332,7 @@ void test_normals() {
   CHECK_ITERABLE_APPROX(
       expected_surface_tangents,
       StrahlkorperFunctions::tangents(
-          strahlkorper, StrahlkorperFunctions::radius(strahlkorper),
+          make_not_null(&buffer), strahlkorper, strahlkorper_radius,
           StrahlkorperFunctions::rhat(
               StrahlkorperFunctions::theta_phi(strahlkorper)),
           StrahlkorperFunctions::jacobian(
@@ -327,7 +341,7 @@ void test_normals() {
   // Test normal_one_form
   tnsr::i<DataVector, 3> expected_normal_one_form(n_pts);
   {
-    const auto r = get(StrahlkorperFunctions::radius(strahlkorper));
+    const auto r = get(strahlkorper_radius);
     const DataVector one_over_r = 1.0 / r;
     const DataVector temp = 1.0 + one_over_r * amp * sin_phi * sin_theta;
     expected_normal_one_form.get(0) = cos_phi * sin_theta * temp;
@@ -339,8 +353,8 @@ void test_normals() {
       expected_normal_one_form,
       StrahlkorperFunctions::normal_one_form(
           StrahlkorperFunctions::cartesian_derivs_of_scalar(
-              StrahlkorperFunctions::radius(strahlkorper), strahlkorper,
-              StrahlkorperFunctions::radius(strahlkorper),
+              make_not_null(&buffer), strahlkorper_radius, strahlkorper,
+              strahlkorper_radius,
               StrahlkorperFunctions::inv_jacobian(
                   StrahlkorperFunctions::theta_phi(strahlkorper))),
           StrahlkorperFunctions::rhat(

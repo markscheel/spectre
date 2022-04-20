@@ -560,12 +560,12 @@ void YlmSpherepack::interpolate_from_coefs(
     const gsl::not_null<T*> result, const R& spectral_coefs,
     const InterpolationInfo<T>& interpolation_info,
     const size_t spectral_stride, const size_t spectral_offset) const {
-  if (m_max_ != interpolation_info.m_max()) {
+  if (UNLIKELY(m_max_ != interpolation_info.m_max())) {
     ERROR("Different m_max for InterpolationInfo ("
           << interpolation_info.m_max() << ") and YlmSpherepack instance ("
           << m_max_ << ")");
   };
-  if (l_max_ != interpolation_info.l_max()) {
+  if (UNLIKELY(l_max_ != interpolation_info.l_max())) {
     ERROR("Different l_max for InterpolationInfo ("
           << interpolation_info.l_max() << ") and YlmSpherepack instance ("
           << l_max_ << ")");

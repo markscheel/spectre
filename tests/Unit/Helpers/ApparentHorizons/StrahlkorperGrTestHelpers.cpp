@@ -173,11 +173,20 @@ Scalar<DataType> horizon_ricci_scalar(
 
   std::array<DataVector, 2> points{std::move(thetas_new), std::move(phis_new)};
 
+  // Allocate a buffer here for ylm_with_spin_on_z_axis.
+  DataVector ylm_with_spin_on_z_axis_storage(
+      std::max(ylm_with_spin_on_z_axis.interpolate_buffer_size(),
+               ylm_with_spin_on_z_axis.gradient_from_coefs_buffer_size()));
+  auto ylm_with_spin_on_z_axis_buffer =
+      gsl::make_span(ylm_with_spin_on_z_axis_storage.data(),
+                     ylm_with_spin_on_z_axis_storage.size());
+
   // Interpolate ricci_scalar_with_spin_on_z_axis onto the new points
   auto interpolation_info =
       ylm_with_spin_on_z_axis.set_up_interpolation_info(points);
   DataVector ricci_scalar_interpolated(interpolation_info.size());
   ylm_with_spin_on_z_axis.interpolate(
+      make_not_null(&ylm_with_spin_on_z_axis_buffer),
       make_not_null(&ricci_scalar_interpolated),
       get(ricci_scalar_with_spin_on_z_axis).data(), interpolation_info);
 

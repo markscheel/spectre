@@ -49,6 +49,10 @@ void test_change_center_of_strahlkorper() {
   change_expansion_center_of_strahlkorper(make_not_null(&strahlkorper),
                                           new_center);
 
+  DataVector dv_buffer(
+      strahlkorper.ylm_spherepack().spec_to_phys_buffer_size());
+  auto buffer = gsl::span(dv_buffer.data(), dv_buffer.size());
+
   // Center should have changed
   for (size_t i = 0; i < 3; ++i) {
     CHECK(gsl::at(new_center, i) ==
@@ -78,9 +82,10 @@ void test_change_center_of_strahlkorper() {
   // approx below may need to change.
   Approx custom_approx_nine = Approx::custom().epsilon(1.e-9).scale(1.);
   CHECK_ITERABLE_CUSTOM_APPROX(
-      strahlkorper.ylm_spherepack().spec_to_phys(strahlkorper.coefficients()),
+      strahlkorper.ylm_spherepack().spec_to_phys(make_not_null(&buffer),
+                                                 strahlkorper.coefficients()),
       original_strahlkorper.ylm_spherepack().spec_to_phys(
-          original_strahlkorper.coefficients()),
+          make_not_null(&buffer), original_strahlkorper.coefficients()),
       custom_approx_nine);
 }
 

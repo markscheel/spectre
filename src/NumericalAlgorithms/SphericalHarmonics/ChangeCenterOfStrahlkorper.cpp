@@ -33,6 +33,7 @@ tnsr::i<DataVector, 3, Frame> get_rhat(
 template <typename Frame>
 void change_expansion_center(
     const gsl::not_null<Strahlkorper<Frame>*> strahlkorper,
+    const gsl::not_null<gsl::span<double>*> buffer,
     const std::array<double, 3>& new_center,
     const tnsr::i<DataVector, 3, Frame>& r_hat) {
   // Get new_center minus old_center.
@@ -43,9 +44,10 @@ void change_expansion_center(
 
   // For bracketing the root, get the min and max radius with respect
   // to the new center.
-  const auto [r_min, r_max] = [&center_difference, &r_hat, &strahlkorper]() {
+  const auto [r_min, r_max] = [&center_difference, &r_hat, &strahlkorper,
+                               &buffer]() {
     const auto radius_old = strahlkorper->ylm_spherepack().spec_to_phys(
-        strahlkorper->coefficients());
+        buffer, strahlkorper->coefficients());
     DataVector radius_new =
         square(get<0>(r_hat) * radius_old - center_difference[0]);
     for (size_t d = 1; d < 3; ++d) {  // Start at 1; already did zero.
@@ -109,7 +111,11 @@ template <typename Frame>
 void change_expansion_center_of_strahlkorper(
     const gsl::not_null<Strahlkorper<Frame>*> strahlkorper,
     const std::array<double, 3>& new_center) {
-  change_expansion_center(strahlkorper, new_center, get_rhat(*strahlkorper));
+  DataVector dv_buffer(
+      strahlkorper->ylm_spherepack().spec_to_phys_buffer_size());
+  auto buffer = gsl::span(dv_buffer.data(), dv_buffer.size());
+  change_expansion_center(strahlkorper, make_not_null(&buffer), new_center,
+                          get_rhat(*strahlkorper));
 }
 
 template <typename Frame>
@@ -117,8 +123,13 @@ void change_expansion_center_of_strahlkorper_to_physical(
     const gsl::not_null<Strahlkorper<Frame>*> strahlkorper) {
   const auto r_hat = get_rhat(*strahlkorper);
 
+  DataVector dv_buffer(
+      strahlkorper->ylm_spherepack().spec_to_phys_buffer_size());
+  auto buffer = gsl::span(dv_buffer.data(), dv_buffer.size());
+
   // Zeroth iteration.
-  change_expansion_center(strahlkorper, strahlkorper->physical_center(), r_hat);
+  change_expansion_center(strahlkorper, make_not_null(&buffer),
+                          strahlkorper->physical_center(), r_hat);
 
   // In the random number tests, it never needed more than 7
   // iterations to converge to relative error of roundoff.  Allow 14
@@ -135,7 +146,8 @@ void change_expansion_center_of_strahlkorper_to_physical(
     if (relative_error <= 2.0 * std::numeric_limits<double>::epsilon()) {
       return;
     }
-    change_expansion_center(strahlkorper, phys_center, r_hat);
+    change_expansion_center(strahlkorper, make_not_null(&buffer), phys_center,
+                            r_hat);
   }
   ERROR("Too many iterations in change_expansion_center_of_strahlkorper");
 }

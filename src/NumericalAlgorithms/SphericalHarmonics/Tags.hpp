@@ -30,6 +30,21 @@ struct Strahlkorper : db::SimpleTag {
   using type = ::Strahlkorper<Frame>;
 };
 
+/// Tag referring to a buffer that is used internally by Strahlkorper functions.
+struct StrahlkorperBuffer : db::SimpleTag {
+  using type = DataVector;
+};
+
+template <typename Frame>
+struct StrahlkorperBufferCompute : StrahlkorperBuffer, db::ComputeTag {
+  using base = StrahlkorperBuffer;
+  using return_type = DataVector;
+  static constexpr auto function =
+      static_cast<DataVector (*)(const ::Strahlkorper<Frame>&)>(
+          &::StrahlkorperFunctions::work_buffer<Frame>);
+  using argument_tags = tmpl::list<Strahlkorper<Frame>>;
+};
+
 /// @{
 /// \f$(\theta,\phi)\f$ on the grid.
 /// Doesn't depend on the shape of the surface.
@@ -149,10 +164,11 @@ template <typename Frame>
 struct RadiusCompute : Radius<Frame>, db::ComputeTag {
   using base = Radius<Frame>;
   using return_type = Scalar<DataVector>;
-  static constexpr auto function = static_cast<void (*)(
-      const gsl::not_null<Scalar<DataVector>*>, const ::Strahlkorper<Frame>&)>(
-      &(::StrahlkorperFunctions::radius<Frame>));
-  using argument_tags = tmpl::list<Strahlkorper<Frame>>;
+  static constexpr auto function =
+      static_cast<void (*)(const gsl::not_null<Scalar<DataVector>*>,
+                           const ::Strahlkorper<Frame>&, const DataVector&)>(
+          &(::StrahlkorperFunctions::radius<Frame>));
+  using argument_tags = tmpl::list<Strahlkorper<Frame>, StrahlkorperBuffer>;
 };
 /// @}
 
@@ -219,10 +235,11 @@ struct DxRadiusCompute : DxRadius<Frame>, db::ComputeTag {
       const Scalar<DataVector>& scalar,
       const ::Strahlkorper<Frame>& strahlkorper,
       const Scalar<DataVector>& radius_of_strahlkorper,
-      const aliases::InvJacobian<Frame>& inv_jac)>(
+      const aliases::InvJacobian<Frame>& inv_jac, const DataVector&)>(
       &StrahlkorperFunctions::cartesian_derivs_of_scalar);
-  using argument_tags = tmpl::list<Radius<Frame>, Strahlkorper<Frame>,
-                                   Radius<Frame>, InvJacobian<Frame>>;
+  using argument_tags =
+      tmpl::list<Radius<Frame>, Strahlkorper<Frame>, Radius<Frame>,
+                 InvJacobian<Frame>, StrahlkorperBuffer>;
 };
 /// @}
 
@@ -249,11 +266,11 @@ struct D2xRadiusCompute : D2xRadius<Frame>, db::ComputeTag {
       const ::Strahlkorper<Frame>& strahlkorper,
       const Scalar<DataVector>& radius_of_strahlkorper,
       const aliases::InvJacobian<Frame>& inv_jac,
-      const aliases::InvHessian<Frame>& inv_hess)>(
+      const aliases::InvHessian<Frame>& inv_hess, const DataVector&)>(
       &StrahlkorperFunctions::cartesian_second_derivs_of_scalar);
   using argument_tags =
       tmpl::list<Radius<Frame>, Strahlkorper<Frame>, Radius<Frame>,
-                 InvJacobian<Frame>, InvHessian<Frame>>;
+                 InvJacobian<Frame>, InvHessian<Frame>,StrahlkorperBuffer>;
 };
 /// @}
 
@@ -274,10 +291,10 @@ struct LaplacianRadiusCompute : LaplacianRadius<Frame>, db::ComputeTag {
       gsl::not_null<Scalar<DataVector>*> lap_radius,
       const Scalar<DataVector>& radius,
       const ::Strahlkorper<Frame>& strahlkorper,
-      const tnsr::i<DataVector, 2, ::Frame::Spherical<Frame>>& theta_phi)>(
-      &StrahlkorperFunctions::laplacian_of_scalar);
-  using argument_tags =
-      tmpl::list<Radius<Frame>, Strahlkorper<Frame>, ThetaPhi<Frame>>;
+      const tnsr::i<DataVector, 2, ::Frame::Spherical<Frame>>& theta_phi,
+      const DataVector&)>(&StrahlkorperFunctions::laplacian_of_scalar);
+  using argument_tags = tmpl::list<Radius<Frame>, Strahlkorper<Frame>,
+                                   ThetaPhi<Frame>, StrahlkorperBuffer>;
 };
 /// @}
 
@@ -334,15 +351,16 @@ template <typename Frame>
 struct TangentsCompute : Tangents<Frame>, db::ComputeTag {
   using base = Tangents<Frame>;
   using return_type = aliases::Jacobian<Frame>;
-  static constexpr auto function =
-      static_cast<void (*)(gsl::not_null<aliases::Jacobian<Frame>*> tangents,
-                           const ::Strahlkorper<Frame>& strahlkorper,
-                           const Scalar<DataVector>& radius,
-                           const tnsr::i<DataVector, 3, Frame>& r_hat,
-                           const aliases::Jacobian<Frame>& jac)>(
-          &StrahlkorperFunctions::tangents);
-  using argument_tags = tmpl::list<Strahlkorper<Frame>, Radius<Frame>,
-                                   Rhat<Frame>, Jacobian<Frame>>;
+  static constexpr auto function = static_cast<void (*)(
+      gsl::not_null<aliases::Jacobian<Frame>*> tangents,
+      const ::Strahlkorper<Frame>& strahlkorper,
+      const Scalar<DataVector>& radius,
+      const tnsr::i<DataVector, 3, Frame>& r_hat,
+      const aliases::Jacobian<Frame>& jac, const DataVector&)>(
+      &StrahlkorperFunctions::tangents);
+  using argument_tags =
+      tmpl::list<Strahlkorper<Frame>, Radius<Frame>, Rhat<Frame>,
+                 Jacobian<Frame>, StrahlkorperBuffer>;
 };
 /// @}
 
@@ -351,10 +369,11 @@ using items_tags = tmpl::list<Strahlkorper<Frame>>;
 
 template <typename Frame>
 using compute_items_tags =
-    tmpl::list<ThetaPhiCompute<Frame>, RhatCompute<Frame>,
-               JacobianCompute<Frame>, InvJacobianCompute<Frame>,
-               InvHessianCompute<Frame>, RadiusCompute<Frame>,
-               CartesianCoordsCompute<Frame>, DxRadiusCompute<Frame>,
-               D2xRadiusCompute<Frame>, LaplacianRadiusCompute<Frame>,
-               NormalOneFormCompute<Frame>, TangentsCompute<Frame>>;
+    tmpl::list<StrahlkorperBufferCompute<Frame>, ThetaPhiCompute<Frame>,
+               RhatCompute<Frame>, JacobianCompute<Frame>,
+               InvJacobianCompute<Frame>, InvHessianCompute<Frame>,
+               RadiusCompute<Frame>, CartesianCoordsCompute<Frame>,
+               DxRadiusCompute<Frame>, D2xRadiusCompute<Frame>,
+               LaplacianRadiusCompute<Frame>, NormalOneFormCompute<Frame>,
+               TangentsCompute<Frame>>;
 }  // namespace StrahlkorperTags

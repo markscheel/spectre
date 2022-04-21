@@ -49,6 +49,7 @@ void strahlkorper_in_different_frame(
   auto& bracket_r_max = get<::Tags::TempScalar<6>>(temp_buffer);
   auto& f_bracket_r_min = get<::Tags::TempScalar<7>>(temp_buffer);
   auto& f_bracket_r_max = get<::Tags::TempScalar<8>>(temp_buffer);
+  const auto buffer = StrahlkorperFunctions::work_buffer(src_strahlkorper);
 
   StrahlkorperTags::ThetaPhiCompute<SrcFrame>::function(
       make_not_null(&src_theta_phi), src_strahlkorper);
@@ -58,7 +59,7 @@ void strahlkorper_in_different_frame(
   StrahlkorperTags::RhatCompute<SrcFrame>::function(make_not_null(&r_hat),
                                                     src_theta_phi);
   StrahlkorperTags::RadiusCompute<SrcFrame>::function(
-      make_not_null(&src_radius), src_strahlkorper);
+      make_not_null(&src_radius), src_strahlkorper, buffer);
   StrahlkorperTags::CartesianCoordsCompute<SrcFrame>::function(
       make_not_null(&src_cartesian_coords), src_strahlkorper, src_radius,
       r_hat);

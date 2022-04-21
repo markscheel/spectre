@@ -24,6 +24,14 @@ gsl::span<double> make_span_buffer(const DataVector& buffer) {
 }  // namespace
 
 template <typename Fr>
+DataVector work_buffer(const Strahlkorper<Fr>& strahlkorper) {
+  return DataVector(
+      std::max({strahlkorper.ylm_spherepack().spec_to_phys_buffer_size(),
+                strahlkorper.ylm_spherepack().second_derivative_buffer_size(),
+                strahlkorper.ylm_spherepack().gradient_buffer_size()}));
+}
+
+template <typename Fr>
 Scalar<DataVector> radius(const Strahlkorper<Fr>& strahlkorper,
                           const DataVector& buffer) {
   Scalar<DataVector> result{
@@ -449,6 +457,8 @@ void normal_one_form(const gsl::not_null<tnsr::i<DataVector, 3, Fr>*> one_form,
 #define FRAME(data) BOOST_PP_TUPLE_ELEM(0, data)
 
 #define INSTANTIATE(_, data)                                                   \
+  template DataVector StrahlkorperFunctions::work_buffer(                      \
+      const Strahlkorper<FRAME(data)>& strahlkorper);                          \
   template Scalar<DataVector> StrahlkorperFunctions::radius(                   \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const DataVector& buffer);                                               \

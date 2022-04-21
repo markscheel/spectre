@@ -115,6 +115,14 @@ void inv_hessian(
     const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi);
 /// @}
 
+/*!
+ * Allocates the buffer that should be passed into many of the
+ * functions below.  It is allocated to a size large enough so that it
+ * can be used in any of those functions that need a buffer.
+ */
+template <typename Fr>
+DataVector work_buffer(const Strahlkorper<Fr>& strahlkorper);
+
 /// @{
 /*!
  * (Euclidean) distance \f$r_{\rm surf}(\theta,\phi)\f$ from the

@@ -121,13 +121,12 @@ void inv_hessian(
  * expansion center to each point of the Strahlkorper surface.
  */
 template <typename Fr>
-Scalar<DataVector> radius(const gsl::not_null<DataVector*> buffer,
-                          const Strahlkorper<Fr>& strahlkorper);
+Scalar<DataVector> radius(const Strahlkorper<Fr>& strahlkorper,
+                          const DataVector& buffer);
 
 template <typename Fr>
 void radius(const gsl::not_null<Scalar<DataVector>*> result,
-            const gsl::not_null<DataVector*> buffer,
-            const Strahlkorper<Fr>& strahlkorper);
+            const Strahlkorper<Fr>& strahlkorper, const DataVector& buffer);
 /// @}
 
 /// @{
@@ -179,10 +178,10 @@ void cartesian_coords(const gsl::not_null<tnsr::I<DataVector, 3, Fr>*> coords,
  */
 template <typename Fr>
 tnsr::i<DataVector, 3, Fr> cartesian_derivs_of_scalar(
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
     const Scalar<DataVector>& radius_of_strahlkorper,
-    const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac);
+    const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac,
+    const DataVector& buffer);
 
 /*!
  * \param dx_scalar The returned derivatives of the scalar.
@@ -196,10 +195,10 @@ tnsr::i<DataVector, 3, Fr> cartesian_derivs_of_scalar(
 template <typename Fr>
 void cartesian_derivs_of_scalar(
     const gsl::not_null<tnsr::i<DataVector, 3, Fr>*> dx_scalar,
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
     const Scalar<DataVector>& radius_of_strahlkorper,
-    const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac);
+    const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac,
+    const DataVector& buffer);
 /// @}
 
 /// @{
@@ -222,11 +221,11 @@ void cartesian_derivs_of_scalar(
  */
 template <typename Fr>
 tnsr::ii<DataVector, 3, Fr> cartesian_second_derivs_of_scalar(
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
     const Scalar<DataVector>& radius_of_strahlkorper,
     const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac,
-    const StrahlkorperTags::aliases::InvHessian<Fr>& inv_hess);
+    const StrahlkorperTags::aliases::InvHessian<Fr>& inv_hess,
+    const DataVector& buffer);
 
 /*!
  * \param d2x_scalar The returned 2nd derivatives of the scalar.
@@ -242,11 +241,11 @@ tnsr::ii<DataVector, 3, Fr> cartesian_second_derivs_of_scalar(
 template <typename Fr>
 void cartesian_second_derivs_of_scalar(
     const gsl::not_null<tnsr::ii<DataVector, 3, Fr>*> d2x_scalar,
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
     const Scalar<DataVector>& radius_of_strahlkorper,
     const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac,
-    const StrahlkorperTags::aliases::InvHessian<Fr>& inv_hess);
+    const StrahlkorperTags::aliases::InvHessian<Fr>& inv_hess,
+    const DataVector& buffer);
 /// @}
 
 /// @{
@@ -261,16 +260,16 @@ void cartesian_second_derivs_of_scalar(
  */
 template <typename Fr>
 Scalar<DataVector> laplacian_of_scalar(
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
-    const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi);
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
+    const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi,
+    const DataVector& buffer);
 
 template <typename Fr>
 void laplacian_of_scalar(
     const gsl::not_null<Scalar<DataVector>*> laplacian,
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
-    const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi);
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
+    const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi,
+    const DataVector& buffer);
 /// @}
 
 /// @{
@@ -300,10 +299,10 @@ void laplacian_of_scalar(
  */
 template <typename Fr>
 StrahlkorperTags::aliases::Jacobian<Fr> tangents(
-    const gsl::not_null<DataVector*> buffer,
     const ::Strahlkorper<Fr>& strahlkorper, const Scalar<DataVector>& radius,
     const tnsr::i<DataVector, 3, Fr>& r_hat,
-    const StrahlkorperTags::aliases::Jacobian<Fr>& jac);
+    const StrahlkorperTags::aliases::Jacobian<Fr>& jac,
+    const DataVector& buffer);
 
 /*!
  * \param result The computed tangent vectors.
@@ -317,10 +316,10 @@ StrahlkorperTags::aliases::Jacobian<Fr> tangents(
 template <typename Fr>
 void tangents(
     const gsl::not_null<StrahlkorperTags::aliases::Jacobian<Fr>*> result,
-    const gsl::not_null<DataVector*> buffer,
     const ::Strahlkorper<Fr>& strahlkorper, const Scalar<DataVector>& radius,
     const tnsr::i<DataVector, 3, Fr>& r_hat,
-    const StrahlkorperTags::aliases::Jacobian<Fr>& jac);
+    const StrahlkorperTags::aliases::Jacobian<Fr>& jac,
+    const DataVector& buffer);
 /// @}
 
 /// @{

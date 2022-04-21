@@ -14,24 +14,28 @@
 namespace StrahlkorperFunctions {
 
 namespace {
-gsl::span<double> make_span_buffer(const gsl::not_null<DataVector*> buffer) {
-  return gsl::make_span(buffer->data(), buffer->size());
+gsl::span<double> make_span_buffer(const DataVector& buffer) {
+  // The buffer isn't really const, but we don't actually care about
+  // its value as the temporary storage inside of it is overwritten.
+  // But the buffer needs to be declared const to make everything in
+  // the DataBox work.  So here we const_cast that const away.
+  return gsl::make_span(const_cast<DataVector&>(buffer).data(), buffer.size());
 }
 }  // namespace
 
 template <typename Fr>
-Scalar<DataVector> radius(const gsl::not_null<DataVector*> buffer,
-                          const Strahlkorper<Fr>& strahlkorper) {
+Scalar<DataVector> radius(const Strahlkorper<Fr>& strahlkorper,
+                          const DataVector& buffer) {
   Scalar<DataVector> result{
       DataVector{strahlkorper.ylm_spherepack().physical_size()}};
-  radius(make_not_null(&result), buffer, strahlkorper);
+  radius(make_not_null(&result), strahlkorper, buffer);
   return result;
 }
 
 template <typename Fr>
 void radius(const gsl::not_null<Scalar<DataVector>*> result,
-            const gsl::not_null<DataVector*> buffer,
-            const Strahlkorper<Fr>& strahlkorper) {
+            const Strahlkorper<Fr>& strahlkorper,
+            const DataVector& buffer) {
   auto buf = make_span_buffer(buffer);
   get(*result) = strahlkorper.ylm_spherepack().spec_to_phys(
       make_not_null(&buf), strahlkorper.coefficients());
@@ -264,23 +268,23 @@ void cartesian_coords(const gsl::not_null<tnsr::I<DataVector, 3, Fr>*> coords,
 
 template <typename Fr>
 tnsr::i<DataVector, 3, Fr> cartesian_derivs_of_scalar(
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
     const Scalar<DataVector>& radius_of_strahlkorper,
-    const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac) {
+    const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac,
+    const DataVector& buffer) {
   tnsr::i<DataVector, 3, Fr> result{DataVector{get(scalar).size()}};
-  cartesian_derivs_of_scalar(make_not_null(&result), buffer, scalar,
-                             strahlkorper, radius_of_strahlkorper, inv_jac);
+  cartesian_derivs_of_scalar(make_not_null(&result), scalar, strahlkorper,
+                             radius_of_strahlkorper, inv_jac, buffer);
   return result;
 }
 
 template <typename Fr>
 void cartesian_derivs_of_scalar(
     const gsl::not_null<tnsr::i<DataVector, 3, Fr>*> dx_scalar,
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
     const Scalar<DataVector>& radius_of_strahlkorper,
-    const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac) {
+    const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac,
+    const DataVector& buffer) {
   destructive_resize_components(dx_scalar, get(scalar).size());
 
   // If ylm_spherepack().gradient() ever gets a not_null function,
@@ -304,26 +308,26 @@ void cartesian_derivs_of_scalar(
 
 template <typename Fr>
 tnsr::ii<DataVector, 3, Fr> cartesian_second_derivs_of_scalar(
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
     const Scalar<DataVector>& radius_of_strahlkorper,
     const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac,
-    const StrahlkorperTags::aliases::InvHessian<Fr>& inv_hess) {
+    const StrahlkorperTags::aliases::InvHessian<Fr>& inv_hess,
+    const DataVector& buffer) {
   tnsr::ii<DataVector, 3, Fr> result{DataVector{get(scalar).size()}};
-  cartesian_second_derivs_of_scalar(make_not_null(&result), buffer, scalar,
+  cartesian_second_derivs_of_scalar(make_not_null(&result), scalar,
                                     strahlkorper, radius_of_strahlkorper,
-                                    inv_jac, inv_hess);
+                                    inv_jac, inv_hess, buffer);
   return result;
 }
 
 template <typename Fr>
 void cartesian_second_derivs_of_scalar(
     const gsl::not_null<tnsr::ii<DataVector, 3, Fr>*> d2x_scalar,
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
     const Scalar<DataVector>& radius_of_strahlkorper,
     const StrahlkorperTags::aliases::InvJacobian<Fr>& inv_jac,
-    const StrahlkorperTags::aliases::InvHessian<Fr>& inv_hess) {
+    const StrahlkorperTags::aliases::InvHessian<Fr>& inv_hess,
+    const DataVector& buffer) {
   destructive_resize_components(d2x_scalar, get(scalar).size());
   for (auto& component : *d2x_scalar) {
     component = 0.0;
@@ -365,21 +369,21 @@ void cartesian_second_derivs_of_scalar(
 
 template <typename Fr>
 Scalar<DataVector> laplacian_of_scalar(
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
-    const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi) {
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
+    const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi,
+    const DataVector& buffer) {
   Scalar<DataVector> result{DataVector{get(scalar).size()}};
-  laplacian_of_scalar(make_not_null(&result), buffer, scalar, strahlkorper,
-                      theta_phi);
+  laplacian_of_scalar(make_not_null(&result),  scalar, strahlkorper,
+                      theta_phi, buffer);
   return result;
 }
 
 template <typename Fr>
 void laplacian_of_scalar(
     const gsl::not_null<Scalar<DataVector>*> laplacian,
-    const gsl::not_null<DataVector*> buffer, const Scalar<DataVector>& scalar,
-    const Strahlkorper<Fr>& strahlkorper,
-    const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi) {
+    const Scalar<DataVector>& scalar, const Strahlkorper<Fr>& strahlkorper,
+    const tnsr::i<DataVector, 2, ::Frame::Spherical<Fr>>& theta_phi,
+    const DataVector& buffer) {
   get(*laplacian).destructive_resize(get(scalar).size());
   // If ylm_spherepack().first_and_second_derivative() ever gets a not_null
   // function, that function can be used here.
@@ -392,23 +396,23 @@ void laplacian_of_scalar(
 
 template <typename Fr>
 StrahlkorperTags::aliases::Jacobian<Fr> tangents(
-    const gsl::not_null<DataVector*> buffer,
     const ::Strahlkorper<Fr>& strahlkorper, const Scalar<DataVector>& radius,
     const tnsr::i<DataVector, 3, Fr>& r_hat,
-    const StrahlkorperTags::aliases::Jacobian<Fr>& jac) {
+    const StrahlkorperTags::aliases::Jacobian<Fr>& jac,
+    const DataVector& buffer) {
   StrahlkorperTags::aliases::Jacobian<Fr> result{
       DataVector{get(radius).size()}};
-  tangents(make_not_null(&result), buffer, strahlkorper, radius, r_hat, jac);
+  tangents(make_not_null(&result), strahlkorper, radius, r_hat, jac, buffer);
   return result;
 }
 
 template <typename Fr>
 void tangents(
     const gsl::not_null<StrahlkorperTags::aliases::Jacobian<Fr>*> result,
-    const gsl::not_null<DataVector*> buffer,
     const ::Strahlkorper<Fr>& strahlkorper, const Scalar<DataVector>& radius,
     const tnsr::i<DataVector, 3, Fr>& r_hat,
-    const StrahlkorperTags::aliases::Jacobian<Fr>& jac) {
+    const StrahlkorperTags::aliases::Jacobian<Fr>& jac,
+    const DataVector& buffer) {
   destructive_resize_components(result, get(radius).size());
   auto buf = make_span_buffer(buffer);
   const auto dr =
@@ -446,12 +450,12 @@ void normal_one_form(const gsl::not_null<tnsr::i<DataVector, 3, Fr>*> one_form,
 
 #define INSTANTIATE(_, data)                                                   \
   template Scalar<DataVector> StrahlkorperFunctions::radius(                   \
-      const gsl::not_null<DataVector*> buffer,                                 \
-      const Strahlkorper<FRAME(data)>& strahlkorper);                          \
+      const Strahlkorper<FRAME(data)>& strahlkorper,                           \
+      const DataVector& buffer);                                               \
   template void StrahlkorperFunctions::radius(                                 \
       const gsl::not_null<Scalar<DataVector>*> result,                         \
-      const gsl::not_null<DataVector*> buffer,                                 \
-      const Strahlkorper<FRAME(data)>& strahlkorper);                          \
+      const Strahlkorper<FRAME(data)>& strahlkorper,                           \
+      const DataVector& buffer);                                               \
   template tnsr::i<DataVector, 2, ::Frame::Spherical<FRAME(data)>>             \
   StrahlkorperFunctions::theta_phi(                                            \
       const ::Strahlkorper<FRAME(data)>& strahlkorper);                        \
@@ -507,62 +511,62 @@ void normal_one_form(const gsl::not_null<tnsr::i<DataVector, 3, Fr>*> one_form,
       const tnsr::i<DataVector, 3, FRAME(data)>& r_hat);                       \
   template tnsr::i<DataVector, 3, FRAME(data)>                                 \
   StrahlkorperFunctions::cartesian_derivs_of_scalar(                           \
-      const gsl::not_null<DataVector*> buffer,                                 \
       const Scalar<DataVector>& scalar,                                        \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const Scalar<DataVector>& radius_of_strahlkorper,                        \
-      const StrahlkorperTags::aliases::InvJacobian<FRAME(data)>& inv_jac);     \
+      const StrahlkorperTags::aliases::InvJacobian<FRAME(data)>& inv_jac,      \
+      const DataVector& buffer);                                               \
   template void StrahlkorperFunctions::cartesian_derivs_of_scalar(             \
       const gsl::not_null<tnsr::i<DataVector, 3, FRAME(data)>*> dx_scalar,     \
-      const gsl::not_null<DataVector*> buffer,                                 \
       const Scalar<DataVector>& scalar,                                        \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const Scalar<DataVector>& radius_of_strahlkorper,                        \
-      const StrahlkorperTags::aliases::InvJacobian<FRAME(data)>& inv_jac);     \
+      const StrahlkorperTags::aliases::InvJacobian<FRAME(data)>& inv_jac,      \
+      const DataVector& buffer);                                               \
   template tnsr::ii<DataVector, 3, FRAME(data)>                                \
   StrahlkorperFunctions::cartesian_second_derivs_of_scalar(                    \
-      const gsl::not_null<DataVector*> buffer,                                 \
       const Scalar<DataVector>& scalar,                                        \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const Scalar<DataVector>& radius_of_strahlkorper,                        \
       const StrahlkorperTags::aliases::InvJacobian<FRAME(data)>& inv_jac,      \
-      const StrahlkorperTags::aliases::InvHessian<FRAME(data)>& inv_hess);     \
+      const StrahlkorperTags::aliases::InvHessian<FRAME(data)>& inv_hess,      \
+      const DataVector& buffer);                                               \
   template void StrahlkorperFunctions::cartesian_second_derivs_of_scalar(      \
       const gsl::not_null<tnsr::ii<DataVector, 3, FRAME(data)>*> result,       \
-      const gsl::not_null<DataVector*> buffer,                                 \
       const Scalar<DataVector>& scalar,                                        \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const Scalar<DataVector>& radius_of_strahlkorper,                        \
       const StrahlkorperTags::aliases::InvJacobian<FRAME(data)>& inv_jac,      \
-      const StrahlkorperTags::aliases::InvHessian<FRAME(data)>& inv_hess);     \
+      const StrahlkorperTags::aliases::InvHessian<FRAME(data)>& inv_hess,      \
+      const DataVector& buffer);                                               \
   template Scalar<DataVector> StrahlkorperFunctions::laplacian_of_scalar(      \
-      const gsl::not_null<DataVector*> buffer,                                 \
       const Scalar<DataVector>& scalar,                                        \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const tnsr::i<DataVector, 2, ::Frame::Spherical<FRAME(data)>>&           \
-          theta_phi);                                                          \
+          theta_phi,                                                           \
+      const DataVector& buffer);                                               \
   template void StrahlkorperFunctions::laplacian_of_scalar(                    \
       const gsl::not_null<Scalar<DataVector>*> result,                         \
-      const gsl::not_null<DataVector*> buffer,                                 \
       const Scalar<DataVector>& scalar,                                        \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const tnsr::i<DataVector, 2, ::Frame::Spherical<FRAME(data)>>&           \
-          theta_phi);                                                          \
+          theta_phi,                                                           \
+      const DataVector& buffer);                                               \
   template StrahlkorperTags::aliases::Jacobian<FRAME(data)>                    \
   StrahlkorperFunctions::tangents(                                             \
-      const gsl::not_null<DataVector*> buffer,                                 \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const Scalar<DataVector>& radius,                                        \
       const tnsr::i<DataVector, 3, FRAME(data)>& r_hat,                        \
-      const StrahlkorperTags::aliases::Jacobian<FRAME(data)>& jac);            \
+      const StrahlkorperTags::aliases::Jacobian<FRAME(data)>& jac,             \
+      const DataVector& buffer);                                               \
   template void StrahlkorperFunctions::tangents(                               \
       const gsl::not_null<StrahlkorperTags::aliases::Jacobian<FRAME(data)>*>   \
           result,                                                              \
-      const gsl::not_null<DataVector*> buffer,                                 \
       const Strahlkorper<FRAME(data)>& strahlkorper,                           \
       const Scalar<DataVector>& radius,                                        \
       const tnsr::i<DataVector, 3, FRAME(data)>& r_hat,                        \
-      const StrahlkorperTags::aliases::Jacobian<FRAME(data)>& jac);            \
+      const StrahlkorperTags::aliases::Jacobian<FRAME(data)>& jac,             \
+      const DataVector& buffer);                                               \
   template tnsr::i<DataVector, 3, FRAME(data)>                                 \
   StrahlkorperFunctions::normal_one_form(                                      \
       const tnsr::i<DataVector, 3, FRAME(data)>& dx_radius,                    \

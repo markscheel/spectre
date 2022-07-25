@@ -16,7 +16,8 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
   // can be different for different SizeControlStates.
   //
   // The value of 20 causes the control system to panic easily if
-  // delta_radius is decreasing quickly.
+  // delta_radius is decreasing quickly.  The value 20 was chosen
+  // by trial-and-error in SpEC.
   constexpr double time_tolerance_for_delta_r_in_danger = 20.0;
   const bool delta_radius_is_in_danger =
       crossing_time_info.horizon_will_hit_excision_boundary_first and
@@ -26,12 +27,16 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
   const bool char_speed_is_in_danger = [&crossing_time_info, &info,
                                         &delta_radius_is_in_danger,
                                         &min_char_speed]() {
-    // speed_tolerance_for_char_speed_in_danger is slightly greater than
-    // unity so that we don't panic if the actual char speed is large
-    // enough compared to the target char speed.
+    // speed_tolerance_for_char_speed_in_danger is slightly greater
+    // than unity so that we don't panic if the actual char speed is
+    // large enough compared to the target char speed.  The value 1.1
+    // was chosen in SpEC and we haven't had to change it; the behavior
+    // should not be sensitive to small changes in this value.
     constexpr double speed_tolerance_for_char_speed_in_danger = 1.1;
     // We don't want to panic unless crossing time is less than
-    // the current damping time.
+    // the current damping time. The value 0.99 was chosen in SpEC and we
+    // haven't had to change it; the behavior should not be sensitive to
+    // small changes in this value.
     constexpr double time_tolerance_for_char_speed_in_danger = 0.99;
     if (delta_radius_is_in_danger) {
       return false;
@@ -48,9 +53,9 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
   }();
 
   const bool comoving_decreasing_slower_than_char_speeds =
-      not(crossing_time_info.t_char_speed > 0.0 &&
-          crossing_time_info.t_comoving_char_speed > 0.0 &&
-          update_args.min_comoving_char_speed > 0.0 &&
+      not(crossing_time_info.t_char_speed > 0.0 and
+          crossing_time_info.t_comoving_char_speed > 0.0 and
+          update_args.min_comoving_char_speed > 0.0 and
           update_args.min_comoving_char_speed /
                   crossing_time_info.t_comoving_char_speed >
               update_args.min_char_speed / crossing_time_info.t_char_speed);
@@ -58,12 +63,12 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
   if (char_speed_is_in_danger) {
     constexpr double min_char_speed_increase_factor = 1.01;
     if (info->target_char_speed < min_char_speed) {
-      // We are already in state 1, and we are in danger.
-      // But TargetSpeed is less than CharSpeedMin, so we don't want
-      // to continue to push CharSpeedMin downward.  Instead, increase
-      // TargetSpeed to be above CharSpeedMin.
-      // We don't do this if DeltaRexIsInDanger, because for DeltaRex
-      // in danger, we might need to drive CharSpeed lower.
+      // We are already in state AhSpeed, and we are in danger.
+      // But target_char_speed is less than min_char_speed, so we don't want
+      // to continue to push min_char_speed downward.  Instead, increase
+      // target_char_speed to be above min_char_speed.
+      // We don't do this if delta_radius_is_in_danger, because for that
+      // case we might need to drive min_char_speed to a smaller value.
       info->target_char_speed = min_char_speed * min_char_speed_increase_factor;
     }
     info->suggested_time_scale = crossing_time_info.t_char_speed;

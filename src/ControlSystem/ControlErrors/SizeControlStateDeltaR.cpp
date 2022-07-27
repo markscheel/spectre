@@ -54,7 +54,6 @@ void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
 double DeltaR::control_signal(
     const SizeControlInfo& /*info*/,
     const SizeControlStateControlSignalArgs& control_signal_args) const {
-  // The return value is Q from Eq. 96 of ArXiv:1211.6079.
   return control_signal_args.control_error_delta_r;
 }
 }  // namespace SizeControlStates

@@ -11,14 +11,14 @@
 /// arguments.
 struct SizeControlStateUpdateArgs {
   /// min_char_speed is the minimum over the excision boundary
-  /// of Eq. 89 of ArXiv:1211.6079.
+  /// of Eq. 89 of \cite Hemberger2012jz.
   double min_char_speed;
   /// min_comoving_char_speed is the minimum over the excision boundary
-  /// of Eq. 28 of ArXiv:1211.6079.
+  /// of Eq. 28 of \cite Hemberger2012jz.
   double min_comoving_char_speed;
   /// control_error_delta_r is the control error when the control system
   /// is in state SizeControlLabel::DeltaR.
-  /// This is Q in Eq. 96 of ArXiv:1211.6079.
+  /// This is Q in Eq. 96 of \cite Hemberger2012jz.
   double control_error_delta_r;
 };
 
@@ -31,7 +31,7 @@ struct SizeControlStateControlSignalArgs {
   /// avg_distorted_normal_dot_unit_coord_vector is the average of
   /// distorted_normal_dot_unit_coord_vector over the excision
   /// boundary.  Here distorted_normal_dot_unit_coord_vector is Eq. 93
-  /// of ArXiv:1211.6079.  distorted_normal_dot_unit_coord_vector is
+  /// of \cite Hemberger2012jz.  distorted_normal_dot_unit_coord_vector is
   /// \f$\hat{n}_i x^i/r\f$ where \f$\nat{n}_i\f$ is the
   /// distorted-frame unit normal to the excision boundary (pointing
   /// INTO the hole, i.e. out of the domain), and \f$x^i/r\f$ is the
@@ -42,7 +42,7 @@ struct SizeControlStateControlSignalArgs {
   /// point on the excision-boundary Strahlkorper.
   double avg_distorted_normal_dot_unit_coord_vector;
   /// time_deriv_of_lambda_00 is the time derivative of the quantity lambda_00
-  /// that appears in ArXiv:1211.6079.  time_deriv_of_lambda_00 is (minus)
+  /// that appears in \cite Hemberger2012jz.  time_deriv_of_lambda_00 is (minus)
   /// the radial velocity of the excision boundary in the distorted frame with
   /// respect to the grid frame.
   double time_deriv_of_lambda_00;

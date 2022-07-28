@@ -38,7 +38,7 @@
 /// logic in determining transitions between different states, and
 /// that logic would depend not only on the current state, but also on
 /// the previous state.
-enum class SizeControlLabel {
+enum class SizeControlLabel : size_t {
   Initial,
   AhSpeed,
   DeltaR,
@@ -52,7 +52,14 @@ struct SizeControlInfo {
   // SizeControlInfo needs to be serializable because it will be
   // stored inside of a ControlError.
   void pup(PUP::er& p) {
-    p | state;
+    if(p.isUnpacking()) {
+      size_t state_as_size_t;
+      p | state_as_size_t;
+      state = static_cast<SizeControlLabel>(state_as_size_t);
+    } else {
+      auto state_as_size_t = static_cast<size_t>(state);
+      p | state_as_size_t;
+    }
     p | damping_time;
     p | target_char_speed;
     p | target_drift_velocity;

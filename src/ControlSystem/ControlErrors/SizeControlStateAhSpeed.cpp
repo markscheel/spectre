@@ -59,10 +59,14 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
           update_args.min_comoving_char_speed /
                   crossing_time_info.t_comoving_char_speed >
               update_args.min_char_speed / crossing_time_info.t_char_speed);
-
+  // The value of 5.0 was chosen by trial and error in SpEC
+  constexpr double comoving_char_speed_to_damping_time_limit = 5.0;
   if (char_speed_is_in_danger) {
-    constexpr double min_char_speed_increase_factor = 1.01;
     if (info->target_char_speed < min_char_speed) {
+      // The value of 1.01 below was chosen by trial and error in
+      // SpEC.  The value needs to be greater than unity, and something
+      // that doesn't drive min_char_speed too quickly.
+      constexpr double min_char_speed_increase_factor = 1.01;
       // We are already in state AhSpeed, and we are in danger.
       // But target_char_speed is less than min_char_speed, so we don't want
       // to continue to push min_char_speed downward.  Instead, increase
@@ -73,6 +77,8 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
     }
     info->suggested_time_scale = crossing_time_info.t_char_speed;
   } else if (delta_radius_is_in_danger) {
+    // The values of target_speed_decrease_factor and
+    // time_tolerance_for_delta_r were chosen by trial and error in SpEC.
     constexpr double target_speed_decrease_factor = 0.125;
     constexpr double time_tolerance_for_delta_r =
         0.25 * time_tolerance_for_delta_r_in_danger;
@@ -94,7 +100,8 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
              update_args.min_char_speed > 0.0 and
              (crossing_time_info.t_comoving_char_speed == 0.0 or
               (crossing_time_info.t_comoving_char_speed >
-                   5.0 * info->damping_time and
+                   comoving_char_speed_to_damping_time_limit *
+                       info->damping_time and
                comoving_decreasing_slower_than_char_speeds)) and
              (update_args.min_char_speed >= info->target_char_speed or
               min_comoving_char_speed > min_char_speed)) {

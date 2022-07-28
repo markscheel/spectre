@@ -7,10 +7,13 @@ namespace SizeControlStates {
 void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
                     const SizeControlStateUpdateArgs& update_args,
                     const CrossingTimeInfo& crossing_time_info) const {
+  // The value of 1e-3 was chosen by trial and error in SpEC.
   constexpr double delta_r_control_signal_threshold = 1.e-3;
 
   // Note that delta_radius_is_in_danger and char_speed_is_in_danger
   // can be different for different SizeControlStates.
+
+  // The value of 0.99 was chosen by trial and error in SpEC.
   constexpr double time_tolerance_for_delta_r_in_danger = 0.99;
   const bool delta_radius_is_in_danger =
       crossing_time_info.horizon_will_hit_excision_boundary_first and
@@ -27,7 +30,10 @@ void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
       // Comoving char speed is negative or threatening to cross zero, so
       // staying in DeltaR mode will not work.  So switch to AhSpeed mode.
 
-      // This factor prevents oscillating between states Initial and AhSpeed.
+      // This factor prevents oscillating between states Initial and
+      // AhSpeed.  It needs to be slightly greater than unity. The
+      // value of 1.01 was chosen arbitrarily in SpEC and never needed
+      // to be changed.
       constexpr double non_oscillation_factor = 1.01;
       info->discontinuous_change_has_occurred = true;
       info->state = SizeControlLabel::AhSpeed;
@@ -44,6 +50,9 @@ void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
   } else if (update_args.min_comoving_char_speed > 0.0 and
              std::abs(update_args.control_error_delta_r) >
                  delta_r_control_signal_threshold) {
+    // delta_r_state_decrease_factor should be slightly less than unity.
+    // The value of 0.99 below was chosen arbitrarily in SpEC and never
+    // needed to be changed.
     constexpr double delta_r_state_decrease_factor = 0.99;
     info->suggested_time_scale =
         info->damping_time * delta_r_state_decrease_factor;

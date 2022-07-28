@@ -17,8 +17,9 @@ void Initial::update(const gsl::not_null<SizeControlInfo*> info,
       crossing_time_info.t_delta_radius < info->damping_time and
       not char_speed_is_in_danger;
 
-  // This factor is present in SpEC, but it probably isn't necessary.
-  // We keep it here to facilitate comparison with SpEC.
+  // This factor is present in SpEC, but it probably isn't necessary
+  // (but it doesn't hurt either).  We keep it here to facilitate
+  // comparison with SpEC.  The value of 1.01 was chosen in SpEC.
   constexpr double non_oscillation_factor = 1.01;
 
   if (char_speed_is_in_danger) {

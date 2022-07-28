@@ -34,12 +34,12 @@ void Initial::update(const gsl::not_null<Info*> info,
     info->discontinuous_change_has_occurred = true;
     info->state = Label::DeltaR;
     info->suggested_time_scale = crossing_time_info.t_delta_radius;
-    // TODO: Add possible transition to State DeltaRDriftInward.
+    // Here is where transition to State DeltaRDriftInward will go.
   } else if (update_args.min_comoving_char_speed > 0.0) {
     // Here the comoving speed is positive, so prefer DeltaR control.
     info->discontinuous_change_has_occurred = true;
     info->state = Label::DeltaR;
-    // TODO: Add possible transition to State DeltaRDriftInward.
+    // Here is where transition to State DeltaRDriftInward will go.
   }
   // Otherwise, no change.
 }

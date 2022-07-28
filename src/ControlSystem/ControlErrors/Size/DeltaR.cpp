@@ -67,8 +67,8 @@ void DeltaR::update(const gsl::not_null<Info*> info,
     info->suggested_time_scale =
         info->damping_time * delta_r_state_decrease_factor;
   }
-  // TODO: Add possible transitions to states DeltaRDriftInward and
-  // state DeltaRDriftOutward.
+  // Here is where possible transitions to states DeltaRDriftInward and
+  // state DeltaRDriftOutward will go.
 }
 
 double DeltaR::control_signal(

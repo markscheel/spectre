@@ -6,10 +6,12 @@
 #include "ControlSystem/ControlErrors/SizeControlInfo.hpp"
 #include "Utilities/Gsl.hpp"
 
-/// Packages some of the inputs to the SizeControlState::update, so
-/// that SizeControlState::update doesn't need a large number of
+namespace control_system::size {
+
+/// Packages some of the inputs to the State::update, so
+/// that State::update doesn't need a large number of
 /// arguments.
-struct SizeControlStateUpdateArgs {
+struct StateUpdateArgs {
   /// min_char_speed is the minimum over the excision boundary
   /// of Eq. 89 of \cite Hemberger2012jz.
   double min_char_speed;
@@ -17,15 +19,15 @@ struct SizeControlStateUpdateArgs {
   /// of Eq. 28 of \cite Hemberger2012jz.
   double min_comoving_char_speed;
   /// control_error_delta_r is the control error when the control system
-  /// is in state SizeControlLabel::DeltaR.
+  /// is in state Label::DeltaR.
   /// This is Q in Eq. 96 of \cite Hemberger2012jz.
   double control_error_delta_r;
 };
 
-/// Packages some of the inputs to the SizeControlState::control_signal, so
-/// that SizeControlState::control_signal doesn't need a large number of
+/// Packages some of the inputs to the State::control_signal, so
+/// that State::control_signal doesn't need a large number of
 /// arguments.
-struct SizeControlStateControlSignalArgs {
+struct ControlSignalArgs {
   double min_char_speed;
   double control_error_delta_r;
   /// avg_distorted_normal_dot_unit_coord_vector is the average of
@@ -53,31 +55,32 @@ struct SizeControlStateControlSignalArgs {
 /// Each 'state' of the size control system has a different control
 /// signal, which has a different purpose, even though each state
 /// controls the same map quantity, namely the Y00 coefficient of the
-/// shape map.  For example, state SizeControlLabel::AhSpeed controls
+/// shape map.  For example, state Label::AhSpeed controls
 /// the Y00 coefficient of the shape map so that the minimum
 /// characteristic speed is driven towards a target value, and state
-/// SizeControlLabel::DeltaR controls the Y00 coefficient of the shape
+/// Label::DeltaR controls the Y00 coefficient of the shape
 /// map (or the Y00 coefficient of a separate spherically-symmetric size
 /// map) so that the minimum difference between the horizon radius and
 /// the excision boundary radius is driven towards a constant.
 ///
 /// Each state has its own logic (the 'update' function) that
 /// determines values of certain parameters (i.e. the things in
-/// SizeControlInfo), including whether the control system should
+/// Info), including whether the control system should
 /// transition to a different state.
-class SizeControlState {
+class State {
  public:
-  virtual ~SizeControlState() = default;
-  /// Updates the SizeControlInfo in `info`.  Notice that `info`
+  virtual ~State() = default;
+  /// Updates the Info in `info`.  Notice that `info`
   /// includes a state, which might be different than the current
   /// state upon return. It is the caller's responsibility to check
   /// if the current state has changed.
-  virtual void update(const gsl::not_null<SizeControlInfo*> info,
-                      const SizeControlStateUpdateArgs& update_args,
+  virtual void update(const gsl::not_null<Info*> info,
+                      const StateUpdateArgs& update_args,
                       const CrossingTimeInfo& crossing_time_info) const = 0;
   /// Returns the control signal, but does not modify the state or any
   /// parameters.
   virtual double control_signal(
-      const SizeControlInfo& info,
-      const SizeControlStateControlSignalArgs& control_signal_args) const = 0;
+      const Info& info,
+      const ControlSignalArgs& control_signal_args) const = 0;
 };
+}  // namespace control_system::size

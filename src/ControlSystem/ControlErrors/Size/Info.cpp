@@ -1,7 +1,7 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#include "ControlSystem/ControlErrors/SizeControlInfo.hpp"
+#include "ControlSystem/ControlErrors/Size/Info.hpp"
 
 namespace control_system::size {
 CrossingTimeInfo::CrossingTimeInfo(

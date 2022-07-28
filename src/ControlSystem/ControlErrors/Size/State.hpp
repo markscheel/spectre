@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ControlSystem/ControlErrors/SizeControlInfo.hpp"
+#include "ControlSystem/ControlErrors/Size/Info.hpp"
 #include "Utilities/Gsl.hpp"
 
 namespace control_system::size {

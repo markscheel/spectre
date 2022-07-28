@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "ControlSystem/ControlErrors/SizeControlInfo.hpp"
-#include "ControlSystem/ControlErrors/SizeControlState.hpp"
+#include "ControlSystem/ControlErrors/Size/Info.hpp"
+#include "ControlSystem/ControlErrors/Size/State.hpp"
 
 namespace control_system::size::States {
 class Initial : public State {

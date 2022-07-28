@@ -94,7 +94,7 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
       info->discontinuous_change_has_occurred = true;
       info->state = SizeControlLabel::DeltaR;
       info->suggested_time_scale = crossing_time_info.t_delta_radius;
-      // TODO: PreferState3OverState2 goes here.
+      // TODO: Add possible transition to State DeltaRDriftInward
     }
   } else if (update_args.min_comoving_char_speed > 0.0 and
              update_args.min_char_speed > 0.0 and
@@ -107,7 +107,7 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
               min_comoving_char_speed > min_char_speed)) {
     info->discontinuous_change_has_occurred = true;
     info->state = SizeControlLabel::DeltaR;
-    // TODO: PreferState3OverState2 goes here.
+    // TODO: Add possible transition to State DeltaRDriftInward
   }
   // If no 'if's are encountered above, then all the info parameters stay
   // the same as they were.

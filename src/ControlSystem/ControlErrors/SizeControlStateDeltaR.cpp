@@ -7,13 +7,22 @@ namespace SizeControlStates {
 void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
                     const SizeControlStateUpdateArgs& update_args,
                     const CrossingTimeInfo& crossing_time_info) const {
-  // The value of 1e-3 was chosen by trial and error in SpEC.
+  // If update_args.control_error_delta_r is larger than
+  // delta_r_control_signal_threshold (and neither char speed nor
+  // delta radius is in danger), then the timescale is decreased to
+  // keep the control error small. This behavior is similar to what
+  // TimecaleTuners do, but is triggered only in some situations. The
+  // value of 1e-3 was chosen by trial and error in SpEC but it might
+  // be helpful to decrease this value in the future if size control
+  // needs to be very tight.
   constexpr double delta_r_control_signal_threshold = 1.e-3;
 
   // Note that delta_radius_is_in_danger and char_speed_is_in_danger
   // can be different for different SizeControlStates.
 
   // The value of 0.99 was chosen by trial and error in SpEC.
+  // It should be slightly less than unity but nothing should be
+  // sensitive to small changes in this value.
   constexpr double time_tolerance_for_delta_r_in_danger = 0.99;
   const bool delta_radius_is_in_danger =
       crossing_time_info.horizon_will_hit_excision_boundary_first and
@@ -31,9 +40,10 @@ void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
       // staying in DeltaR mode will not work.  So switch to AhSpeed mode.
 
       // This factor prevents oscillating between states Initial and
-      // AhSpeed.  It needs to be slightly greater than unity. The
-      // value of 1.01 was chosen arbitrarily in SpEC and never needed
-      // to be changed.
+      // AhSpeed.  It needs to be slightly greater than unity, but the
+      // control system should not be sensitive to the exact
+      // value. The value of 1.01 was chosen arbitrarily in SpEC and
+      // never needed to be changed.
       constexpr double non_oscillation_factor = 1.01;
       info->discontinuous_change_has_occurred = true;
       info->state = SizeControlLabel::AhSpeed;

@@ -19,7 +19,9 @@ void Initial::update(const gsl::not_null<SizeControlInfo*> info,
 
   // This factor is present in SpEC, but it probably isn't necessary
   // (but it doesn't hurt either).  We keep it here to facilitate
-  // comparison with SpEC.  The value of 1.01 was chosen in SpEC.
+  // comparison with SpEC.  The value of 1.01 was chosen in SpEC, but
+  // nothing should be sensitive to small changes in this value as long
+  // as it is something slightly greater than unity.
   constexpr double non_oscillation_factor = 1.01;
 
   if (char_speed_is_in_danger) {

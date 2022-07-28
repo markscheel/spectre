@@ -5,11 +5,11 @@
 
 #include <cmath>
 
-#include "ControlSystem/ControlErrors/SizeControlInfo.hpp"
-#include "ControlSystem/ControlErrors/SizeControlState.hpp"
-#include "ControlSystem/ControlErrors/SizeControlStateAhSpeed.hpp"
-#include "ControlSystem/ControlErrors/SizeControlStateDeltaR.hpp"
-#include "ControlSystem/ControlErrors/SizeControlStateInitial.hpp"
+#include "ControlSystem/ControlErrors/Size/Info.hpp"
+#include "ControlSystem/ControlErrors/Size/State.hpp"
+#include "ControlSystem/ControlErrors/Size/AhSpeed.hpp"
+#include "ControlSystem/ControlErrors/Size/DeltaR.hpp"
+#include "ControlSystem/ControlErrors/Size/Initial.hpp"
 #include "Utilities/Gsl.hpp"
 
 namespace {

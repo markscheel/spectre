@@ -1,7 +1,7 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#include "ControlSystem/ControlErrors/SizeControlStateInitial.hpp"
+#include "ControlSystem/ControlErrors/Size/Initial.hpp"
 
 namespace control_system::size::States {
 void Initial::update(const gsl::not_null<Info*> info,

@@ -1,7 +1,7 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#include "ControlSystem/ControlErrors/SizeControlStateAhSpeed.hpp"
+#include "ControlSystem/ControlErrors/Size/AhSpeed.hpp"
 
 #include <cmath>
 

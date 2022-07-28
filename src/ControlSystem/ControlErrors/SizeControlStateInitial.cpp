@@ -3,12 +3,12 @@
 
 #include "ControlSystem/ControlErrors/SizeControlStateInitial.hpp"
 
-namespace SizeControlStates {
-void Initial::update(const gsl::not_null<SizeControlInfo*> info,
-                     const SizeControlStateUpdateArgs& update_args,
+namespace control_system::size::States {
+void Initial::update(const gsl::not_null<Info*> info,
+                     const StateUpdateArgs& update_args,
                      const CrossingTimeInfo& crossing_time_info) const {
   // Note that delta_radius_is_in_danger and char_speed_is_in_danger
-  // can be different for different SizeControlStates.
+  // can be different for different States.
   const bool char_speed_is_in_danger =
       crossing_time_info.char_speed_will_hit_zero_first and
       crossing_time_info.t_char_speed < info->damping_time;
@@ -26,31 +26,31 @@ void Initial::update(const gsl::not_null<SizeControlInfo*> info,
 
   if (char_speed_is_in_danger) {
     info->discontinuous_change_has_occurred = true;
-    info->state = SizeControlLabel::AhSpeed;
+    info->state = Label::AhSpeed;
     info->target_char_speed =
         update_args.min_char_speed * non_oscillation_factor;
     info->suggested_time_scale = crossing_time_info.t_char_speed;
   } else if (delta_radius_is_in_danger) {
     info->discontinuous_change_has_occurred = true;
-    info->state = SizeControlLabel::DeltaR;
+    info->state = Label::DeltaR;
     info->suggested_time_scale = crossing_time_info.t_delta_radius;
     // TODO: Add possible transition to State DeltaRDriftInward.
   } else if (update_args.min_comoving_char_speed > 0.0) {
     // Here the comoving speed is positive, so prefer DeltaR control.
     info->discontinuous_change_has_occurred = true;
-    info->state = SizeControlLabel::DeltaR;
+    info->state = Label::DeltaR;
     // TODO: Add possible transition to State DeltaRDriftInward.
   }
   // Otherwise, no change.
 }
 
 double Initial::control_signal(
-    const SizeControlInfo& info,
-    const SizeControlStateControlSignalArgs& control_signal_args) const {
+    const Info& info,
+    const ControlSignalArgs& control_signal_args) const {
   // The return value is the Q that directly controls the speed of the
   // excision boundary in the distorted frame relative to the grid frame.
   return info.target_drift_velocity -
          control_signal_args.time_deriv_of_lambda_00;
 }
 
-}  // namespace SizeControlStates
+}  // namespace control_system::size::States

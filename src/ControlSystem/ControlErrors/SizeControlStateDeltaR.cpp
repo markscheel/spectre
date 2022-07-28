@@ -3,9 +3,9 @@
 
 #include "ControlSystem/ControlErrors/SizeControlStateDeltaR.hpp"
 
-namespace SizeControlStates {
-void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
-                    const SizeControlStateUpdateArgs& update_args,
+namespace control_system::size::States {
+void DeltaR::update(const gsl::not_null<Info*> info,
+                    const StateUpdateArgs& update_args,
                     const CrossingTimeInfo& crossing_time_info) const {
   // If update_args.control_error_delta_r is larger than
   // delta_r_control_signal_threshold (and neither char speed nor
@@ -18,7 +18,7 @@ void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
   constexpr double delta_r_control_signal_threshold = 1.e-3;
 
   // Note that delta_radius_is_in_danger and char_speed_is_in_danger
-  // can be different for different SizeControlStates.
+  // can be different for different States.
 
   // The value of 0.99 was chosen by trial and error in SpEC.
   // It should be slightly less than unity but nothing should be
@@ -46,7 +46,7 @@ void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
       // never needed to be changed.
       constexpr double non_oscillation_factor = 1.01;
       info->discontinuous_change_has_occurred = true;
-      info->state = SizeControlLabel::AhSpeed;
+      info->state = Label::AhSpeed;
       info->target_char_speed =
           update_args.min_char_speed * non_oscillation_factor;
     }
@@ -72,8 +72,8 @@ void DeltaR::update(const gsl::not_null<SizeControlInfo*> info,
 }
 
 double DeltaR::control_signal(
-    const SizeControlInfo& /*info*/,
-    const SizeControlStateControlSignalArgs& control_signal_args) const {
+    const Info& /*info*/,
+    const ControlSignalArgs& control_signal_args) const {
   return control_signal_args.control_error_delta_r;
 }
-}  // namespace SizeControlStates
+}  // namespace control_system::size::States

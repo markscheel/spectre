@@ -5,13 +5,15 @@
 
 #include <pup.h>
 
+namespace control_system::size {
+
 /// Labels the different 'state's of size control.
 ///
 /// The different states are:
 /// - Initial: drives dr/dt of the excision boundary to
-///   SizeControlInfo::target_drift_velocity.
+///   Info::target_drift_velocity.
 /// - AhSpeed: drives the minimum characteristic speed on the excision boundary
-///   to SizeControlInfo::target_char_speed.
+///   to Info::target_char_speed.
 /// - DeltaR: drives the minimum distance between the horizon and the excision
 ///   boundary to be constant in time.
 /// - DeltaRDriftInward: Same as DeltaR but the excision boundary has a small
@@ -38,7 +40,7 @@
 /// logic in determining transitions between different states, and
 /// that logic would depend not only on the current state, but also on
 /// the previous state.
-enum class SizeControlLabel : size_t {
+enum class Label : size_t {
   Initial,
   AhSpeed,
   DeltaR,
@@ -48,14 +50,14 @@ enum class SizeControlLabel : size_t {
 };
 
 /// Holds information that is saved between calls of SizeControl.
-struct SizeControlInfo {
-  // SizeControlInfo needs to be serializable because it will be
+struct Info {
+  // Info needs to be serializable because it will be
   // stored inside of a ControlError.
   void pup(PUP::er& p) {
     if(p.isUnpacking()) {
       size_t state_as_size_t;
       p | state_as_size_t;
-      state = static_cast<SizeControlLabel>(state_as_size_t);
+      state = static_cast<Label>(state_as_size_t);
     } else {
       auto state_as_size_t = static_cast<size_t>(state);
       p | state_as_size_t;
@@ -67,21 +69,21 @@ struct SizeControlInfo {
     p | discontinuous_change_has_occurred;
   }
 
-  SizeControlLabel state{SizeControlLabel::Initial};
+  Label state{Label::Initial};
   /// The current damping time associated with size control.
   double damping_time;
   /// target_char_speed is what the characteristic speed is driven
-  /// toward in state SizeControlLabel::AhSpeed.
+  /// toward in state Label::AhSpeed.
   double target_char_speed;
   /// target_drift_velocity is what dr/dt (where r and t are distorted frame
   /// variables) of the excision boundary is driven toward in state
-  /// SizeControlLabel::Initial.
+  /// Label::Initial.
   double target_drift_velocity;
-  /// Sometimes SizeControlState::update will request that damping_time
+  /// Sometimes State::update will request that damping_time
   /// be changed; the new suggested value is suggested_time_scale.
   double suggested_time_scale;
   /// discontinuous_change_has_occurred is set to true by
-  /// SizeControlState::update if it changes anything in such a way that
+  /// State::update if it changes anything in such a way that
   /// the control signal jumps discontinuously in time.
   bool discontinuous_change_has_occurred;
 };
@@ -111,3 +113,4 @@ struct CrossingTimeInfo {
   bool char_speed_will_hit_zero_first{false};
   bool horizon_will_hit_excision_boundary_first{false};
 };
+}  // namespace control_system::size

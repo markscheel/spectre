@@ -3,6 +3,7 @@
 
 #include "ControlSystem/ControlErrors/SizeControlInfo.hpp"
 
+namespace control_system::size {
 CrossingTimeInfo::CrossingTimeInfo(
     const double char_speed_crossing_time,
     const double comoving_char_speed_crossing_time,
@@ -20,3 +21,4 @@ CrossingTimeInfo::CrossingTimeInfo(
     horizon_will_hit_excision_boundary_first = true;
   }
 }
+}  // namespace control_system::size

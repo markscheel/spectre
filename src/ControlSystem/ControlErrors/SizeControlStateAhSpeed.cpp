@@ -5,15 +5,15 @@
 
 #include <cmath>
 
-namespace SizeControlStates {
-void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
-                     const SizeControlStateUpdateArgs& update_args,
+namespace control_system::size::States {
+void AhSpeed::update(const gsl::not_null<Info*> info,
+                     const StateUpdateArgs& update_args,
                      const CrossingTimeInfo& crossing_time_info) const {
   const double min_char_speed = update_args.min_char_speed;
   const double min_comoving_char_speed = update_args.min_comoving_char_speed;
 
   // Note that delta_radius_is_in_danger and char_speed_is_in_danger
-  // can be different for different SizeControlStates.
+  // can be different for different States.
   //
   // The value of 20 causes the control system to panic easily if
   // delta_radius is decreasing quickly.  The value 20 was chosen
@@ -92,7 +92,7 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
           std::min(info->damping_time, crossing_time_info.t_delta_radius);
     } else {
       info->discontinuous_change_has_occurred = true;
-      info->state = SizeControlLabel::DeltaR;
+      info->state = Label::DeltaR;
       info->suggested_time_scale = crossing_time_info.t_delta_radius;
       // TODO: Add possible transition to State DeltaRDriftInward
     }
@@ -106,7 +106,7 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
              (update_args.min_char_speed >= info->target_char_speed or
               min_comoving_char_speed > min_char_speed)) {
     info->discontinuous_change_has_occurred = true;
-    info->state = SizeControlLabel::DeltaR;
+    info->state = Label::DeltaR;
     // TODO: Add possible transition to State DeltaRDriftInward
   }
   // If no 'if's are encountered above, then all the info parameters stay
@@ -114,10 +114,10 @@ void AhSpeed::update(const gsl::not_null<SizeControlInfo*> info,
 }
 
 double AhSpeed::control_signal(
-    const SizeControlInfo& info,
-    const SizeControlStateControlSignalArgs& control_signal_args) const {
+    const Info& info,
+    const ControlSignalArgs& control_signal_args) const {
   const double Y00 = sqrt(0.25 / M_PI);
   return (info.target_char_speed - control_signal_args.min_char_speed) /
          (Y00 * control_signal_args.avg_distorted_normal_dot_unit_coord_vector);
 }
-}  // namespace SizeControlStates
+}  // namespace control_system::size::States

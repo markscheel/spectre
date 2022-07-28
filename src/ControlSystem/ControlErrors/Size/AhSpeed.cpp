@@ -38,18 +38,12 @@ void AhSpeed::update(const gsl::not_null<Info*> info,
     // haven't had to change it; the behavior should not be sensitive to
     // small changes in this value.
     constexpr double time_tolerance_for_char_speed_in_danger = 0.99;
-    if (delta_radius_is_in_danger) {
-      return false;
-    } else if (crossing_time_info.char_speed_will_hit_zero_first and
-               crossing_time_info.t_char_speed <
-                   info->damping_time *
-                       time_tolerance_for_char_speed_in_danger and
-               min_char_speed < info->target_char_speed *
-                                    speed_tolerance_for_char_speed_in_danger) {
-      return true;
-    } else {
-      return false;
-    }
+    return (not delta_radius_is_in_danger) and
+           (crossing_time_info.char_speed_will_hit_zero_first and
+            crossing_time_info.t_char_speed <
+                info->damping_time * time_tolerance_for_char_speed_in_danger and
+            min_char_speed < info->target_char_speed *
+                                 speed_tolerance_for_char_speed_in_danger);
   }();
 
   const bool comoving_decreasing_slower_than_char_speeds =

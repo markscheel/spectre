@@ -3,7 +3,16 @@
 
 #include "ControlSystem/ControlErrors/Size/DeltaR.hpp"
 
+#include <memory>
+
+#include "ControlSystem/ControlErrors/Size/AhSpeed.hpp"
+
 namespace control_system::size::States {
+
+std::unique_ptr<State> DeltaR::get_clone() const {
+  return std::make_unique<DeltaR>(*this);
+}
+
 void DeltaR::update(const gsl::not_null<Info*> info,
                     const StateUpdateArgs& update_args,
                     const CrossingTimeInfo& crossing_time_info) const {
@@ -46,7 +55,7 @@ void DeltaR::update(const gsl::not_null<Info*> info,
       // never needed to be changed.
       constexpr double non_oscillation_factor = 1.01;
       info->discontinuous_change_has_occurred = true;
-      info->state = Label::AhSpeed;
+      info->state = std::make_unique<States::AhSpeed>();
       info->target_char_speed =
           update_args.min_char_speed * non_oscillation_factor;
     }
@@ -76,4 +85,6 @@ double DeltaR::control_signal(
     const ControlSignalArgs& control_signal_args) const {
   return control_signal_args.control_error_delta_r;
 }
+
+PUP::able::PUP_ID DeltaR::my_PUP_ID = 0;
 }  // namespace control_system::size::States

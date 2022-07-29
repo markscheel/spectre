@@ -4,8 +4,16 @@
 #include "ControlSystem/ControlErrors/Size/AhSpeed.hpp"
 
 #include <cmath>
+#include <memory>
+
+#include "ControlSystem/ControlErrors/Size/DeltaR.hpp"
 
 namespace control_system::size::States {
+
+std::unique_ptr<State> AhSpeed::get_clone() const {
+  return std::make_unique<AhSpeed>(*this);
+}
+
 void AhSpeed::update(const gsl::not_null<Info*> info,
                      const StateUpdateArgs& update_args,
                      const CrossingTimeInfo& crossing_time_info) const {
@@ -86,7 +94,7 @@ void AhSpeed::update(const gsl::not_null<Info*> info,
           std::min(info->damping_time, crossing_time_info.t_delta_radius);
     } else {
       info->discontinuous_change_has_occurred = true;
-      info->state = Label::DeltaR;
+      info->state = std::make_unique<States::DeltaR>();
       info->suggested_time_scale = crossing_time_info.t_delta_radius;
       // Here is where possible transition to State DeltaRDriftInward will go.
     }
@@ -100,7 +108,7 @@ void AhSpeed::update(const gsl::not_null<Info*> info,
              (update_args.min_char_speed >= info->target_char_speed or
               min_comoving_char_speed > min_char_speed)) {
     info->discontinuous_change_has_occurred = true;
-    info->state = Label::DeltaR;
+    info->state = std::make_unique<States::DeltaR>();
     // Here is where possible transition to State DeltaRDriftInward
     // will go.
   }
@@ -115,4 +123,6 @@ double AhSpeed::control_signal(
   return (info.target_char_speed - control_signal_args.min_char_speed) /
          (Y00 * control_signal_args.avg_distorted_normal_dot_unit_coord_vector);
 }
+
+PUP::able::PUP_ID AhSpeed::my_PUP_ID = 0;
 }  // namespace control_system::size::States

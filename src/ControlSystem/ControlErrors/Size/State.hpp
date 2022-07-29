@@ -3,8 +3,17 @@
 
 #pragma once
 
-#include "ControlSystem/ControlErrors/Size/Info.hpp"
+#include <memory>
+#include <pup.h>
+
+#include "Parallel/CharmPupable.hpp"
 #include "Utilities/Gsl.hpp"
+
+/// \cond
+namespace control_system::size {
+struct Info;
+}  // namespace control_system::size
+/// \endcond
 
 namespace control_system::size {
 
@@ -67,9 +76,48 @@ struct ControlSignalArgs {
 /// determines values of certain parameters (i.e. the things in
 /// Info), including whether the control system should
 /// transition to a different state.
-class State {
+///
+/// The different states are:
+/// - Initial: drives dr/dt of the excision boundary to
+///   Info::target_drift_velocity.
+/// - AhSpeed: drives the minimum characteristic speed on the excision boundary
+///   to Info::target_char_speed.
+/// - DeltaR: drives the minimum distance between the horizon and the excision
+///   boundary to be constant in time.
+/// - DeltaRDriftInward: Same as DeltaR but the excision boundary has a small
+///   velocity inward.  This state is triggered when it is deemed that the
+///   excision boundary and the horizon are too close to each other; the
+///   small velocity makes the excision boundary and the horizon drift apart.
+/// - DeltaRDriftOutward: Same as DeltaR but the excision boundary has a small
+///   velocity outward.  This state is triggered when it is deemed that the
+///   excision boundary and the horizon are too far apart.
+/// - DeltaRTransition: Same as DeltaR except for the logic that
+///   determines how DeltaRTransition changes to other states.
+///   DeltaRTransition is allowed (under some circumstances) to change
+///   to state DeltaR, but DeltaRDriftOutward and DeltaRDriftInward
+///   are never allowed to change to state DeltaR.  Instead
+///   DeltaRDriftOutward and DeltaRDriftInward are allowed (under
+///   some circumstances) to change to state DeltaRTransition.
+///
+/// The reason that DeltaRDriftInward, DeltaRDriftOutward, and
+/// DeltaRTransition are separate states is to simplify the logic.  In
+/// principle, all 3 of those states could be merged with state
+/// DeltaR, because the control error is the same for all four states
+/// (except for a velocity term that could be set to zero).  But if that
+/// were done, then there would need to be additional complicated
+/// logic in determining transitions between different states, and
+/// that logic would depend not only on the current state, but also on
+/// the previous state.
+class State : public PUP::able {
  public:
-  virtual ~State() = default;
+  State(){};
+  State(const State& /*rhs*/) = default;
+  State& operator=(const State& /*rhs*/) = default;
+  State(State&& /*rhs*/) = default;
+  State& operator=(State&& /*rhs*/) = default;
+  virtual ~State() override = default;
+
+  virtual std::unique_ptr<State> get_clone() const = 0;
   /// Updates the Info in `info`.  Notice that `info`
   /// includes a state, which might be different than the current
   /// state upon return. It is the caller's responsibility to check
@@ -80,7 +128,9 @@ class State {
   /// Returns the control signal, but does not modify the state or any
   /// parameters.
   virtual double control_signal(
-      const Info& info,
-      const ControlSignalArgs& control_signal_args) const = 0;
+      const Info& info, const ControlSignalArgs& control_signal_args) const = 0;
+
+  WRAPPED_PUPable_abstract(State);  // NOLINT
+  explicit State(CkMigrateMessage* msg) : PUP::able(msg) {}
 };
 }  // namespace control_system::size

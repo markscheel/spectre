@@ -12,6 +12,7 @@ spectre_target_sources(
   AhSpeed.cpp
   DeltaR.cpp
   Initial.cpp
+  RegisterDerivedWithCharm.cpp
   )
 
 spectre_target_headers(
@@ -23,6 +24,7 @@ spectre_target_headers(
   AhSpeed.hpp
   DeltaR.hpp
   Initial.hpp
+  RegisterDerivedWithCharm.hpp
   )
 
 target_link_libraries(
@@ -31,4 +33,6 @@ target_link_libraries(
   Boost::boost
   DataStructures
   ErrorHandling
+  GSL::gsl
+  Parallel
   )

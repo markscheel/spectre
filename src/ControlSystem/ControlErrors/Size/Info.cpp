@@ -3,7 +3,23 @@
 
 #include "ControlSystem/ControlErrors/Size/Info.hpp"
 
+#include <pup.h>
+#include <pup_stl.h>
+
+#include "ControlSystem/ControlErrors/Size/State.hpp"
+#include "Parallel/CharmPupable.hpp"
+
 namespace control_system::size {
+
+void Info::pup(PUP::er& p) {
+  p | state;
+  p | damping_time;
+  p | target_char_speed;
+  p | target_drift_velocity;
+  p | suggested_time_scale;
+  p | discontinuous_change_has_occurred;
+}
+
 CrossingTimeInfo::CrossingTimeInfo(
     const double char_speed_crossing_time,
     const double comoving_char_speed_crossing_time,

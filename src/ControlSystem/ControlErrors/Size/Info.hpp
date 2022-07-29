@@ -3,73 +3,25 @@
 
 #pragma once
 
+#include <memory>
 #include <pup.h>
 
+/// \cond
 namespace control_system::size {
+struct State;
+}  // namespace control_system::size
+/// \endcond
 
-/// Labels the different 'state's of size control.
-///
-/// The different states are:
-/// - Initial: drives dr/dt of the excision boundary to
-///   Info::target_drift_velocity.
-/// - AhSpeed: drives the minimum characteristic speed on the excision boundary
-///   to Info::target_char_speed.
-/// - DeltaR: drives the minimum distance between the horizon and the excision
-///   boundary to be constant in time.
-/// - DeltaRDriftInward: Same as DeltaR but the excision boundary has a small
-///   velocity inward.  This state is triggered when it is deemed that the
-///   excision boundary and the horizon are too close to each other; the
-///   small velocity makes the excision boundary and the horizon drift apart.
-/// - DeltaRDriftOutward: Same as DeltaR but the excision boundary has a small
-///   velocity outward.  This state is triggered when it is deemed that the
-///   excision boundary and the horizon are too far apart.
-/// - DeltaRTransition: Same as DeltaR except for the logic that
-///   determines how DeltaRTransition changes to other states.
-///   DeltaRTransition is allowed (under some circumstances) to change
-///   to state DeltaR, but DeltaRDriftOutward and DeltaRDriftInward
-///   are never allowed to change to state DeltaR.  Instead
-///   DeltaRDriftOutward and DeltaRDriftInward are allowed (under
-///   some circumstances) to change to state DeltaRTransition.
-///
-/// The reason that DeltaRDriftInward, DeltaRDriftOutward, and
-/// DeltaRTransition are separate states is to simplify the logic.  In
-/// principle, all 3 of those states could be merged with state
-/// DeltaR, because the control error is the same for all four states
-/// (except for a velocity term that could be set to zero).  But if that
-/// were done, then there would need to be additional complicated
-/// logic in determining transitions between different states, and
-/// that logic would depend not only on the current state, but also on
-/// the previous state.
-enum class Label : size_t {
-  Initial,
-  AhSpeed,
-  DeltaR,
-  DeltaRDriftInward,
-  DeltaRDriftOutward,
-  DeltaRTransition
-};
+namespace control_system::size {
 
 /// Holds information that is saved between calls of SizeControl.
 struct Info {
   // Info needs to be serializable because it will be
   // stored inside of a ControlError.
-  void pup(PUP::er& p) {
-    if(p.isUnpacking()) {
-      size_t state_as_size_t;
-      p | state_as_size_t;
-      state = static_cast<Label>(state_as_size_t);
-    } else {
-      auto state_as_size_t = static_cast<size_t>(state);
-      p | state_as_size_t;
-    }
-    p | damping_time;
-    p | target_char_speed;
-    p | target_drift_velocity;
-    p | suggested_time_scale;
-    p | discontinuous_change_has_occurred;
-  }
+  void pup(PUP::er& p);
 
-  Label state{Label::Initial};
+  /// The current state of size control.
+  std::unique_ptr<State> state;
   /// The current damping time associated with size control.
   double damping_time;
   /// target_char_speed is what the characteristic speed is driven

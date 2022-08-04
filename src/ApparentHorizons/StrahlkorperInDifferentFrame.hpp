@@ -23,8 +23,9 @@ class not_null;
 
 /// \brief Transforms a Strahlkorper from SrcFrame to DestFrame.
 ///
-/// The destination Strahlkorper has the same l_max() and m_max() as the
-/// source Strahlkorper.
+/// The destination Strahlkorper has
+/// l_max() = src_strahlorper.l_max() + dest_increment_l_max, and
+/// m_max() = src_strahlorper.m_max() + dest_increment_m_max.
 ///
 /// Note that because the Blocks inside the Domain allow access to
 /// maps only between a selected subset of frames, we cannot use
@@ -38,4 +39,5 @@ void strahlkorper_in_different_frame(
     const std::unordered_map<
         std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&
         functions_of_time,
-    double time);
+    double time, size_t dest_increment_l_max = 0,
+    size_t dest_increment_m_max = 0);

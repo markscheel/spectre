@@ -29,6 +29,7 @@ void test_strahlkorper_in_different_frame() {
   // nonzero center.
   const std::array<double, 3> strahlkorper_grid_center = {0.03, 0.02, 0.01};
   const size_t l_max = 8;
+  const size_t l_max_increment = 2;
   const Strahlkorper<Frame::Grid> strahlkorper_grid(l_max, 2.0,
                                                     strahlkorper_grid_center);
 
@@ -57,11 +58,11 @@ void test_strahlkorper_in_different_frame() {
   Strahlkorper<Frame::Inertial> strahlkorper_inertial{};
   strahlkorper_in_different_frame(make_not_null(&strahlkorper_inertial),
                                   strahlkorper_grid, domain, functions_of_time,
-                                  time);
+                                  time, l_max_increment, l_max_increment);
 
   // Now compare.
   const Strahlkorper<Frame::Inertial> strahlkorper_expected(
-      l_max, 2.0,
+      l_max + l_max_increment, 2.0,
       {{strahlkorper_grid_center[0] + 0.005, strahlkorper_grid_center[1] + 0.01,
         strahlkorper_grid_center[2] + 0.015}});
   CHECK_ITERABLE_APPROX(strahlkorper_expected.physical_center(),

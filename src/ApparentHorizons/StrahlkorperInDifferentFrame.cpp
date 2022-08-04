@@ -32,7 +32,22 @@ void strahlkorper_in_different_frame(
     const std::unordered_map<
         std::string, std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&
         functions_of_time,
-    const double time) {
+    const double time, const size_t dest_increment_l_max,
+    const size_t dest_increment_m_max) {
+  const size_t dest_l_max = src_strahlkorper.l_max() + dest_increment_l_max;
+  const size_t dest_m_max = src_strahlkorper.m_max() + dest_increment_m_max;
+  if (dest_m_max > dest_l_max) {
+    ERROR("Cannot specify dest_l_max = "
+          << src_strahlkorper.l_max() << " + " << dest_increment_l_max << " = "
+          << dest_l_max << " and dest_m_max = " << src_strahlkorper.m_max()
+          << " + " << dest_increment_m_max << " = " << dest_m_max);
+  }
+
+  const Strahlkorper<SrcFrame>& prolonged_src_strahlkorper =
+      dest_increment_l_max == 0 and dest_increment_m_max == 0
+          ? src_strahlkorper
+          : Strahlkorper<SrcFrame>(dest_l_max, dest_m_max, src_strahlkorper);
+
   // Temporary storage; reduce the number of allocations.
   Variables<
       tmpl::list<::Tags::Tempi<0, 2, ::Frame::Spherical<SrcFrame>>,
@@ -40,7 +55,7 @@ void strahlkorper_in_different_frame(
                  ::Tags::TempI<3, 3, DestFrame>, ::Tags::TempScalar<4>,
                  ::Tags::TempScalar<5>, ::Tags::TempScalar<6>,
                  ::Tags::TempScalar<7>, ::Tags::TempScalar<8>>>
-      temp_buffer(src_strahlkorper.ylm_spherepack().physical_size());
+      temp_buffer(prolonged_src_strahlkorper.ylm_spherepack().physical_size());
   auto& src_theta_phi =
       get<::Tags::Tempi<0, 2, ::Frame::Spherical<SrcFrame>>>(temp_buffer);
   auto& r_hat = get<::Tags::Tempi<1, 3, SrcFrame>>(temp_buffer);
@@ -53,17 +68,18 @@ void strahlkorper_in_different_frame(
   auto& f_bracket_r_max = get<::Tags::TempScalar<8>>(temp_buffer);
 
   StrahlkorperTags::ThetaPhiCompute<SrcFrame>::function(
-      make_not_null(&src_theta_phi), src_strahlkorper);
+      make_not_null(&src_theta_phi), prolonged_src_strahlkorper);
   // r_hat doesn't depend on the actual surface (that is, it is
   // identical for the src and dest surfaces), so we use
-  // src_strahlkorper to compute it because it has a sensible max Ylm l.
+  // prolonged_src_strahlkorper to compute it because it has a sensible max Ylm
+  // l.
   StrahlkorperTags::RhatCompute<SrcFrame>::function(make_not_null(&r_hat),
                                                     src_theta_phi);
   StrahlkorperTags::RadiusCompute<SrcFrame>::function(
-      make_not_null(&src_radius), src_strahlkorper);
+      make_not_null(&src_radius), prolonged_src_strahlkorper);
   StrahlkorperTags::CartesianCoordsCompute<SrcFrame>::function(
-      make_not_null(&src_cartesian_coords), src_strahlkorper, src_radius,
-      r_hat);
+      make_not_null(&src_cartesian_coords), prolonged_src_strahlkorper,
+      src_radius, r_hat);
 
   // We now wish to map src_cartesian_coords to the destination frame.
   // Each Block will have a different map, so the mapping must be done
@@ -123,7 +139,7 @@ void strahlkorper_in_different_frame(
     return center;
   }();
 
-  const auto center_src = src_strahlkorper.expansion_center();
+  const auto center_src = prolonged_src_strahlkorper.expansion_center();
 
   // Find the coordinate radius of the destination surface at each of
   // the angular collocation points of the destination surface. To do
@@ -134,7 +150,7 @@ void strahlkorper_in_different_frame(
   // because it might fail if r_dest is out of range of the map. Below
   // there is another version of the function that returns a double.
   const auto radius_function_for_bracketing =
-      [&r_hat, &center_src, &center_dest, &src_strahlkorper, &domain,
+      [&r_hat, &center_src, &center_dest, &prolonged_src_strahlkorper, &domain,
        &functions_of_time,
        &time](const double r_dest, const size_t s) -> std::optional<double> {
     // Get destination Cartesian coordinates of the point.
@@ -185,7 +201,8 @@ void strahlkorper_in_different_frame(
                                        get<0>(x_src.value()) - center_src[0]);
 
           // Evaluate the radius of the surface at (theta_src,phi_src).
-          const double r_surf_src = src_strahlkorper.radius(theta_src, phi_src);
+          const double r_surf_src =
+              prolonged_src_strahlkorper.radius(theta_src, phi_src);
 
           // If r_surf_src = r_src, then r_dest is on the surface.
           return r_surf_src - r_src;
@@ -203,7 +220,7 @@ void strahlkorper_in_different_frame(
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ > 7 && __GNUC__ < 10
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif   // defined(__GNUC__)&&!defined(__clang__)&&__GNUC__>7&&__GNUC__<10
+#endif  // defined(__GNUC__)&&!defined(__clang__)&&__GNUC__>7&&__GNUC__<10
     return {};
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ > 7 && __GNUC__ < 10
 #pragma GCC diagnostic pop
@@ -259,8 +276,8 @@ void strahlkorper_in_different_frame(
   // Reset the radius and center of the destination strahlkorper.
   // Keep the same l_max() and m_max() as the source strahlkorper.
   *dest_strahlkorper = Strahlkorper<DestFrame>(
-      src_strahlkorper.l_max(), src_strahlkorper.m_max(), radius_at_each_angle,
-      center_dest);
+      prolonged_src_strahlkorper.l_max(), prolonged_src_strahlkorper.m_max(),
+      radius_at_each_angle, center_dest);
 }
 
 #define SRCFRAME(data) BOOST_PP_TUPLE_ELEM(0, data)
@@ -275,7 +292,7 @@ void strahlkorper_in_different_frame(
           std::string,                                                       \
           std::unique_ptr<domain::FunctionsOfTime::FunctionOfTime>>&         \
           functions_of_time,                                                 \
-      const double time);
+      const double time, const size_t dest_l_max, const size_t dest_m_max);
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (::Frame::Grid), (::Frame::Inertial))
 

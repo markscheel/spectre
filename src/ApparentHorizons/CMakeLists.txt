@@ -11,6 +11,7 @@ spectre_target_sources(
   FastFlow.cpp
   ObjectLabel.cpp
   StrahlkorperGr.cpp
+  StrahlkorperCenterFromCoords.cpp
   StrahlkorperInDifferentFrame.cpp
   )
 
@@ -26,6 +27,7 @@ spectre_target_headers(
   ObjectLabel.hpp
   ObserveCenters.hpp
   StrahlkorperGr.hpp
+  StrahlkorperCenterFromCoords.hpp
   StrahlkorperInDifferentFrame.hpp
   Tags.hpp
   TagsDeclarations.hpp

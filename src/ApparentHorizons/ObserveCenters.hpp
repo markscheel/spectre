@@ -85,12 +85,14 @@ struct ObserveCenters {
     std::array<double, 3> inertial_center =
         make_array<3>(std::numeric_limits<double>::signaling_NaN());
     auto integrand = make_with_value<Scalar<DataVector>>(get(area_element), 0.);
+    const double denominator = grid_horizon.ylm_spherepack().definite_integral(
+        get(area_element).data());
     for (size_t i = 0; i < 3; ++i) {
       get(integrand) = get(area_element) * inertial_coords.get(i);
       gsl::at(inertial_center, i) =
           grid_horizon.ylm_spherepack().definite_integral(
               get(integrand).data()) /
-          (4.0 * M_PI);
+          denominator;
     }
 
     // time, grid_x, grid_y, grid_z, inertial_x, inertial_y, inertial_z

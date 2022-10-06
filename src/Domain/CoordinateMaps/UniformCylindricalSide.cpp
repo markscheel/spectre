@@ -100,26 +100,22 @@ UniformCylindricalSide::UniformCylindricalSide(
       cos_theta_max_one > cos(M_PI * 0.85),
       "z_plane_minus_one is too far from the center of sphere_one: cos(theta) "
       "= " << cos_theta_max_one);
-  ASSERT(
-      cos_theta_min_two > cos(M_PI * 0.4),
-      "z_plane_plus_two is too close to the center of sphere_two: cos(theta) = "
-          << cos_theta_min_two);
-  ASSERT(
-      cos_theta_max_two < cos(M_PI * 0.6),
-      "z_plane_minus_two is too close to the center of sphere_two: cos(theta) "
-      "= " << cos_theta_min_two);
-  ASSERT(
-      cos_theta_min_two < (z_plane_plus_two == z_plane_plus_one
-                               ? cos(M_PI * 0.25)
-                               : cos(M_PI * 0.15)),
-      "z_plane_plus_two is too far from the center of sphere_two: cos(theta) = "
-          << cos_theta_min_two);
-  ASSERT(
-      cos_theta_max_two > (z_plane_minus_two == z_plane_minus_one
-                               ? cos(M_PI * 0.75)
-                               : cos(M_PI * 0.85)),
-      "z_plane_minus_two is too far from the center of sphere_two: cos(theta) "
-      "= " << cos_theta_max_two);
+  ASSERT(cos_theta_min_two > (z_plane_plus_one_ == z_plane_plus_two_
+                                  ? cos(M_PI * 0.75)
+                                  : cos(M_PI * 0.4)),
+         "z_plane_plus_two is too close to the south pole: theta/pi="
+             << acos(cos_theta_min_two) / M_PI);
+  ASSERT(cos_theta_max_two < (z_plane_minus_one_ == z_plane_minus_two_
+                                  ? cos(M_PI * 0.25)
+                                  : cos(M_PI * 0.6)),
+         "z_plane_minus_two is too close to the north pole: theta/pi="
+             << acos(cos_theta_max_two) / M_PI);
+  ASSERT(cos_theta_min_two < cos(M_PI * 0.15),
+         "z_plane_plus_two is too close to the north pole: theta_min_two/pi="
+             << acos(cos_theta_min_two) / M_PI);
+  ASSERT(cos_theta_max_two > cos(M_PI * 0.85),
+         "z_plane_minus_two is too close to the south pole: theta_max_two/pi="
+             << acos(cos_theta_max_two) / M_PI);
 
   const double dist_spheres = sqrt(square(center_one[0] - center_two[0]) +
                                    square(center_one[1] - center_two[1]) +
@@ -138,18 +134,45 @@ UniformCylindricalSide::UniformCylindricalSide(
       sqrt(square(center_one[0] - center_two[0]) +
            square(center_one[1] - center_two[1]));
 
-  ASSERT(center_one[2] - radius_one <= center_two[2] + 0.2 * radius_two and
-             center_one[2] + radius_one >= center_two[2] - 0.2 * radius_two,
-         "The map has been tested only for the case when "
-         "sphere_one is not a tiny thing at the top or bottom of sphere_two. "
-         " Radius_one = "
-             << radius_one << ", radius_two = " << radius_two
-             << " center_one[2] = " << center_one[2]
-             << " center_two[2] = " << center_two[2]);
+  if (z_plane_plus_two != z_plane_plus_one and
+      z_plane_minus_two != z_plane_minus_one) {
+    ASSERT(center_one[2] - radius_one <= center_two[2] + 0.2 * radius_two and
+               center_one[2] + radius_one >= center_two[2] - 0.2 * radius_two,
+           "The map has been tested only for the case when "
+           "sphere_one is not a tiny thing at the top or bottom of sphere_two. "
+           " Radius_one = "
+               << radius_one << ", radius_two = " << radius_two
+               << " center_one[2] = " << center_one[2]
+               << " center_two[2] = " << center_two[2]);
+  }
 
-  ASSERT(horizontal_dist_spheres <= radius_one,
+  if (z_plane_plus_two == z_plane_plus_one) {
+    ASSERT(z_plane_minus_two <= z_plane_plus_two - 0.18 * radius_two,
+           "The map has been tested only if the sphere_two planes are far "
+           "enough apart. z_plane_plus_two="
+               << z_plane_plus_two << " z_plane_minus_two=" << z_plane_minus_two
+               << " radius_two=" << radius_two);
+  }
+
+  if (z_plane_minus_two == z_plane_minus_one) {
+    ASSERT(z_plane_plus_two >= z_plane_minus_two + 0.18 * radius_two,
+           "The map has been tested only if the sphere_two planes are far "
+           "enough apart. z_plane_plus_two="
+               << z_plane_plus_two << " z_plane_minus_two=" << z_plane_minus_two
+               << " radius_two=" << radius_two);
+  }
+
+  ASSERT(horizontal_dist_spheres <=
+             (z_plane_plus_two == z_plane_plus_one or
+                      z_plane_minus_two == z_plane_minus_one
+                  ? 0.0
+                  : std::min(radius_one,
+                             std::max(0.0, 0.95 * radius_two - radius_one))),
          "The map has been tested only for the case when "
-         "sphere_one intersects the polar axis of sphere_two. "
+         "sphere_one intersects the polar axis of sphere_two and is not "
+         "too far from the edge of sphere_two (or in the "
+         "case of equal plus or minus z_planes, when the two spheres have the "
+         "same x and y centers."
          " Radius_one = "
              << radius_one << ", radius_two = " << radius_two
              << ", dist_spheres = " << dist_spheres

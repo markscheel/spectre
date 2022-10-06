@@ -493,28 +493,43 @@ namespace domain::CoordinateMaps {
  * \f{align}
  * \sqrt{(C^0_1-C^0_2)^2 + (C^1_1-C^1_2)^2} &\leq R_1.
  * \f}
+ * and we demand that Sphere 1 is not too close to the edge of Sphere 2
+ * in the \f$x\f$ or \f$y\f$ directions:
+ * \f{align}
+ * \sqrt{(C^0_1-C^0_2)^2 + (C^1_1-C^1_2)^2} &\leq \mathrm{max}(0,0.95 R_2-R_1),
+ * \f}
+ * where the max occurs because sometimes \f$0.95 R_2-R_1\f$ might be negative.
  *
  * We also demand that either
  * \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$
  * or that \f$z^+_{\mathrm{P}1} <= z^+_{\mathrm{P}2} -0.03 R_1\f$.
  * Similarly, we demand that either \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$
  * or \f$z^-_{\mathrm{P}1} >= z^-_{\mathrm{P}2} + 0.03 R_1\f$.
+ * If \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ or
+ * \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand that
+ * \f$C_1^0=C_2^0\f$ and \f$C_1^1=C_2^1\f$.
  * These restrictions follow expected use cases and avoid distorted maps.
  *
  * We require that the z planes in the above figures lie above/below
  * the centers of the corresponding spheres and are not too close to
- * the centers or edges of those spheres; specificially, we demand
+ * the centers or edges of those spheres, except in the case where
+ * \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ or
+ * \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$; specificially, we demand
  * that
  * - \f$ 0.15\pi < \theta_{2 \mathrm{min}} < 0.4\pi\f$
  *  (for \f$z^+_{\mathrm{P}1} \neq z^+_{\mathrm{P}2}\f$)
- * - \f$ 0.25\pi < \theta_{2 \mathrm{min}} < 0.4\pi\f$
+ * - \f$ 0.15\pi < \theta_{2 \mathrm{min}} < 0.75\pi\f$
  *  (for \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$)
  * - \f$ 0.15\pi < \theta_{1 \mathrm{min}} < 0.4\pi\f$
  * - \f$ 0.6\pi < \theta_{2 \mathrm{max}} < 0.85\pi\f$
  *  (for \f$z^-_{\mathrm{P}1} \neq z^-_{\mathrm{P}2}\f$)
- * - \f$ 0.6\pi < \theta_{2 \mathrm{max}} < 0.75\pi\f$
+ * - \f$ 0.25\pi < \theta_{2 \mathrm{max}} < 0.85\pi\f$
  *  (for \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$)
  * - \f$ 0.6\pi < \theta_{1 \mathrm{max}} < 0.85\pi\f$
+ * For  \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ we also demand that
+ * \f$z^-_{\mathrm{P}2} \leq z^+_{\mathrm{P}2} - 0.18 R_2\f$, and similarly
+ * for \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand that
+ * \f$z^+_{\mathrm{P}2} \geq z^-_{\mathrm{P}2} + 0.18 R_2\f$.
  *
  * Here the numerical values are safety factors.
  * These restrictions are not strictly necessary but are made for simplicity.

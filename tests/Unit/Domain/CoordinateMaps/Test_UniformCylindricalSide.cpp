@@ -16,11 +16,148 @@ namespace domain {
 
 namespace {
 
-void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
-                                   const bool lower_planes_are_equal = false) {
-  if(upper_planes_are_equal and lower_planes_are_equal) {
-    ERROR("Map untested if both upper and lower planes are equal");
+void test_uniform_cylindrical_side_planes_equal(
+    const bool flip_z_axis = false) {
+  INFO("UniformCylindricalSidePlanesEqual");
+
+  // Set up random number generator
+  MAKE_GENERATOR(gen);
+  std::uniform_real_distribution<> unit_dis(0.0, 1.0);
+  std::uniform_real_distribution<> interval_dis(-1.0, 1.0);
+  std::uniform_real_distribution<> angle_dis(0.0, 2.0 * M_PI);
+
+  // Choose some random center for sphere_two
+  const std::array<double, 3> center_two = {
+      interval_dis(gen), interval_dis(gen), interval_dis(gen)};
+  CAPTURE(center_two);
+
+  // Choose a random radius of sphere_two, reasonably large.
+  const double radius_two = 6.0 * (unit_dis(gen) + 1.0);
+  CAPTURE(radius_two);
+
+  // Choose an angle for the positive z-plane
+  const double min_angle_shared = 0.15;
+  const double max_angle_shared = 0.75;
+  const double z_plane_plus_two =
+      center_two[2] +
+      cos((min_angle_shared +
+           (max_angle_shared - min_angle_shared) * unit_dis(gen)) *
+          M_PI) *
+          radius_two;
+  const double z_plane_plus_one = z_plane_plus_two;
+  CAPTURE(z_plane_plus_two);
+  CAPTURE(z_plane_plus_one);
+
+  // Choose an angle for the negative z-plane for sphere 2
+  // Note that min_angle_two must be < 1-max_angle_shared
+  // (otherwise we cannot fit a sphere_one)
+  // max_angle_two comes from the requirement that
+  // z_plane_minus_two < z_plane_plus_two - 0.18 radius_two.
+  const double min_angle_two = 0.15;
+  const double max_angle_two =
+      center_two[2] < z_plane_plus_two
+          ? 0.4
+          : std::min(0.4, acos((center_two[2] - z_plane_plus_two) / radius_two +
+                               0.18) /
+                              M_PI);
+  CHECK(min_angle_two < max_angle_two);
+
+  const double z_plane_minus_two =
+      center_two[2] -
+      cos((min_angle_two + (max_angle_two - min_angle_two) * unit_dis(gen)) *
+          M_PI) *
+          radius_two;
+  CAPTURE(z_plane_minus_two);
+
+  // Choose z_plane_frac_minus_one=(z_plane_minus_one-center_one[2])/radius_one
+  // (note that this quantity is < 0).
+  const double min_angle = 0.15;
+  const double max_angle = 0.4;
+  const double z_plane_frac_minus_one =
+      -cos((min_angle + (max_angle - min_angle) * unit_dis(gen)) * M_PI);
+
+  // Choose z_plane_frac_plus_one=(z_plane_plus_one-center_one[2])/radius_one
+  const double z_plane_frac_plus_one =
+      cos((min_angle + (max_angle - min_angle) * unit_dis(gen)) * M_PI);
+
+  // Choose radius of sphere_one.
+  const double radius_one = [&z_plane_frac_plus_one, &z_plane_frac_minus_one,
+                             &radius_two, &center_two, &z_plane_plus_one,
+                             &z_plane_minus_two, &unit_dis, &gen]() {
+    // max_radius_one_planes is determined by the condition
+    // z_plane_minus_one >= z_plane_minus_two + 0.03 * radius_two
+    // The expression below is derived by
+    // evaluating z_plane_minus_one using the formula for
+    // z_plane_frac_minus_one, and eliminating center_one[2] using the formula
+    // for z_plane_frac_plus_one.
+    const double max_radius_one_planes =
+        (z_plane_plus_one - z_plane_minus_two - 0.03 * radius_two) /
+        (z_plane_frac_plus_one - z_plane_frac_minus_one);
+
+    // max_radius_one_fit is determined by the condition that
+    // 0.98 radius_two >= radius_one + |C_1-C_2|,
+    // eliminating center_one[2] using the formula
+    // for z_plane_frac_plus_one.
+    const double max_radius_one_fit =
+        std::min((0.98 * radius_two - center_two[2] + z_plane_plus_one) /
+                     (1.0 + z_plane_frac_plus_one),
+                 (0.98 * radius_two + center_two[2] - z_plane_plus_one) /
+                     (1.0 - z_plane_frac_plus_one));
+
+    // Compute the minimum allowed value of the angle alpha_minus.
+    // (these quantities are measured from zero; note the minus signs)
+    const double theta_max_minus_one = acos(-z_plane_frac_minus_one);
+    const double theta_max_minus_two =
+        acos(-(z_plane_minus_two - center_two[2]) / radius_two);
+    const double min_alpha_minus = 1.1 * theta_max_minus_one;
+    // max_radius_one_from_alpha comes from the restriction
+    // that alpha > min_alpha_minus
+    // and the expression for z_plane_frac_plus_one (used to eliminate
+    // center_one[2]) and the expression for z_plane_frac_minus_one.
+    const double max_radius_one_from_alpha =
+        (z_plane_plus_one - z_plane_minus_two +
+         radius_two * tan(min_alpha_minus) * sin(theta_max_minus_two)) /
+        (tan(min_alpha_minus) * sin(theta_max_minus_one) +
+         z_plane_frac_plus_one - z_plane_frac_minus_one);
+    const double max_radius_one = std::min(
+        {max_radius_one_planes, max_radius_one_fit, max_radius_one_from_alpha});
+    const double min_radius_one = 0.08 * radius_two;
+    CHECK(max_radius_one >= min_radius_one);
+    return min_radius_one + unit_dis(gen) * (max_radius_one - min_radius_one);
+  }();
+  CAPTURE(radius_one);
+
+  const std::array<double, 3> center_one = {
+      center_two[0], center_two[1],
+      z_plane_plus_two - z_plane_frac_plus_one * radius_one};
+  CAPTURE(center_one);
+
+  const double z_plane_minus_one =
+      center_one[2] + radius_one * z_plane_frac_minus_one;
+  CAPTURE(z_plane_minus_one);
+
+  if (flip_z_axis) {
+    // Here we test the map with z_plane_minus_one equal to
+    // z_plane_minus_two.  We do this by simply flipping the map
+    // parameters about the z axis (and exchanging parameters named
+    // plus and minus).  This way we don't need to rewrite the entire
+    // test for z_plane_minus_one==z_plane_minus_two.
+    const CoordinateMaps::UniformCylindricalSide map(
+        {{center_one[0], center_one[1], -center_one[2]}},
+        {{center_two[0], center_two[1], -center_two[2]}},
+        radius_one,
+        radius_two, -z_plane_minus_one, -z_plane_plus_one, -z_plane_minus_two,
+        -z_plane_plus_two);
+    test_suite_for_map_on_cylinder(map, 1.0, 2.0, true, true);
+  } else {
+    const CoordinateMaps::UniformCylindricalSide map(
+        center_one, center_two, radius_one, radius_two, z_plane_plus_one,
+        z_plane_minus_one, z_plane_plus_two, z_plane_minus_two);
+    test_suite_for_map_on_cylinder(map, 1.0, 2.0, true, true);
   }
+}
+
+void test_uniform_cylindrical_side() {
   INFO("UniformCylindricalSide");
 
   // Set up random number generator
@@ -46,35 +183,19 @@ void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
   // Make sure z_plane_plus_two intersects sphere_two on the +z side of the
   // center. We don't allow the plane to be too close to the center or
   // too close to the edge.
-  const double z_plane_plus_two = [&max_angle, &min_angle, &radius_two,
-                                   &center_two, &upper_planes_are_equal,
-                                   &unit_dis, &gen]() {
-    // If the planes are equal, relax the min angle to make sure that sphere_one
-    // fits inside sphere_two
-    const double new_min_angle =
-        upper_planes_are_equal ? min_angle + 0.1 : min_angle;
-    return center_two[2] +
-           cos((new_min_angle + (max_angle - new_min_angle) * unit_dis(gen)) *
-               M_PI) *
-               radius_two;
-  }();
+  const double z_plane_plus_two =
+      center_two[2] +
+      cos((min_angle + (max_angle - min_angle) * unit_dis(gen)) * M_PI) *
+          radius_two;
   CAPTURE(z_plane_plus_two);
 
   // Make sure z_plane_minus_two intersects sphere_two on the -z side of the
   // center. We don't allow the plane to be too close to the center or
   // too close to the edge.
-  const double z_plane_minus_two = [&max_angle, &min_angle, &radius_two,
-                                    &center_two, &lower_planes_are_equal,
-                                    &unit_dis, &gen]() {
-    // If the planes are equal, relax the min angle to make sure that sphere_one
-    // fits inside sphere_two
-    const double new_min_angle =
-        lower_planes_are_equal ? min_angle + 0.1 : min_angle;
-    return center_two[2] -
-           cos((new_min_angle + (max_angle - new_min_angle) * unit_dis(gen)) *
-               M_PI) *
-               radius_two;
-  }();
+  const double z_plane_minus_two =
+      center_two[2] -
+      cos((min_angle + (max_angle - min_angle) * unit_dis(gen)) * M_PI) *
+          radius_two;
   CAPTURE(z_plane_minus_two);
 
   // Choose z_plane_frac_plus_one=(z_plane_plus_one-center_one[2])/radius_one
@@ -109,10 +230,9 @@ void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
                              &theta_max_plus_one, &theta_max_plus_two,
                              &z_plane_frac_minus_one, &z_plane_minus_two,
                              &min_alpha_minus, &theta_max_minus_one,
-                             &theta_max_minus_two, &upper_planes_are_equal,
-                             &lower_planes_are_equal, &unit_dis, &gen]() {
-    const double z_upper_separation = upper_planes_are_equal ? 0.0 : 0.03;
-    const double z_lower_separation = lower_planes_are_equal ? 0.0 : 0.03;
+                             &theta_max_minus_two, &unit_dis, &gen]() {
+    const double z_upper_separation = 0.03;
+    const double z_lower_separation = 0.03;
     // max_radius_one_to_fit_inside_sphere_two_plus is the largest that
     // radius_one can be and still satisfy both
     // 0.98 radius_two >= radius_one + |C_1-C_2| and
@@ -196,71 +316,8 @@ void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
         {0.98 * radius_two, 0.99 * max_radius_one_to_fit_inside_sphere_two,
          max_radius_one_to_fit_between_plane_twos,
          max_radius_one_for_alpha_minus, max_radius_one_for_alpha_plus});
-
     double min_radius_one = 0.08 * radius_two;
 
-    // We also have restrictions that
-    // C^z_1 < C^z_2 + r_1 + r_2/5
-    // C^z_1 > C^z_2 - r_1 - r_2/5
-    // which are guaranteed by the choice of center_one_z in the next
-    // lambda.  But the next lambda is bypassed if
-    // upper_planes_are_equal or if lower_planes_are_equal.  So we
-    // need to enforce these restrictions here by placing a minimum
-    // value on r_1.
-    // These restrictions are equivalent to
-    // r_1 > |C^z_1 - C^z_2| - r_2/5
-    //
-    // Similarly we have the restriction that
-    // r_1 < 0.98 r_2 - |C^z_2 -C^z_1|
-    // which is usually enforced elsewhere, but if
-    // upper_planes_are_equal or if lower_planes_are_equal, we need to
-    // enforce it here because C^z_1 is already determined by r_1.
-    if (upper_planes_are_equal) {
-      // Here C^z_1 = z_plane_plus_two - z_plane_frac_plus_one r_1
-      // so
-      // r_1 > z_plane_plus_two - z_plane_frac_plus_one r_1 - C^z_2 - r_2/5
-      // and
-      // r_1 > -z_plane_plus_two + z_plane_frac_plus_one r_1 + C^z_2 - r_2/5
-      min_radius_one =
-          std::max({min_radius_one,
-                    (z_plane_plus_two - center_two[2] - 0.2 * radius_two) /
-                        (1.0 + z_plane_frac_plus_one),
-                    (-z_plane_plus_two + center_two[2] - 0.2 * radius_two) /
-                        (1.0 - z_plane_frac_plus_one)});
-      // So also
-      // r_1 < z_plane_plus_two - z_plane_frac_plus_one r_1 - C^z_2 + 0.98 r_2
-      // and
-      // r_1 < -z_plane_plus_two + z_plane_frac_plus_one r_1 + C^z_2 + 0.98
-      // r_2
-      max_radius_one =
-          std::min({max_radius_one,
-                    (z_plane_plus_two - center_two[2] + 0.98 * radius_two) /
-                        (1.0 + z_plane_frac_plus_one),
-                    (-z_plane_plus_two + center_two[2] + 0.98 * radius_two) /
-                        (1.0 - z_plane_frac_plus_one)});
-    } else if (lower_planes_are_equal) {
-      // Here C^z_1 = z_plane_minus_two - z_plane_frac_minus_one r_1
-      // so
-      // r_1 > z_plane_minus_two - z_plane_frac_minus_one r_1 - C^z_2 - r_2/5
-      // and
-      // r_1 > -z_plane_minus_two + z_plane_frac_minus_one r_1 + C^z_2 - r_2/5
-      min_radius_one =
-          std::max({min_radius_one,
-                    (z_plane_minus_two - center_two[2] - 0.2 * radius_two) /
-                        (1.0 + z_plane_frac_minus_one),
-                    (-z_plane_minus_two + center_two[2] - 0.2 * radius_two) /
-                        (1.0 - z_plane_frac_minus_one)});
-      // So also
-      // r_1 < z_plane_minus_two - z_plane_frac_minus_one r_1 - C^z_2 + 0.98
-      // r_2 and r_1 <-z_plane_minus_two + z_plane_frac_minus_one r_1 + C^z_2
-      // + 0.98 r_2
-      max_radius_one =
-          std::min({max_radius_one,
-                    (z_plane_minus_two - center_two[2] + 0.98 * radius_two) /
-                        (1.0 + z_plane_frac_minus_one),
-                    (-z_plane_minus_two + center_two[2] + 0.98 * radius_two) /
-                        (1.0 - z_plane_frac_minus_one)});
-    }
     CHECK(max_radius_one >= min_radius_one);
     return min_radius_one + unit_dis(gen) * (max_radius_one - min_radius_one);
   }();
@@ -273,13 +330,7 @@ void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
                                &theta_max_plus_two, &z_plane_frac_minus_one,
                                &z_plane_minus_two, &min_alpha_minus,
                                &theta_max_minus_one, &theta_max_minus_two,
-                               &upper_planes_are_equal, &lower_planes_are_equal,
                                &unit_dis, &gen]() {
-    if (upper_planes_are_equal) {
-      return z_plane_plus_two - z_plane_frac_plus_one * radius_one;
-    } else if (lower_planes_are_equal) {
-      return z_plane_minus_two - z_plane_frac_minus_one * radius_one;
-    }
     const double max_center_one_z_from_alpha_plus =
         (tan(min_alpha_plus) <= 0.0 or radius_one * sin(theta_max_plus_one) <=
                                            radius_two * sin(theta_max_plus_two))
@@ -336,14 +387,10 @@ void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
   // upper and lower planes are equal, put in exact value so there is
   // no roundoff.
   const double z_plane_plus_one =
-      upper_planes_are_equal
-          ? z_plane_plus_two
-          : center_one_z + radius_one * z_plane_frac_plus_one;
+      center_one_z + radius_one * z_plane_frac_plus_one;
   CAPTURE(z_plane_plus_one);
   const double z_plane_minus_one =
-      lower_planes_are_equal
-          ? z_plane_minus_two
-          : center_one_z + radius_one * z_plane_frac_minus_one;
+      center_one_z + radius_one * z_plane_frac_minus_one;
   CAPTURE(z_plane_minus_one);
 
   // Only thing remaining are the x and y centers of sphere_one.
@@ -366,6 +413,11 @@ void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
         // So demand that at least some of sphere_one lies along the polar
         // axis of sphere_two.
         const double max_rho_sphere2 = radius_one;
+
+        // We demand that the edge of sphere 1 is not too close to the
+        // edge of sphere 2.  But don't let max_rho_sphere3 be negative.
+        const double max_rho_sphere3 =
+            std::max(0.0, radius_two * 0.95 - radius_one);
 
         // Alpha always gets smaller when rho gets larger (for other
         // quantities fixed). So if alpha < min_alpha even when rho=0, then
@@ -401,8 +453,9 @@ void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
             radius_one * sin(theta_max_minus_one) +
             radius_two * sin(theta_max_minus_two);
         const double max_rho =
-            std::min({max_rho_sphere, max_rho_sphere2, max_rho_alpha_plus,
-                      max_rho_alpha_minus});
+            std::min({max_rho_sphere, max_rho_sphere2, max_rho_sphere3,
+                      max_rho_alpha_plus, max_rho_alpha_minus});
+        CHECK(max_rho >= 0.0);
         return unit_dis(gen) * max_rho;
       }();
 
@@ -442,23 +495,23 @@ void test_uniform_cylindrical_side(const bool upper_planes_are_equal = false,
         {{center_two[0],
           center_two[1] + radius_two * sin(theta_max_plus_two) * 0.98,
           z_plane_plus_two - (z_plane_plus_two - center_two[2]) * 1.e-5}}));
-    }
-
-    // Point inside the southern cone
-    if (z_plane_minus_two != z_plane_minus_one) {
-      CHECK_FALSE(map.inverse(
-          {{center_two[0],
-            center_two[1] + radius_two * sin(theta_max_minus_two) * 0.98,
-            z_plane_minus_two + (center_two[2] - z_plane_minus_two) * 1.e-5}}));
-    }
   }
+
+  // Point inside the southern cone
+  if (z_plane_minus_two != z_plane_minus_one) {
+    CHECK_FALSE(map.inverse(
+        {{center_two[0],
+          center_two[1] + radius_two * sin(theta_max_minus_two) * 0.98,
+          z_plane_minus_two + (center_two[2] - z_plane_minus_two) * 1.e-5}}));
+  }
+}
 }  // namespace
 
 SPECTRE_TEST_CASE("Unit.Domain.CoordinateMaps.UniformCylindricalSide",
                   "[Domain][Unit]") {
   test_uniform_cylindrical_side();
-  test_uniform_cylindrical_side(true, false);
-  test_uniform_cylindrical_side(false, true);
+  test_uniform_cylindrical_side_planes_equal(false);
+  test_uniform_cylindrical_side_planes_equal(true);
   CHECK(not CoordinateMaps::UniformCylindricalSide{}.is_identity());
 }
 }  // namespace domain

@@ -90,7 +90,7 @@ namespace domain::CoordinateMaps {
  *
  * UniformCylindricalSide provides the following functions:
  *
- * ### operator()
+ * ## operator()
  *
  * `operator()` maps \f$(\bar{x},\bar{y},\bar{z})\f$ to \f$(x,y,z)\f$
  * according to
@@ -153,7 +153,7 @@ namespace domain::CoordinateMaps {
  *             \frac{\bar{z}+1}{2}\label{eq:deftheta2alt}\\
  * \f}
  *
- * ### inverse
+ * ## inverse
  *
  * Given \f$(x,y,z)\f$ we want to find \f$(\bar{x},\bar{y},\bar{z})\f$.
  * From Eqs. (\f$\ref{eq:x2}\f$), (\f$\ref{eq:deftheta1alt}\f$), and
@@ -207,7 +207,7 @@ namespace domain::CoordinateMaps {
  *   \bar{y} &= \bar{\rho}\bar{R}\sin\phi.
  * \f}
  *
- * #### Considerations when root-finding.
+ * ### Considerations when root-finding.
  *
  * We solve \f$Q(\lambda)=0\f$ numerically for \f$\lambda\f$,
  * where \f$Q(\lambda)\f$ is given by Eq. (\f$\ref{eq:defQ}\f$).
@@ -293,14 +293,14 @@ namespace domain::CoordinateMaps {
  * A root within roundoff of \f$\lambda_{\mathrm{max}}\f$ is treated
  * similarly.
  *
- * ##### Special cases:
+ * #### Special cases:
  *
  * For some points on the boundary of the mapped domain,
  * \f$\lambda_{\mathrm{min}}\f$ will be within roundoff of
  * \f$\lambda=1\f$. We check explicitly for this case, and we
  * compute the root as exactly \f$\lambda=1\f$.
  *
- * #### Quick rejection of points out of range of the map.
+ * ### Quick rejection of points out of range of the map.
  *
  * It is expected that `inverse()` will often be passed points
  * \f$(x,y,z)\f$ that are out of the range of the map; in this case
@@ -378,7 +378,7 @@ namespace domain::CoordinateMaps {
  * \f$z > z^{-}_{\mathrm{P}1}\f$ checking the cone criterion
  * does not make sense.
  *
- * ### jacobian
+ * ## jacobian
  *
  * From Eqs. (\f$\ref{eq:deftheta1alt}\f$) and (\f$\ref{eq:deftheta2alt}\f$)
  * we see that \f$\theta_1\f$ and \f$\theta_2\f$ depend on \f$\bar{z}\f$ and
@@ -468,12 +468,12 @@ namespace domain::CoordinateMaps {
  * \frac{1}{2}\lambda(z^{+}_{\mathrm{P}2}-z^{-}_{\mathrm{P}2}).
  * \f}
  *
- * ### inv_jacobian
+ * ## inv_jacobian
  *
  * The inverse Jacobian is computed by numerically inverting the
  * Jacobian.
  *
- * ### Restrictions on map parameters
+ * ## Restrictions on map parameters
  *
  * We demand that Sphere 1 is fully contained inside Sphere 2, and
  * that the two spheres have at least some small separation between
@@ -487,62 +487,6 @@ namespace domain::CoordinateMaps {
  *
  * We also demand that \f$R_1>0.08 R_2\f$.  Again, this assumption
  * is made for accuracy purposes and might be relaxed.
- *
- * We don't want a tiny Sphere 1 near the edge of Sphere 2, so we
- * demand that
- * \f{align}
- *  C^z_1 - R_1 &\leq C^z_2 + R_2/5,\\
- *  C^z_1 + R_1 &\geq C^z_2 - R_2/5.
- * \f}
- * We also demand that the polar axis of Sphere 2 intersects Sphere 1
- * somewhere:
- * \f{align}
- * \sqrt{(C^0_1-C^0_2)^2 + (C^1_1-C^1_2)^2} &\leq R_1.
- * \f}
- * and we demand that Sphere 1 is not too close to the edge of Sphere 2
- * in the \f$x\f$ or \f$y\f$ directions:
- * \f{align}
- * \sqrt{(C^0_1-C^0_2)^2 + (C^1_1-C^1_2)^2} &\leq \mathrm{max}(0,0.95 R_2-R_1),
- * \f}
- * where the max occurs because sometimes \f$0.95 R_2-R_1\f$ might be negative.
- *
- * We also demand that either
- * \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$
- * or that \f$z^+_{\mathrm{P}1} <= z^+_{\mathrm{P}2} -0.03 R_1\f$.
- * Similarly, we demand that either \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$
- * or \f$z^-_{\mathrm{P}1} >= z^-_{\mathrm{P}2} + 0.03 R_1\f$.
- * If \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ or
- * \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand that
- * \f$C_1^x=C_2^x\f$ and \f$C_1^y=C_2^y\f$.
- * These restrictions follow expected use cases and avoid distorted maps.
- *
- * We require that the z planes in the above figures lie above/below
- * the centers of the corresponding spheres and are not too close to
- * the centers or edges of those spheres, except in the case where
- * \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ or
- * \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$; specificially, we demand
- * that
- * - \f$ 0.15\pi < \theta_{2 \mathrm{min}} < 0.4\pi\f$
- *  (for \f$z^+_{\mathrm{P}1} \neq z^+_{\mathrm{P}2}\f$)
- * - \f$ 0.15\pi < \theta_{2 \mathrm{min}} < 0.75\pi\f$
- *  (for \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$)
- * - \f$ 0.15\pi < \theta_{1 \mathrm{min}} < 0.4\pi\f$
- * - \f$ 0.6\pi < \theta_{2 \mathrm{max}} < 0.85\pi\f$
- *  (for \f$z^-_{\mathrm{P}1} \neq z^-_{\mathrm{P}2}\f$)
- * - \f$ 0.25\pi < \theta_{2 \mathrm{max}} < 0.85\pi\f$
- *  (for \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$)
- * - \f$ 0.6\pi < \theta_{1 \mathrm{max}} < 0.85\pi\f$
- * For  \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ we also demand that
- * \f$z^-_{\mathrm{P}2} \leq z^+_{\mathrm{P}2} - 0.18 R_2\f$, and similarly
- * for \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand that
- * \f$z^+_{\mathrm{P}2} \geq z^-_{\mathrm{P}2} + 0.18 R_2\f$.
- *
- * Here the numerical values are safety factors.
- * These restrictions are not strictly necessary but are made for simplicity.
- * Increasing the range will make the maps less accurate because the domain
- * is more distorted. These parameters
- * can be changed provided the unit tests are changed to test the
- * appropriate parameter ranges.
  *
  * Consider the line segment \f$L^+_1\f$ that connects a point on the
  * circle \f$S^+_1\f$ (the circle formed by the intersection of sphere 1
@@ -569,6 +513,81 @@ namespace domain::CoordinateMaps {
  *
  * Similarly, one can define an angle \f$\alpha^-\f$ for the region
  * near the south pole, and we require similar restrictions on that angle.
+ *
+ * We also demand that either
+ * \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$
+ * or that \f$z^+_{\mathrm{P}1} <= z^+_{\mathrm{P}2} -0.03 R_1\f$.
+ * Similarly, we demand that either \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$
+ * or \f$z^-_{\mathrm{P}1} >= z^-_{\mathrm{P}2} + 0.03 R_1\f$.
+ * These restrictions follow expected use cases and avoid extreme distortions.
+ *
+ * ### Unequal z planes
+ * For \f$z^+_{\mathrm{P}1} \neq z^+_{\mathrm{P}2}\f$ and
+ * \f$z^-_{\mathrm{P}1} \neq z^-_{\mathrm{P}2}\f$, we assume the following
+ * restrictions on other parameters:
+ *
+ * We prohibit a tiny Sphere 1 near the edge of Sphere 2 by demanding that
+ * \f{align}
+ *  C^z_1 - R_1 &\leq C^z_2 + R_2/5,\\
+ *  C^z_1 + R_1 &\geq C^z_2 - R_2/5.
+ * \f}
+ * We also demand that the polar axis of Sphere 2 intersects Sphere 1
+ * somewhere:
+ * \f{align}
+ * \sqrt{(C^0_1-C^0_2)^2 + (C^1_1-C^1_2)^2} &\leq R_1.
+ * \f}
+ * and we demand that Sphere 1 is not too close to the edge of Sphere 2
+ * in the \f$x\f$ or \f$y\f$ directions:
+ * \f{align}
+ * \sqrt{(C^0_1-C^0_2)^2 + (C^1_1-C^1_2)^2} &\leq \mathrm{max}(0,0.95 R_2-R_1),
+ * \f}
+ * where the max avoids problems when \f$0.95 R_2-R_1\f$ is negative.
+ *
+ * We require that the z planes in the above figures lie above/below
+ * the centers of the corresponding spheres and are not too close to
+ * the centers or edges of those spheres; specificially, we demand
+ * that
+ * \f{align}
+ *   \label{eq:theta_1_min_res}
+ *   0.15\pi &< \theta_{1 \mathrm{min}} < 0.4\pi \\
+ *   \label{eq:theta_1_max_res}
+ *   0.6\pi &< \theta_{1 \mathrm{max}} < 0.85\pi \\
+ *   \label{eq:theta_2_min_res}
+ *   0.15\pi &< \theta_{2 \mathrm{min}} < 0.4\pi \\
+ *   \label{eq:theta_2_max_res}
+ *   0.6\pi &< \theta_{2 \mathrm{max}} < 0.85\pi .
+ * \f}
+ *
+ * Here the numerical values are safety factors.
+ * These restrictions are not strictly necessary but are made for simplicity.
+ * Increasing the range will make the maps less accurate because the domain
+ * is more distorted. These parameters
+ * can be changed provided the unit tests are changed to test the
+ * appropriate parameter ranges.
+ *
+ * ### Equal z planes
+ *
+ * If \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ or
+ * \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand that
+ * \f$C_1^x=C_2^x\f$ and \f$C_1^y=C_2^y\f$, which simplifies the cases
+ * we need to test and agrees with our expected use cases.
+ *
+ * As in the case with unequal z planes, we require that the
+ * z planes in the above figures lie above/below
+ * the centers of the corresponding spheres and are not too close to
+ * the centers or edges of those spheres, but some of the restrictions are
+ * relaxed because of expected use cases.  The conditions are the
+ * same as Eqs. (\f$\ref{eq:theta_1_min_res}\f$--\f$\ref{eq:theta_1_max_res}\f$)
+ * except if \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$
+ * we demand
+ * - \f$ 0.15\pi < \theta_{2 \mathrm{min}} < 0.75\pi\f$ instead of
+ *   Eq. (\f$\ref{eq:theta_2_min_res}\f$), and in addition we demand
+ * - \f$z^-_{\mathrm{P}2} \leq z^+_{\mathrm{P}2} - 0.18 R_2\f$
+ *
+ * and if \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand
+ * - \f$ 0.25\pi < \theta_{2 \mathrm{max}} < 0.85\pi\f$ instead of
+ *   Eq. (\f$\ref{eq:theta_2_max_res}\f$), and in addition we demand
+ * - \f$z^+_{\mathrm{P}2} \geq z^-_{\mathrm{P}2} + 0.18 R_2\f$
  */
 class UniformCylindricalSide {
  public:

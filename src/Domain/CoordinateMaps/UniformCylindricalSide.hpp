@@ -31,7 +31,9 @@ namespace domain::CoordinateMaps {
  * \image html UniformCylSide.svg "A hollow cylinder maps to the shaded region."
  *
  * \details Consider two spheres with centers \f$C_1\f$ and \f$C_2\f$,
- * and radii \f$R_1\f$ and \f$R_2\f$. Let sphere 1 be intersected by two
+ * and radii \f$R_1\f$ and \f$R_2\f$. Sphere 1 is assumed to be contained
+ * inside Sphere 2.
+ * Let sphere 1 be intersected by two
  * planes normal to the \f$z\f$ axis and located at
  * \f$z = z^{\pm}_{\mathrm{P}1}\f$,
  * and let sphere 2 be intersected by two planes normal to the \f$z\f$ axis and
@@ -41,22 +43,25 @@ namespace domain::CoordinateMaps {
  *
  * UniformCylindricalSide maps a 3D unit right cylindrical shell (with
  * coordinates \f$(\bar{x},\bar{y},\bar{z})\f$ such that
- * \f$-1\leq\bar{z}\leq 1\f$ and \f$1 \leq \bar{x}^2+\bar{y}^2 \leq
- * 4\f$) to the shaded area in the figure above (with coordinates
+ * \f$-1\leq\bar{z}\leq 1\f$ and \f$1 \leq \bar{x}^2+\bar{y}^2 \leq 4\f$, where
+ * the values of 1 and 2 for the inner and outer cylindrical radii
+ * are arbitrary choices but are required by UniformCylindricalSide)
+ * to the shaded area in the figure above (with coordinates
  * \f$(x,y,z)\f$).  The "inner surface" of the cylindrical shell
  * \f$\bar{x}^2+\bar{y}^2=1\f$ is mapped to the portion of sphere 1
  * that has \f$z^{-}_{\mathrm{P}1} \leq z \leq z^{+}_{\mathrm{P}1} \f$,
- * and on this portion of the sphere the cosine of the angular coordinate
- * \f$\cos\theta_1 =(z-C_1^2)/R_1\f$ is uniform in \f$\bar{z}\f$,
- * and the angular coordinate \f$\phi_1 = \atan((y-C_1^1)/(x-C_1^0))\f$
+ * and on this portion of the sphere the cosine of the polar angular coordinate
+ * \f$\cos\theta_1 =(z-C_1^z)/R_1\f$ is uniform in \f$\bar{z}\f$,
+ * and the angular coordinate \f$\phi_1 = \atan((y-C_1^y)/(x-C_1^x))\f$
  * is the same as \f$\phi = \atan(\bar{y}/\bar{x})\f$.
  * Likewise, the "outer surface" of the cylindrical shell
  * \f$\bar{x}^2+\bar{y}^2=4\f$ is mapped to the portion of sphere 2
  * that has \f$z^{-}_{\mathrm{P}2} \leq z \leq z^{+}_{\mathrm{P}2}
- * \f$, and on this portion of the sphere the cosine of the angular coordinate
- * \f$\cos\theta_2 = (z-C_2^2)/R_2\f$ is uniform in \f$\bar{z}\f$,
+ * \f$, and on this portion of the sphere the cosine of the azimuthal
+ * angular coordinate
+ * \f$\cos\theta_2 = (z-C_2^z)/R_2\f$ is uniform in \f$\bar{z}\f$,
  * and the angular coordinate \f$\phi_2 =
- * \atan((y-C_2^1)/(x-C_2^0))\f$ is the same as \f$\phi\f$.
+ * \atan((y-C_2^y)/(x-C_2^x))\f$ is the same as \f$\phi\f$.
  *
  * UniformCylindricalSide is different from CylindricalSide
  * because of the distribution of points on the spheres, and because
@@ -91,13 +96,13 @@ namespace domain::CoordinateMaps {
  * according to
  *
  * \f{align}
- * x^0 &= C_1^0+\lambda(C_2^0-C_1^0) +
+ * x &= C_1^x+\lambda(C_2^x-C_1^x) +
  *        \cos\phi\left(R_1\sin\theta_1 +
  *        \lambda(R_2\sin\theta_2-R_1\sin\theta_1)\right), \label{eq:x0} \\
- * x^1 &= C_1^1+\lambda(C_2^1-C_1^1) +
+ * y &= C_1^y+\lambda(C_2^y-C_1^y) +
  *        \sin\phi\left(R_1\sin\theta_1 +
  *        \lambda(R_2\sin\theta_2-R_1\sin\theta_1)\right), \label{eq:x1} \\
- * x^2 &= C_1^2+\lambda(C_2^2-C_1^2) +
+ * z &= C_1^z+\lambda(C_2^z-C_1^z) +
  *        R_1\cos\theta_1 +
  *        \lambda(R_2\cos\theta_2-R_1\cos\theta_1) \label{eq:x2}.
  * \f}
@@ -119,11 +124,11 @@ namespace domain::CoordinateMaps {
  * are defined by
  * \f{align}
  *   \label{eq:deftheta1min}
- *   \cos(\theta_{1\mathrm{min}}) &= (z^{+}_{\mathrm{P}1}-C_1^2)/R_1,\\
- *   \cos(\theta_{1\mathrm{max}}) &= (z^{-}_{\mathrm{P}1}-C_1^2)/R_1,\\
- *   \cos(\theta_{2\mathrm{min}}) &= (z^{+}_{\mathrm{P}2}-C_2^2)/R_2,\\
+ *   \cos(\theta_{1\mathrm{min}}) &= (z^{+}_{\mathrm{P}1}-C_1^z)/R_1,\\
+ *   \cos(\theta_{1\mathrm{max}}) &= (z^{-}_{\mathrm{P}1}-C_1^z)/R_1,\\
+ *   \cos(\theta_{2\mathrm{min}}) &= (z^{+}_{\mathrm{P}2}-C_2^z)/R_2,\\
  *   \label{eq:deftheta2max}
- *   \cos(\theta_{2\mathrm{max}}) &= (z^{-}_{\mathrm{P}2}-C_2^2)/R_2,
+ *   \cos(\theta_{2\mathrm{max}}) &= (z^{-}_{\mathrm{P}2}-C_2^z)/R_2,
  * \f}
  * and
  * \f{align}
@@ -140,10 +145,10 @@ namespace domain::CoordinateMaps {
  * (\f$\ref{eq:deftheta2}\f$) can be simplified using Eqs.
  * (\f$\ref{eq:deftheta1min}\f$-\f$\ref{eq:deftheta2max}\f$):
  * \f{align}
- * R_1\cos\theta_1 &= z^{-}_{\mathrm{P}1}-C_1^2
+ * R_1\cos\theta_1 &= z^{-}_{\mathrm{P}1}-C_1^z
  *        +(z^{+}_{\mathrm{P}1}-z^{-}_{\mathrm{P}1})
  *             \frac{\bar{z}+1}{2}\label{eq:deftheta1alt}\\
- * R_2\cos\theta_2 &= z^{-}_{\mathrm{P}2}-C_2^2
+ * R_2\cos\theta_2 &= z^{-}_{\mathrm{P}2}-C_2^z
  *        +(z^{+}_{\mathrm{P}2}-z^{-}_{\mathrm{P}2})
  *             \frac{\bar{z}+1}{2}\label{eq:deftheta2alt}\\
  * \f}
@@ -157,7 +162,7 @@ namespace domain::CoordinateMaps {
  *
  * \f{align}
  * \frac{1+\bar{z}}{2} &=
- *   \frac{x^2 +
+ *   \frac{z +
  *     \lambda (z^{-}_{\mathrm{P}1}-z^{-}_{\mathrm{P}2}) - z^{-}_{\mathrm{P}1}}
  *   {(1-\lambda)(z^{+}_{\mathrm{P}1}-z^{-}_{\mathrm{P}1})
  *    + \lambda(z^{+}_{\mathrm{P}2}-z^{-}_{\mathrm{P}2})}
@@ -173,8 +178,8 @@ namespace domain::CoordinateMaps {
  * of \f$Q(\lambda)=0\f$, where
  *
  * \f{align}
- * Q(\lambda) &= \left(x^0-C_1^0-\lambda(C_2^0-C_1^0)\right)^2+
- *               \left(x^1-C_1^1-\lambda(C_2^1-C_1^1)\right)^2-
+ * Q(\lambda) &= \left(x-C_1^x-\lambda(C_2^x-C_1^x)\right)^2+
+ *               \left(y-C_1^y-\lambda(C_2^y-C_1^y)\right)^2-
  *               \left((1-\lambda)R_1\sin\theta_1 +
  *               \lambda R_2\sin\theta_2\right)^2.\label{eq:defQ}
  * \f}
@@ -191,7 +196,7 @@ namespace domain::CoordinateMaps {
  *
  * \f{align}
  *  \tan\phi &=
- *  \frac{x^1-C_1^1-\lambda(C_2^1-C_1^1)}{x^0-C_1^0-\lambda(C_2^0-C_1^0)}.
+ *  \frac{y-C_1^y-\lambda(C_2^y-C_1^y)}{x-C_1^x-\lambda(C_2^x-C_1^x)}.
  * \f}
  *
  * Then \f$\bar{\rho}\f$ is obtained from Eq. (\f$\ref{eq:lambdafromrhobar}\f$)
@@ -215,17 +220,17 @@ namespace domain::CoordinateMaps {
  * \f{align}
  *   \lambda_{\mathrm{min}} &=
  *   \mathrm{max}\left\{0,
- *              \frac{x^2-z^{+}_{\mathrm{P}1}}
+ *              \frac{z-z^{+}_{\mathrm{P}1}}
  *                 {(z^{+}_{\mathrm{P}2}-z^{+}_{\mathrm{P}1})},
- *              \frac{z^{-}_{\mathrm{P}1}-x^2}
+ *              \frac{z^{-}_{\mathrm{P}1}-z}
  *                 {(z^{-}_{\mathrm{P}1}-z^{-}_{\mathrm{P}2})}
  *      \right\}\label{eq:lambdamin}
  * \f}
  * In the case where \f$z^{+}_{\mathrm{P}2}=z^{+}_{\mathrm{P}1}\f$
  * we treat the middle term in Eq.(\f$\ref{eq:lambdamin}\f$) as zero since
- * in that case \f$x^2-z^{+}_{\mathrm{P}1}\f$ can never be positive for
+ * in that case \f$z-z^{+}_{\mathrm{P}1}\f$ can never be positive for
  * \f$x^2\f$ in the range of the map, and for
- * \f$x^2=z^{+}_{\mathrm{P}2}=z^{+}_{\mathrm{P}1}\f$
+ * \f$z=z^{+}_{\mathrm{P}2}=z^{+}_{\mathrm{P}1}\f$
  * it turns out that
  * (\f$\ref{eq:zbar_from_lambda}\f$) places no restriction on
  * \f$\lambda_{\mathrm{min}}\f$.  For the same reason, if
@@ -259,8 +264,8 @@ namespace domain::CoordinateMaps {
  *
  * \f{align}
  * Q'(\lambda) =& -2 \left[
- *      \left(x^0-C_1^0-\lambda(C_2^0-C_1^0)\right)(C_2^0-C_1^0)+
- *      \left(x^1-C_1^1-\lambda(C_2^1-C_1^1)\right)(C_2^1-C_1^1)
+ *      \left(x-C_1^x-\lambda(C_2^x-C_1^x)\right)(C_2^x-C_1^x)+
+ *      \left(y-C_1^y-\lambda(C_2^y-C_1^y)\right)(C_2^y-C_1^y)
  *      \right]\nonumber \\
  *     &
  *    -\left[
@@ -324,12 +329,13 @@ namespace domain::CoordinateMaps {
  * z^{+}_{\mathrm{P}2}\f$ has radius \f$r_2 = R_2
  * \sin\theta_{2\mathrm{min}}\f$.  Now consider the cone that passes
  * through these two circles.  A point in the range of the map must be outside
- * or on this cone. The cone can be defined parametrically as
+ * (where "outside" means farther from the \f$z\f$ axis) or on this cone.
+ * The cone can be defined parametrically as
  *
  * \f{align}
- * x_c &= C_1^0 + \tilde{\lambda}(C_2^0-C_1^0) +
+ * x_c &= C_1^x + \tilde{\lambda}(C_2^x-C_1^x) +
  *      \cos\varphi (r_1 + \tilde{\lambda} (r_2 -r_1)),\\
- * y_c &= C_1^1 + \tilde{\lambda}(C_2^1-C_1^1),+
+ * y_c &= C_1^y + \tilde{\lambda}(C_2^y-C_1^y),+
  *      \sin\varphi (r_1 + \tilde{\lambda} (r_2 -r_1)),\\
  * z_c &= z^{+}_{\mathrm{P}1} +
  *        \tilde{\lambda}(z^{+}_{\mathrm{P}2}-z^{+}_{\mathrm{P}1}),
@@ -346,8 +352,8 @@ namespace domain::CoordinateMaps {
  * \f{align}
  *  \tilde{\lambda} &= \frac{z - z^{+}_{\mathrm{P}1}}
  *   {z^{+}_{\mathrm{P}2}-z^{+}_{\mathrm{P}1}}, \\
- *  \tilde{x} &= x - C_1^0 - \tilde{\lambda} (C_2^0-C_1^0),\\
- *  \tilde{y} &= y - C_1^1 - \tilde{\lambda} (C_2^1-C_1^1).\\
+ *  \tilde{x} &= x - C_1^x - \tilde{\lambda} (C_2^x-C_1^x),\\
+ *  \tilde{y} &= y - C_1^x - \tilde{\lambda} (C_2^y-C_1^y).\\
  * \f}
  *
  * Then the condition for the point to be outside or on the cone is
@@ -429,11 +435,11 @@ namespace domain::CoordinateMaps {
  * \frac{\bar{y}^2}{\bar{\rho}^3\bar{R}^3}R_1\sin\theta_1 +
  *        (R_2\sin\theta_2-R_1\sin\theta_1)
  *        \frac{\lambda \bar{R}^2\bar\rho^2+\bar{x}^2}{\bar\rho^3\bar{R}^3}
- *  + \frac{\bar{x}}{\bar\rho\bar{R}^2}(C_2^0-C_1^0),\\
+ *  + \frac{\bar{x}}{\bar\rho\bar{R}^2}(C_2^x-C_1^x),\\
  * \frac{\partial x^0}{\partial \bar{y}} &=
  * \frac{\bar{x}\bar{y}}{\bar{\rho}^3\bar{R}^3}
  *        (R_2\sin\theta_2-2 R_1\sin\theta_1)
- *  + \frac{\bar{y}}{\bar\rho\bar{R}^2}(C_2^0-C_1^0),\\
+ *  + \frac{\bar{y}}{\bar\rho\bar{R}^2}(C_2^x-C_1^x),\\
  * \frac{\partial x^0}{\partial \bar{z}} &=
  * -\frac{1}{2}\frac{\bar{x}}{\bar\rho\bar{R}}\left[
  *   \cot\theta_1(1-\lambda)(z^{+}_{\mathrm{P}1}-z^{-}_{\mathrm{P}1})+
@@ -441,22 +447,22 @@ namespace domain::CoordinateMaps {
  * \frac{\partial x^1}{\partial \bar{x}} &=
  * \frac{\bar{x}\bar{y}}{\bar{\rho}^3\bar{R}^3}
  *        (R_2\sin\theta_2-2 R_1\sin\theta_1)
- *  + \frac{\bar{x}}{\bar\rho\bar{R}^2}(C_2^1-C_1^1),\\
+ *  + \frac{\bar{x}}{\bar\rho\bar{R}^2}(C_2^y-C_1^y),\\
  * \frac{\partial x^1}{\partial \bar{y}} &=
  * \frac{\bar{x}^2}{\bar{\rho}^3\bar{R}^3}R_1\sin\theta_1 +
  *        (R_2\sin\theta_2-R_1\sin\theta_1)
  *        \frac{\lambda \bar{R}^2\bar\rho^2+\bar{y}^2}{\bar\rho^3\bar{R}^3}
- *  + \frac{\bar{y}}{\bar\rho\bar{R}^2}(C_2^1-C_1^1),\\
+ *  + \frac{\bar{y}}{\bar\rho\bar{R}^2}(C_2^y-C_1^y),\\
  * \frac{\partial x^1}{\partial \bar{z}} &=
  * -\frac{1}{2}\frac{\bar{y}}{\bar\rho\bar{R}}\left[
  *   \cot\theta_1(1-\lambda)(z^{+}_{\mathrm{P}1}-z^{-}_{\mathrm{P}1})+
  *   \cot\theta_2\lambda(z^{+}_{\mathrm{P}2}-z^{-}_{\mathrm{P}2})\right],\\
  * \frac{\partial x^2}{\partial \bar{x}} &=
  *  \frac{\bar{x}}{\bar\rho\bar{R}^2}\left(
- *        C_2^2-C_1^2 + R_2\cos\theta_2-R_1\cos\theta_1\right),\\
+ *        C_2^z-C_1^z + R_2\cos\theta_2-R_1\cos\theta_1\right),\\
  * \frac{\partial x^2}{\partial \bar{y}} &=
  *  \frac{\bar{y}}{\bar\rho\bar{R}^2}\left(
- *        C_2^2-C_1^2 + R_2\cos\theta_2-R_1\cos\theta_1\right),\\
+ *        C_2^z-C_1^z + R_2\cos\theta_2-R_1\cos\theta_1\right),\\
  * \frac{\partial x^2}{\partial \bar{z}} &=
  * \frac{1}{2}(1-\lambda)(z^{+}_{\mathrm{P}1}-z^{-}_{\mathrm{P}1})+
  * \frac{1}{2}\lambda(z^{+}_{\mathrm{P}2}-z^{-}_{\mathrm{P}2}).
@@ -485,8 +491,8 @@ namespace domain::CoordinateMaps {
  * We don't want a tiny Sphere 1 near the edge of Sphere 2, so we
  * demand that
  * \f{align}
- *  C^2_1 - R_1 &\leq C^2_2 + R_2/5,\\
- *  C^2_1 + R_1 &\geq C^2_2 - R_2/5.
+ *  C^z_1 - R_1 &\leq C^z_2 + R_2/5,\\
+ *  C^z_1 + R_1 &\geq C^z_2 - R_2/5.
  * \f}
  * We also demand that the polar axis of Sphere 2 intersects Sphere 1
  * somewhere:
@@ -507,7 +513,7 @@ namespace domain::CoordinateMaps {
  * or \f$z^-_{\mathrm{P}1} >= z^-_{\mathrm{P}2} + 0.03 R_1\f$.
  * If \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ or
  * \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand that
- * \f$C_1^0=C_2^0\f$ and \f$C_1^1=C_2^1\f$.
+ * \f$C_1^x=C_2^x\f$ and \f$C_1^y=C_2^y\f$.
  * These restrictions follow expected use cases and avoid distorted maps.
  *
  * We require that the z planes in the above figures lie above/below

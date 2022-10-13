@@ -488,6 +488,8 @@ namespace domain::CoordinateMaps {
  * We also demand that \f$R_1>0.08 R_2\f$.  Again, this assumption
  * is made for accuracy purposes and might be relaxed.
  *
+ * ### Invertibility condition
+ *
  * Consider the line segment \f$L^+_1\f$ that connects a point on the
  * circle \f$S^+_1\f$ (the circle formed by the intersection of sphere 1
  * and the plane \f$z=z^+_{\mathrm{P}1}\f$) with the center of the
@@ -514,6 +516,8 @@ namespace domain::CoordinateMaps {
  * Similarly, one can define an angle \f$\alpha^-\f$ for the region
  * near the south pole, and we require similar restrictions on that angle.
  *
+ * ### Restrictions on z-planes
+ *
  * We also demand that either
  * \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$
  * or that \f$z^+_{\mathrm{P}1} <= z^+_{\mathrm{P}2} -0.03 R_1\f$.
@@ -521,7 +525,7 @@ namespace domain::CoordinateMaps {
  * or \f$z^-_{\mathrm{P}1} >= z^-_{\mathrm{P}2} + 0.03 R_1\f$.
  * These restrictions follow expected use cases and avoid extreme distortions.
  *
- * ### Unequal z planes
+ * ### Restrictions for unequal z planes
  * For \f$z^+_{\mathrm{P}1} \neq z^+_{\mathrm{P}2}\f$ and
  * \f$z^-_{\mathrm{P}1} \neq z^-_{\mathrm{P}2}\f$, we assume the following
  * restrictions on other parameters:
@@ -565,29 +569,31 @@ namespace domain::CoordinateMaps {
  * can be changed provided the unit tests are changed to test the
  * appropriate parameter ranges.
  *
- * ### Equal z planes
+ * ### Restrictions for equal z planes
  *
  * If \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$ or
  * \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand that
  * \f$C_1^x=C_2^x\f$ and \f$C_1^y=C_2^y\f$, which simplifies the cases
  * we need to test and agrees with our expected use cases.
+ * We also demand
+ * - \f$z^+_{\mathrm{P}2} \geq z^-_{\mathrm{P}2} + 0.18 R_2\f$
  *
  * As in the case with unequal z planes, we require that the
  * z planes in the above figures lie above/below
  * the centers of the corresponding spheres and are not too close to
  * the centers or edges of those spheres, but some of the restrictions are
  * relaxed because of expected use cases.  The conditions are the
- * same as Eqs. (\f$\ref{eq:theta_1_min_res}\f$--\f$\ref{eq:theta_1_max_res}\f$)
+ * same as Eqs. (\f$\ref{eq:theta_1_min_res}\f$--\f$\ref{eq:theta_2_max_res}\f$)
  * except if \f$z^+_{\mathrm{P}1} = z^+_{\mathrm{P}2}\f$
- * we demand
- * - \f$ 0.15\pi < \theta_{2 \mathrm{min}} < 0.75\pi\f$ instead of
- *   Eq. (\f$\ref{eq:theta_2_min_res}\f$), and in addition we demand
- * - \f$z^-_{\mathrm{P}2} \leq z^+_{\mathrm{P}2} - 0.18 R_2\f$
- *
- * and if \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we demand
- * - \f$ 0.25\pi < \theta_{2 \mathrm{max}} < 0.85\pi\f$ instead of
- *   Eq. (\f$\ref{eq:theta_2_max_res}\f$), and in addition we demand
- * - \f$z^+_{\mathrm{P}2} \geq z^-_{\mathrm{P}2} + 0.18 R_2\f$
+ * we replace Eq. (\f$\ref{eq:theta_2_min_res}\f$) with
+ * \f{align}
+ *   0.15\pi &< \theta_{2 \mathrm{min}} < 0.75\pi ,
+ * \f}
+ * and if \f$z^-_{\mathrm{P}1} = z^-_{\mathrm{P}2}\f$ we replace
+ * Eq. (\f$\ref{eq:theta_2_max_res}\f$) with
+ * \f{align}
+ *   0.25\pi &< \theta_{2 \mathrm{max}} < 0.85\pi .
+ * \f}
  */
 class UniformCylindricalSide {
  public:

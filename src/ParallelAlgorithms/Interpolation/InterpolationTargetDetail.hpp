@@ -14,12 +14,15 @@
 #include "DataStructures/Tensor/Metafunctions.hpp"
 #include "DataStructures/VariablesTag.hpp"
 #include "Domain/BlockLogicalCoordinates.hpp"
+#include "Domain/CoordinateMaps/Composition.hpp"
+#include "Domain/ElementToBlockLogicalMap.hpp"
 #include "Domain/Tags.hpp"
 #include "Domain/TagsTimeDependent.hpp"
 #include "Parallel/GlobalCache.hpp"
 #include "Parallel/Invoke.hpp"
 #include "Parallel/ParallelComponentHelpers.hpp"
 #include "Utilities/Algorithm.hpp"
+#include "Utilities/ErrorHandling/Assert.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/Literals.hpp"
 #include "Utilities/Requires.hpp"
@@ -636,20 +639,19 @@ void compute_dest_vars_from_source_vars(
     const Mesh<Metavariables::volume_dim>& mesh, const ElementId& element_id,
     const Parallel::GlobalCache<Metavariables>& cache,
     const typename InterpolationTargetTag::temporal_id::type& temporal_id) {
+  // The functions of time are always guaranteed to be
+  // up-to-date here.
+  // For interpolation without an Interpolator ParallelComponent,
+  // this is because the InterpWithoutInterpComponent event will be called
+  // after the Action that keeps functions of time up to date.
+  // For interpolation with an Interpolator ParallelCompoent,
+  // this is because the functions of time are made up to date before
+  // calling SendPointsToInterpolator.
   if constexpr (any_index_in_frame_v<SourceTags, Frame::Inertial> and
                 any_index_in_frame_v<typename InterpolationTargetTag::
                                          vars_to_interpolate_to_target,
                                      Frame::Grid>) {
-    // Need to do frame transformations.
-
-    // The functions of time are always guaranteed to be
-    // up-to-date here.
-    // For interpolation without an Interpolator ParallelComponent,
-    // this is because the InterpWithoutInterpComponent event will be called
-    // after the Action that keeps functions of time up to date.
-    // For interpolation with an Interpolator ParallelCompoent,
-    // this is because the functions of time are made up to date before
-    // calling SendPointsToInterpolator.
+    // Need to do frame transformations to Grid frame.
     const auto& functions_of_time = get<domain::Tags::FunctionsOfTime>(cache);
     const auto& block = domain.blocks().at(element_id.block_id());
     ElementMap<3, ::Frame::Grid> map_logical_to_grid{
@@ -665,6 +667,36 @@ void compute_dest_vars_from_source_vars(
     InterpolationTargetTag::compute_vars_to_interpolate::apply(
         dest_vars, source_vars, mesh, jac_grid_to_inertial,
         invjac_logical_to_grid);
+  } else if constexpr (any_index_in_frame_v<SourceTags, Frame::Inertial> and
+                       any_index_in_frame_v<typename InterpolationTargetTag::
+                                                vars_to_interpolate_to_target,
+                                            Frame::Distorted>) {
+    // Need to do frame transformations to Distorted frame.
+    const auto& functions_of_time = get<domain::Tags::FunctionsOfTime>(cache);
+    const auto& block = domain.blocks().at(element_id.block_id());
+    ASSERT(block.has_distorted_frame(),
+           "Cannot interpolate to distorted frame in a block that does not "
+           "have a distorted frame");
+    ElementMap<3, ::Frame::Grid> map_element_logical_to_grid{
+        element_id, block.moving_mesh_logical_to_grid_map().get_clone()};
+    const auto jac_distorted_to_inertial =
+        block.moving_mesh_distorted_to_inertial_map().jacobian(
+            block.moving_mesh_grid_to_distorted_map()(
+                map_element_logical_to_grid(logical_coordinates(mesh))),
+            InterpolationTarget_detail::evaluate_temporal_id_for_expiration(
+                temporal_id),
+            functions_of_time);
+    domain::CoordinateMaps::Composition element_logical_to_distorted_map{
+        element_to_block_logical_map(element_id),
+        block.moving_mesh_logical_to_grid_map().get_clone(),
+        block.moving_mesh_grid_to_distorted_map().get_clone()};
+    InterpolationTargetTag::compute_vars_to_interpolate::apply(
+        dest_vars, source_vars, mesh, jac_distorted_to_inertial,
+        element_logical_to_distorted_map.inv_jacobian(
+            logical_coordinates(mesh),
+            InterpolationTarget_detail::evaluate_temporal_id_for_expiration(
+                temporal_id),
+            functions_of_time));
   } else {
     // No frame transformations needed.
     InterpolationTargetTag::compute_vars_to_interpolate::apply(

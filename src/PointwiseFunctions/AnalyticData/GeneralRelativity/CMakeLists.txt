@@ -9,6 +9,7 @@ spectre_target_sources(
   ${LIBRARY}
   PRIVATE
   BrillLindquist.cpp
+  SpecNumericalData.cpp
   )
 
 spectre_target_headers(
@@ -17,6 +18,7 @@ spectre_target_headers(
   HEADERS
   AnalyticData.hpp
   BrillLindquist.hpp
+  SpecNumericalData.hpp
   )
 
 target_link_libraries(
@@ -27,4 +29,7 @@ target_link_libraries(
   ErrorHandling
   GeneralRelativity
   Interpolation
+
+  PRIVATE
+  SpEC::Exporter
   )

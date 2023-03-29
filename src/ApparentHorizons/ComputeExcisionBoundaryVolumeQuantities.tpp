@@ -35,22 +35,22 @@
 
 namespace ah {
 
-namespace detail {
+namespace excision_boundary_volume_quantities_detail {
 template <typename Tag>
 using tensor_index_list = typename Tag::type::index_list;
 
 template <typename Tag, typename Frame>
 using all_indices_in_frame_impl =
     TensorMetafunctions::all_indices_in_frame<typename Tag::type, Frame>;
-};
-
 
 /// Returns true if all of the tensors in TagList have
 /// indices only in the given frame or are scalars.
 template <typename TagList, typename Frame>
 constexpr bool all_indices_in_frame_v =
-    tmpl::any<TagList, tmpl::bind<detail::all_indices_in_frame_impl, tmpl::_1,
-                                  Frame>>::value;
+    tmpl::all<TagList,
+              tmpl::bind<all_indices_in_frame_impl, tmpl::_1, Frame>>::value;
+
+};  // namespace excision_boundary_volume_quantities_detail
 
 /// Time-independent map case.
 ///
@@ -73,10 +73,14 @@ void ComputeExcisionBoundaryVolumeQuantities::apply(
   // Note that below we static_assert that all tensors in DestTagList
   // have the same frame.
   using dest_tag_frame = typename tmpl::front<tmpl::flatten<tmpl::transform<
-      DestTagList, tmpl::bind<detail::tensor_index_list, tmpl::_1>>>>::Frame;
-  static_assert(all_indices_in_frame_v<DestTagList, dest_tag_frame>,
-                "All dest tags must be in the same frame if "
-                "the maps are time-independent");
+      DestTagList,
+      tmpl::bind<excision_boundary_volume_quantities_detail::tensor_index_list,
+                 tmpl::_1>>>>::Frame;
+  static_assert(
+      excision_boundary_volume_quantities_detail::all_indices_in_frame_v<
+          DestTagList, dest_tag_frame>,
+      "All dest tags must be in the same frame if "
+      "the maps are time-independent");
 
   static_assert(
       std::is_same_v<tmpl::list_difference<SrcTagList, allowed_src_tags>,

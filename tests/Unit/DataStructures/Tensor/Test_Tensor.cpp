@@ -95,6 +95,29 @@ static_assert(
     "Failed testing any_index_in_frame_v for a tensor with different frames "
     "for different indices");
 
+// Test all_indices_in_frame_v
+static_assert(TensorMetafunctions::all_indices_in_frame_v<
+                  tnsr::iJ<double, 3, Frame::Grid>, Frame::Grid>,
+              "Failed testing all_indices_in_frame_v where it should match");
+static_assert(
+    TensorMetafunctions::all_indices_in_frame_v<Scalar<double>, Frame::Grid>,
+    "Failed testing all_indices_in_frame_v where it should match");
+static_assert(
+    not TensorMetafunctions::all_indices_in_frame_v<
+        tnsr::iJ<double, 3, Frame::Grid>, Frame::Inertial>,
+    "Failed testing all_indices_in_frame_v where it should not match");
+static_assert(
+    not TensorMetafunctions::all_indices_in_frame_v<
+        Tensor<
+            double, tmpl::integral_list<std::int32_t, 2, 1>,
+            index_list<Tensor_detail::TensorIndexType<
+                           3, UpLo::Lo, Frame::Inertial, IndexType::Spacetime>,
+                       Tensor_detail::TensorIndexType<3, UpLo::Lo, Frame::Grid,
+                                                      IndexType::Spacetime>>>,
+        Frame::Inertial>,
+    "Failed testing all_indices_in_frame_v for a tensor with different frames "
+    "for different indices");
+
 // Test remove_first_index
 static_assert(
     std::is_same_v<Scalar<double>, TensorMetafunctions::remove_first_index<

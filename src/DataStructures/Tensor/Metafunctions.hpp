@@ -139,4 +139,23 @@ using any_index_in_frame =
 template <typename Tensor, typename Frame>
 constexpr bool any_index_in_frame_v = any_index_in_frame<Tensor, Frame>::value;
 
+/// \ingroup TensorGroup
+/// \brief Return tmpl::true_type if all indices of the Tensor are in the
+/// frame Frame, or if the Tensor has no indices (i.e. it is a scalar).
+///
+/// Note that the scalar case returns tmpl::true_type instead of std::true_type
+/// so that the return type of all_indices_in_frame is consistent.
+template <typename Tensor, typename Frame>
+using all_indices_in_frame = tmpl::conditional_t<
+    std::is_same_v<typename Tensor::index_list, tmpl::list<>>, tmpl::true_type,
+    tmpl::all<typename Tensor::index_list,
+              tmpl::bind<detail::frame_is_the_same, tmpl::_1, Frame>>>;
+
+/// \ingroup TensorGroup
+/// \brief Return true if all indices of the Tensor are in the
+/// frame Frame, or if the Tensor has no indices (i.e. it is a scalar).
+template <typename Tensor, typename Frame>
+constexpr bool all_indices_in_frame_v =
+    all_indices_in_frame<Tensor, Frame>::value;
+
 }  // namespace TensorMetafunctions

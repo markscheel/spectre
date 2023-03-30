@@ -257,3 +257,13 @@ using change_index_type = Tensor_detail::TensorIndexType<
     Index::ul, typename Index::Frame,
     Index::index_type == IndexType::Spatial ? IndexType::Spacetime
                                             : IndexType::Spatial>;
+
+/// \ingroup TensorGroup
+/// Change the frame of the \ref SpacetimeIndex "TensorIndexType"
+///
+/// \tparam Index the \ref SpacetimeIndex "TensorIndexType" to change
+/// \tparam Fr the Frame to change to.
+template <typename Index, typename Fr>
+using change_index_frame = Tensor_detail::TensorIndexType<
+    Index::index_type == IndexType::Spatial ? Index::dim : Index::dim - 1,
+    Index::ul, Fr, Index::index_type>;

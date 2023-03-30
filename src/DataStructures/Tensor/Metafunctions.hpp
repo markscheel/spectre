@@ -168,4 +168,43 @@ template <typename Tensor, typename Frame>
 constexpr bool all_indices_in_frame_v =
     all_indices_in_frame<Tensor, Frame>::value;
 
+
+/// \ingroup TensorGroup
+/// \brief Replaces Tag with an equivalent Tag but in frame NewFrame
+template <typename Tag, typename NewFrame>
+struct replace_frame_in_tag {
+  // Unspecialized definition, for tags with no template parameters,
+  // like GeneralizedHarmonic
+  using type = Tag;
+};
+
+// Specialization for tensors in GeneralizedHarmonic::Tags
+template <template <size_t, typename> typename Tag, size_t Dim, typename Frame,
+          typename NewFrame>
+struct replace_frame_in_tag<Tag<Dim, Frame>, NewFrame> {
+  using type = Tag<Dim, NewFrame>;
+};
+// Specialization for tensors in gr::Tags
+template <template <size_t, typename, typename> typename Tag, size_t Dim,
+          typename Frame, typename DataType, typename NewFrame>
+struct replace_frame_in_tag<Tag<Dim, Frame, DataType>, NewFrame> {
+  using type = Tag<Dim, NewFrame, DataType>;
+};
+// Specialization for scalars in gr::Tags
+template <template <typename> typename Tag, typename DataType,
+          typename NewFrame>
+struct replace_frame_in_tag<Tag<DataType>, NewFrame> {
+  using type = Tag<DataType>;
+};
+// Specialization for Tags::deriv<Tag> with Tag in GeneralizedHarmonic::Tags
+template <template <size_t, typename> typename Tag, size_t Dim, typename Frame,
+          typename NewFrame>
+struct replace_frame_in_tag<
+    ::Tags::deriv<Tag<Dim, Frame>, tmpl::size_t<Dim>, Frame>, NewFrame> {
+  using type = ::Tags::deriv<Tag<Dim, NewFrame>, tmpl::size_t<Dim>, NewFrame>;
+};
+
+template <typename Tag, typename NewFrame>
+using replace_frame_in_tag_t =
+    typename replace_frame_in_tag<Tag, NewFrame>::type;
 }  // namespace TensorMetafunctions

@@ -126,6 +126,16 @@ using frame_is_the_same = std::is_same<typename T::Frame, Frame>;
 }  // namespace detail
 
 /// \ingroup TensorGroup
+/// \brief Change the frame of all indices of a tensor to a new frame.
+/// \tparam Fr the new frame
+/// \tparam Tensor the tensor from which to keep type, symm and index info
+template <typename Tensor, typename Fr>
+using change_frame_of_all_indices = ::Tensor<
+    typename Tensor::type, typename Tensor::symmetry,
+    typename tmpl::transform<typename Tensor::index_list,
+                             tmpl::bind<change_index_frame, tmpl::_1, Fr>>>;
+
+/// \ingroup TensorGroup
 /// \brief Return tmpl::true_type if any indices of the Tensor are in the
 /// frame Frame.
 template <typename Tensor, typename Frame>

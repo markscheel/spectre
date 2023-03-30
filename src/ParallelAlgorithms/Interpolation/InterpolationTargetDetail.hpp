@@ -732,7 +732,7 @@ void compute_dest_vars_from_source_vars(
   } else {
     // No frame transformations needed.
     // Note that dest_vars may have different Frame tags than
-    // source_vars, even though the frames are the same.
+    // source_vars, even though the frames are really the same.
     using dest_vars_frame = frame_of_taglist<dest_vars::tags_list>;
     static_assert(all_indices_in_frame_v<dest_vars::tags_list, dest_vars_frame>,
                   "All dest tags must be in the same frame if "

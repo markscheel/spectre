@@ -731,15 +731,26 @@ void compute_dest_vars_from_source_vars(
     }
   } else {
     // No frame transformations needed.
+    //
     // Note that dest_vars may have different Frame tags than
-    // source_vars, even though the frames are really the same.
-    using dest_vars_frame = frame_of_taglist<dest_vars::tags_list>;
-    static_assert(all_indices_in_frame_v<dest_vars::tags_list, dest_vars_frame>,
+    // source_vars, even though the frames are really the same.  The
+    // source vars should all be in the Inertial frame, so we create a
+    // new non-owning Variables called dest_vars_in_inertial_frame
+    // that points to dest_vars, and we pass dest_vars_in_inertial_frame
+    // to compute_vars_to_interpolate::apply.
+    using dest_vars_tags =
+        typename InterpolationTargetTag::vars_to_interpolate_to_target;
+    using dest_vars_frame = frame_of_taglist<dest_vars_tags>;
+    static_assert(all_indices_in_frame_v<dest_vars_tags, dest_vars_frame>,
                   "All dest tags must be in the same frame if "
                   "the maps are time-independent");
-    // NOT DONE YET
+    static_assert(all_indices_in_frame_v<SourceTags, ::Frame::Inertial>,
+                  "All src tags must be in Frame::Inertial if "
+                  "the maps are time-independent");
+    Variables<dest_tags_in_inertial_frame> dest_vars_in_inertial_frame(
+        dest_vars->data(), dest_vars->size());
     InterpolationTargetTag::compute_vars_to_interpolate::apply(
-        dest_vars, source_vars, mesh);
+        make_not_null(&dest_vars_in_inertial_frame), source_vars, mesh);
   }
 }
 

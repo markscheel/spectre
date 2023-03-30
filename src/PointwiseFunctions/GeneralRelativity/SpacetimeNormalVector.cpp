@@ -55,7 +55,7 @@ void spacetime_normal_vector(
       const tnsr::I<DTYPE(data), DIM(data), FRAME(data)>& shift);
 
 GENERATE_INSTANTIATIONS(INSTANTIATE, (1, 2, 3), (double, DataVector),
-                        (Frame::Grid, Frame::Inertial))
+                        (Frame::Grid, Frame::Distorted, Frame::Inertial))
 
 #undef DIM
 #undef DTYPE

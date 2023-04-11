@@ -39,6 +39,7 @@ class BlastWave;
 class MagneticFieldLoop;
 class MagneticRotor;
 class OrszagTangVortex;
+class SpecInitialData;
 }  // namespace AnalyticData
 }  // namespace grmhd
 

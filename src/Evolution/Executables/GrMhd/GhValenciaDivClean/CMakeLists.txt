@@ -57,6 +57,12 @@ add_ghmhd_executable(
   "${LIBS_TO_LINK}"
   )
 
+add_ghmhd_executable(
+  "SpecInitialData"
+  grmhd::AnalyticData::SpecInitialData
+  "${LIBS_TO_LINK}"
+  )
+
 add_ghmhd_with_horizon_executable(
   BondiHoyleAccretion
   GeneralizedHarmonic::Solutions::WrappedGr<grmhd::AnalyticData::BondiHoyleAccretion>

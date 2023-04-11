@@ -19,6 +19,7 @@ spectre_target_sources(
   OrszagTangVortex.cpp
   RiemannProblem.cpp
   SlabJet.cpp
+  SpecInitialData.cpp
   )
 
 spectre_target_headers(
@@ -37,6 +38,7 @@ spectre_target_headers(
   OrszagTangVortex.hpp
   RiemannProblem.hpp
   SlabJet.hpp
+  SpecInitialData.hpp
   )
 
 target_link_libraries(
@@ -48,6 +50,12 @@ target_link_libraries(
   Options
   RelativisticEulerSolutions
   Serialization
+  )
+
+target_link_libraries(
+  ${LIBRARY}
+  PRIVATE
+  SpEC::Exporter
   )
 
 add_subdirectory(InitialMagneticFields)

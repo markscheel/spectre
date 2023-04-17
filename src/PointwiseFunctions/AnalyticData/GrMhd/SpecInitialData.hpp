@@ -98,10 +98,10 @@ class SpecInitialData : public evolution::initial_data::InitialData,
   std::unique_ptr<equation_of_state_type> equation_of_state_;
 
   std::vector<std::string> vars_to_interpolate_{
-      "Nid_g",     // (lower 3-metric)
-      "Nid_K",     // (lower extrinsic curvature)
-      "Nid_N",     // (lapse function)
-      "Nid_Shift"  // (upper shift vector)
+      "g",     // (lower 3-metric)
+      "K",     // (lower extrinsic curvature)
+      "Lapse",     // (lapse function)
+      "Shift"  // (upper shift vector)
   };
   std::unique_ptr<spec::Exporter> spec_exporter_;
 };

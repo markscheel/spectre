@@ -30,6 +30,9 @@ if(SPEC_ROOT)
     HEADERS
     Exporter.hpp
   )
+  # The order of these next two target_link_libraries lines is important.
+  target_link_libraries(SpEC::Exporter
+    INTERFACE ${SPEC_EXPORTER_ROOT}/ExporterFactoryObjects.o)
   target_link_libraries(SpEC::Exporter
     INTERFACE ${SPEC_EXPORTER_ROOT}/${_SPEC_LIB_NAME})
 

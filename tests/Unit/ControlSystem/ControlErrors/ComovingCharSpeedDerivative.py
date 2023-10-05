@@ -66,7 +66,7 @@ def comoving_char_speed_derivative(
             * (lambda_00 - grid_frame_excision_sphere_radius / Y00)
             / horizon_00
         )
-        - frame_components_of_grid_shift
+        + frame_components_of_grid_shift
     )
 
     deriv_normal = deriv_normalized_normal(
@@ -78,11 +78,11 @@ def comoving_char_speed_derivative(
         spatial_christoffel_second_kind,
     )
 
-    return np.einsum("i,i", deriv_normal, temp) + Y00 * (
+    return np.einsum("i,i", deriv_normal, temp) - Y00 * (
         np.einsum(
             "i,j,ji", normalized_normal_one_form, excision_rhat, deriv_shift
         )
-        - np.einsum("i,i", excision_rhat, deriv_lapse)
+        + np.einsum("i,i", excision_rhat, deriv_lapse)
         - (dt_horizon_00 / horizon_00)
         * np.einsum("i,i", excision_rhat, normalized_normal_one_form)
     )

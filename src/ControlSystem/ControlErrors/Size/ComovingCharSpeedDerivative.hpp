@@ -84,7 +84,7 @@ namespace control_system::size {
  *
  * The comoving characteristic speed is
  * \f{align}
- *     v_c &= -\alpha -\hat{n}_\hat{i}\beta^\hat{i}
+ *     v_c &= -\alpha +\hat{n}_\hat{i}\beta^\hat{i}
  *           - Y_{00} \hat{n}_{\hat i} \xi^{\hat i}
  *           \left[ \dot{\hat{S}}_{00} (\lambda_{00}
  *                   - r_{\mathrm{EB}}/Y_{00}) / \hat{S}_{00}
@@ -317,13 +317,13 @@ namespace control_system::size {
  * So we can now differentiate Eq. (\f$\ref{eq:comovingspeed}\f$) to obtain
  * \f{align}
  *  \frac{d}{d\lambda_{00}} v_c &=
- *  -\xi^\hat{i} Y_{00} \partial_\hat{i} \alpha
- *   +\left[ -\beta^\hat{i}
+ *  \xi^\hat{i} Y_{00} \partial_\hat{i} \alpha
+ *   +\left[ \beta^\hat{i}
  *   - Y_{00} \xi^\hat{i} \dot{\hat{S}}_{00} (\lambda_{00}
  *                   - r_{\mathrm{EB}}/Y_{00}) / \hat{S}_{00}
  *           + Y_{00} \xi^\hat{i}\dot{\lambda}_{00} \right]
  *  \frac{d}{d\lambda_{00}} \hat{n}_{\hat i} \nonumber \\
- *  &+ \hat{n}_{\hat i} \xi^\hat{j} Y_{00} \partial_\hat{j} \hat{\beta}^\hat{i}
+ *  &- \hat{n}_{\hat i} \xi^\hat{j} Y_{00} \partial_\hat{j} \hat{\beta}^\hat{i}
  *  - Y_{00} \hat{n}_{\hat i} \xi^{\hat i} \dot{\hat{S}}_{00}/\hat{S}_{00},
  * \label{eq:result}
  * \f}

@@ -99,7 +99,7 @@ void comoving_char_speed_derivative(
 
   // Add the dlapse term (without the Y00 factor).
   for (size_t i = 0; i < 3; ++i) {
-    get(*result) -= deriv_lapse.get(i) * excision_rhat.get(i);
+    get(*result) += deriv_lapse.get(i) * excision_rhat.get(i);
   }
 
   // Put in the Y00 factor.
@@ -108,7 +108,7 @@ void comoving_char_speed_derivative(
   // Add the final factor to result
   for (size_t i = 0; i < 3; ++i) {
     get(*result) += excision_normal_vector.get(i) *
-                    (Y00 * dt_lambda_00 * excision_rhat.get(i) -
+                    (Y00 * dt_lambda_00 * excision_rhat.get(i) +
                      frame_components_of_grid_shift.get(i) -
                      excision_rhat.get(i) * (dt_horizon_00 / horizon_00) *
                          (Y00 * lambda_00 - grid_frame_excision_sphere_radius));

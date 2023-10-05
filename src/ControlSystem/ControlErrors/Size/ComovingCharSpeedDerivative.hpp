@@ -30,7 +30,7 @@ namespace control_system::size {
  * \param dt_horizon_00 the time derivative of horizon_00
  * \param grid_frame_excision_sphere_radius radius of the excision boundary
  *        in the grid frame, \f$r_{\mathrm{EB}}\f$.
- * \param excision_rhat the direction cosine \f$\xi^\hat{i}\f$
+ * \param excision_rhat the direction cosine \f$\xi_\hat{i}\f$
  * \param excision_normal_one_form the unnormalized one-form
  *        \f$\hat{s}_\hat{i}\f$
  * \param excision_normal_one_form_norm the norm of the one-form \f$a\f$
@@ -100,7 +100,15 @@ namespace control_system::size {
  * \f$\hat{x}^i/\hat{r}_{\mathrm{EB}}\f$ evaluated on the excision boundary
  * because the size and shape maps preserve angles.  Note that
  * \f$r_{\mathrm{EB}}\f$ is a constant but \f$\hat{r}_{\mathrm{EB}}\f$ is
- * a function of angles.
+ * a function of angles.  Note also
+ * that \f$\xi^{\hat i}\f$ is **not** a vector; it
+ * is a coordinate quantity. In particular,
+ * the lower-index \f$\xi_{\hat i}\f$ is \f$\delta_{ij}x^j/r_{\mathrm{EB}}\f$.
+ * The non-vectorness of \f$\xi^{\hat i}\f$ (and of \f$x^i\f$ itself
+ * in Eq. (\f$\ref{eq:map}\f$)) might cause some confusion when using the
+ * Einstein summation convention; we attempt to alleviate that confusion by
+ * never using the lower-index \f$\xi_{\hat i}\f$ and by keeping
+ * \f$\delta_{ij}\f$ in formulas below.
  * The normal
  * \f$\hat{n}_\hat{i}\f$ is the same as $n_i$
  * transformed into the distorted frame, that is
@@ -111,7 +119,8 @@ namespace control_system::size {
  * decorations on indices and not on the tensors themselves)
  * to reduce later ambiguities
  * in notation that arise because
- * Eq. (\f$\ref{eq:map}\f$) has the same index on both sides of the equation.
+ * Eq. (\f$\ref{eq:map}\f$) has the same index on both sides of the equation
+ * and because \f$\xi^{\hat i}\f$ and \f$x^i\f$ are not tensors.
  * The quantity \f$\beta^\hat{i}\f$ in Eq. (\f$\ref{eq:comovingspeed}\f$)
  * is the distorted-frame
  * component of the grid-frame shift, defined by
@@ -276,6 +285,7 @@ namespace control_system::size {
  * \f}
  * Here we have used Eq. (\f$\ref{eq:derivf}\f$) to differentiate the 3-metric.
  * We have also refrained from raising and lowering indices
+ * on \f$n^\hat{i}\f$, \f$s^\hat{i}\f$, and \f$\xi^\hat{i}\f$
  * to alleviate potential confusion over whether to raise or lower using
  * \f$\gamma_{\hat{i} \hat{j}}\f$ or using \f$\delta_{\hat{i}\hat{j}}\f$.
  * Given the above, the derivative of the normalized normal one-form is

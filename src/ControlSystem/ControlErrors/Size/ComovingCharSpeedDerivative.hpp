@@ -178,6 +178,7 @@ namespace control_system::size {
  * \f{align}
  *  \frac{d}{d\lambda_{00}}\frac{\partial \hat{x}^i}{\partial x^j} &=
  *  -\frac{Y_{00}}{r_{\mathrm{EB}}} \delta^i_j.
+ * \label{eq:derivjacobian}
  * \f}
  *
  * By taking the derivative of the identity
@@ -185,11 +186,17 @@ namespace control_system::size {
  *  \frac{\partial \hat{x}^\hat{i}}{\partial x^k}
  *  \frac{\partial x^k}{\partial \hat{x}^\hat{j}} &= \delta^\hat{i}_\hat{j}
  * \f}
- * we can derive
+ * and by using Eq. (\f$\ref{eq:derivjacobian}\f$) we can derive
  * \f{align}
  *  \frac{d}{d\lambda_{00}}\frac{\partial x^i}{\partial \hat{x}^j} &=
- *  +\frac{Y_{00}}{r_{\mathrm{EB}}} \delta^i_j.
+ *  +\frac{Y_{00}}{r_{\mathrm{EB}}}
+ *   \frac{\partial x^i}{\partial \hat{x}^k}
+ *   \frac{\partial x^k}{\partial \hat{x}^j}.
+ *   \label{eq:strangederivjacobian}
  * \f}
+ * Note that the right-hand side of Eq. (\f$\ref{eq:strangederivjacobian}\f$)
+ * has two inverse Jacobians contracted with each other, which is not
+ * the same as \f$\delta^i_j\f$.
  *
  * ### Derivative of a function of space
  *
@@ -276,18 +283,27 @@ namespace control_system::size {
  * Now
  * \f{align}
  *  \frac{d}{d\lambda_{00}} \hat{s}_{\hat i} &=
- *  s_i\frac{Y_{00}}{r_{\mathrm{EB}}} \delta^i_\hat{i},\\
- *  \frac{d}{d\lambda_{00}} a^2 &= 2 s_i\frac{Y_{00}}{r_{\mathrm{EB}}}
- *  \delta^i_\hat{i} \hat{s}_{\hat j} \gamma^{\hat{i} \hat{j}}
+ *  \hat{s}_k\frac{Y_{00}}{r_{\mathrm{EB}}}
+ *   \frac{\partial x^k}{\partial \hat{x}^\hat{i}}, \\
+ *  \frac{d}{d\lambda_{00}} a^2 &= 2 \hat{s}_k\frac{Y_{00}}{r_{\mathrm{EB}}}
+ *   \frac{\partial x^k}{\partial \hat{x}^\hat{i}}
+ *  \hat{s}_{\hat j} \gamma^{\hat{i} \hat{j}}
  *  + \hat{s}_{\hat i} \hat{s}_{\hat j}
  *  \gamma^{\hat{i} \hat{k}} \gamma^{\hat{j} \hat{l}}
  *  \xi^\hat{m} Y_{00} \partial_{\hat m} \gamma_{\hat{k} \hat{l}}.
  * \f}
  * Here we have used Eq. (\f$\ref{eq:derivf}\f$) to differentiate the 3-metric.
  * We have also refrained from raising and lowering indices
- * on \f$n^\hat{i}\f$, \f$s^\hat{i}\f$, and \f$\xi^\hat{i}\f$
+ * on \f$n_\hat{i}\f$, \f$s_\hat{i}\f$, and \f$\xi^\hat{i}\f$
  * to alleviate potential confusion over whether to raise or lower using
  * \f$\gamma_{\hat{i} \hat{j}}\f$ or using \f$\delta_{\hat{i}\hat{j}}\f$.
+ * The factor \f$\hat{s}_k \partial x^k/\partial \hat{x}^\hat{i}\f$
+ * is unusal and is not a tensor
+ * (\f$\hat{s}_k\f$ is a tensor but the Jacobian it is being multiplied by
+ * is the inverse of the one that would transform it into a different frame);
+ * this factor arises because some quantities being differentiated are
+ * not tensors.
+ *
  * Given the above, the derivative of the normalized normal one-form is
  * \f{align}
  *  \frac{d}{d\lambda_{00}} \hat{n}_{\hat i} &=
@@ -295,34 +311,40 @@ namespace control_system::size {
  *  - \hat{s}_{\hat i} \frac{1}{2a^3}
  *  \frac{d}{d\lambda_{00}} a^2\\
  *  &=
- *  s_i\frac{Y_{00}}{r_{\mathrm{EB}}} \delta^i_\hat{i}
- *  - \hat{s}_{\hat i} \frac{1}{a^3} s_i\frac{Y_{00}}{r_{\mathrm{EB}}}
- *  \delta^i_\hat{k} \hat{s}_{\hat j} \gamma^{\hat{k} \hat{j}}
+ *  \hat{s}_i\frac{Y_{00}}{a r_{\mathrm{EB}}}
+ *    \frac{\partial x^i}{\partial \hat{x}^\hat{i}}
+ *  - \hat{s}_{\hat i} \frac{1}{a^3} \hat{s}_i\frac{Y_{00}}{r_{\mathrm{EB}}}
+ *    \frac{\partial x^i}{\partial \hat{x}^\hat{k}}
+ *    \hat{s}_{\hat j} \gamma^{\hat{k} \hat{j}}
  *  - \hat{s}_{\hat i} \frac{Y_{00}}{2a^3} \hat{s}_{\hat p}
  *  \hat{s}_{\hat j} \gamma^{\hat{p} \hat{k}}
  *  \gamma^{\hat{j} \hat{l}}
  *  \xi^\hat{m} \partial_{\hat m} \gamma_{\hat{k} \hat{l}} \\
  *  &=
- *  \xi_\hat{i}\frac{Y_{00}}{r_{\mathrm{EB}}}
- *  - \hat{s}_{\hat i} \frac{1}{a^3} \xi_\hat{k}\frac{Y_{00}}{r_{\mathrm{EB}}}
- *    \hat{s}_{\hat j} \gamma^{\hat{k} \hat{j}}
+ *  \hat{n}_i
+ *  \frac{\partial x^i}{\partial \hat{x}^\hat{k}}
+ *  \frac{Y_{00}}{r_{\mathrm{EB}}}
+ *  (\delta^\hat{k}_\hat{i} - \hat{n}^\hat{k} \hat{n}_\hat{i})
  *  - \hat{s}_{\hat i} \frac{Y_{00}}{2a^3} \hat{s}_{\hat p}
  *  \hat{s}_{\hat j} \gamma^{\hat{p} \hat{k}}
  *  \gamma^{\hat{j} \hat{l}}
  *  \xi^\hat{m} \partial_{\hat m} \gamma_{\hat{k} \hat{l}}
  *  \label{eq:dnormal} \\
  *  &=
- *  \xi_\hat{i}\frac{Y_{00}}{r_{\mathrm{EB}}}
- *  - \frac{Y_{00}}{a r_{\mathrm{EB}}} \xi_\hat{k} \hat{n}_{\hat i}
- *    \hat{n}_{\hat j} \gamma^{\hat{k} \hat{j}}
+ *  \hat{n}_i
+ *  \frac{\partial x^i}{\partial \hat{x}^\hat{k}}
+ *  \frac{Y_{00}}{r_{\mathrm{EB}}}
+ *  (\delta^\hat{k}_\hat{i} - \hat{n}^\hat{k} \hat{n}_\hat{i})
  *  - Y_{00} \hat{n}_{\hat i} \hat{n}_{\hat p}
  *  \hat{n}_{\hat j} \gamma^{\hat{p} \hat{k}}
  *  \xi^\hat{m} \Gamma^\hat{j}_{\hat{k} \hat{m}}
  *  \label{eq:dnormalgamma},
  * \f}
- * where in the last line we have substituted \f$\hat{n}_{\hat i}\f$ for
+ * where we have substituted \f$\hat{n}_{\hat i}\f$ for
  * \f$\hat{s}_{\hat i}\f$ and we have substituted 3-Christoffel symbols for
- * spatial derivatives of the 3-metric.
+ * spatial derivatives of the 3-metric. Note that the last term in Eq.
+ * (\f$\ref{eq:dnormalgamma}\f$) could also be derived by differentiating
+ * \f$\hat{n}_\hat{i}\hat{n}_\hat{j}\gamma^{\hat{i}\hat{j}}=1\f$.
  *
  * So we can now differentiate Eq. (\f$\ref{eq:comovingspeed}\f$) to obtain
  * \f{align}

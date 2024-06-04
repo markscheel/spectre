@@ -156,9 +156,9 @@ namespace control_system::size {
  * the map parameter \f$\lambda_{00}\f$; this information will be used to
  * decide whether to transition between different size control states.
  *
- * ## Derivation of comoving_char_speed_derivative
+ * ## Derivation of derivative of comoving characteristic speed
  *
- * The function comoving_char_speed_derivative computes
+ * This function computes
  * \f$d v_c/d\lambda_{00}\f$ on the excision boundary, where the total
  * derivative means that all other map parameters
  * (like \f$\lambda_{\ell m}\f$ for \f$\ell>0\f$) are held fixed, and the
@@ -219,7 +219,7 @@ namespace control_system::size {
  *
  * ### Derivative of a function of space
  *
- * Assume we have arbitrary function of space \f$f(\hat{x}^i)\f$.
+ * Assume we have an arbitrary function of space \f$f(\hat{x}^i)\f$.
  * Here we treat \f$f\f$ as a function of the distorted-frame
  * coordinates \f$\hat{x}^i\f$ and not a function of the grid-frame
  * coordinates.  This is because we consider the metric functions to be defined

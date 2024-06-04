@@ -12,28 +12,29 @@
 #include "DataStructures/Tensor/IndexType.hpp"
 #include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
-#include "Utilities/GenerateInstantiations.hpp"
 #include "Utilities/Gsl.hpp"
 
 namespace control_system::size {
-template <typename Frame>
 void comoving_char_speed_derivative(
     const gsl::not_null<Scalar<DataVector>*> result, const double lambda_00,
     const double dt_lambda_00, const double horizon_00,
     const double dt_horizon_00, const double grid_frame_excision_sphere_radius,
-    const tnsr::i<DataVector, 3, Frame>& excision_rhat,
-    const tnsr::i<DataVector, 3, Frame>& excision_normal_one_form,
+    const tnsr::i<DataVector, 3, Frame::Distorted>& excision_rhat,
+    const tnsr::i<DataVector, 3, Frame::Distorted>& excision_normal_one_form,
     const Scalar<DataVector>& excision_normal_one_form_norm,
-    const tnsr::I<DataVector, 3, Frame>& frame_components_of_grid_shift,
-    const tnsr::II<DataVector, 3, Frame>&
+    const tnsr::I<DataVector, 3, Frame::Distorted>&
+        distorted_components_of_grid_shift,
+    const tnsr::II<DataVector, 3, Frame::Distorted>&
         inverse_spatial_metric_on_excision_boundary,
-    const tnsr::Ijj<DataVector, 3, Frame>& spatial_christoffel_second_kind,
-    const tnsr::i<DataVector, 3, Frame>& deriv_lapse,
-    const tnsr::iJ<DataVector, 3, Frame>& deriv_shift) {
+    const tnsr::Ijj<DataVector, 3, Frame::Distorted>&
+        spatial_christoffel_second_kind,
+    const tnsr::i<DataVector, 3, Frame::Distorted>& deriv_lapse,
+    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_shift) {
   const double Y00 = 0.25 * M_2_SQRTPI;
 
   // Define temporary storage.
-  using excision_normal_vector_tag = ::Tags::TempI<1, 3, Frame, DataVector>;
+  using excision_normal_vector_tag =
+      ::Tags::TempI<1, 3, Frame::Distorted, DataVector>;
   TempBuffer<tmpl::list<excision_normal_vector_tag>> buffer(
       get<0>(excision_rhat).size());
   auto& excision_normal_vector = get<excision_normal_vector_tag>(buffer);
@@ -109,32 +110,9 @@ void comoving_char_speed_derivative(
   for (size_t i = 0; i < 3; ++i) {
     get(*result) += excision_normal_vector.get(i) *
                     (Y00 * dt_lambda_00 * excision_rhat.get(i) +
-                     frame_components_of_grid_shift.get(i) -
+                     distorted_components_of_grid_shift.get(i) -
                      excision_rhat.get(i) * (dt_horizon_00 / horizon_00) *
                          (Y00 * lambda_00 - grid_frame_excision_sphere_radius));
   }
 }
 }  // namespace control_system::size
-
-#define FRAME(data) BOOST_PP_TUPLE_ELEM(0, data)
-
-#define INSTANTIATE(_, data)                                               \
-  template void control_system::size::comoving_char_speed_derivative(      \
-      const gsl::not_null<Scalar<DataVector>*> result, double lambda_00,   \
-      double dt_lambda_00, double horizon_00, double dt_horizon_00,        \
-      double grid_frame_excision_sphere_radius,                            \
-      const tnsr::i<DataVector, 3, FRAME(data)>& excision_rhat,            \
-      const tnsr::i<DataVector, 3, FRAME(data)>& excision_normal_one_form, \
-      const Scalar<DataVector>& excision_normal_one_form_norm,             \
-      const tnsr::I<DataVector, 3, FRAME(data)>&                           \
-          frame_components_of_grid_shift,                                  \
-      const tnsr::II<DataVector, 3, FRAME(data)>&                          \
-          inverse_spatial_metric_on_excision_boundary,                     \
-      const tnsr::Ijj<DataVector, 3, FRAME(data)>&                         \
-          spatial_christoffel_second_kind,                                 \
-      const tnsr::i<DataVector, 3, FRAME(data)>& deriv_lapse,              \
-      const tnsr::iJ<DataVector, 3, FRAME(data)>& deriv_shift);
-GENERATE_INSTANTIATIONS(INSTANTIATE, (::Frame::Distorted, ::Frame::Inertial))
-
-#undef INSTANTIATE
-#undef FRAME

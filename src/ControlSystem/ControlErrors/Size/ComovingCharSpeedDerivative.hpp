@@ -43,7 +43,7 @@ namespace control_system::size {
  *        \f$\Gamma^\hat{k}_{\hat{i}\hat{j}}\f$
  * \param deriv_lapse the spatial derivative of the lapse
  *        \f$\partial_\hat{i} \alpha\f$
- * \param deriv_shift the spatial derivative of the shift in the
+ * \param deriv_of_distorted_shift the spatial derivative of the shift in the
  *        distorted frame
  *        \f$\partial_\hat{j} \hat{\beta}^\hat{i}\f$. This is not the
  *        derivative of distorted_components_of_grid_shift.
@@ -396,5 +396,5 @@ void comoving_char_speed_derivative(
     const tnsr::Ijj<DataVector, 3, Frame::Distorted>&
         spatial_christoffel_second_kind,
     const tnsr::i<DataVector, 3, Frame::Distorted>& deriv_lapse,
-    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_distorted_shift);
+    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_of_distorted_shift);
 }  // namespace control_system::size

@@ -29,7 +29,7 @@ void comoving_char_speed_derivative(
     const tnsr::Ijj<DataVector, 3, Frame::Distorted>&
         spatial_christoffel_second_kind,
     const tnsr::i<DataVector, 3, Frame::Distorted>& deriv_lapse,
-    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_shift) {
+    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_of_distorted_shift) {
   const double Y00 = 0.25 * M_2_SQRTPI;
 
   // Define temporary storage.
@@ -91,7 +91,7 @@ void comoving_char_speed_derivative(
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
       get(*result) += excision_rhat.get(j) * excision_normal_one_form.get(i) *
-                      deriv_shift.get(j, i);
+                      deriv_of_distorted_shift.get(j, i);
     }
   }
 

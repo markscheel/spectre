@@ -318,7 +318,7 @@ namespace control_system::size {
  * Here we have used Eq. (\f$\ref{eq:strangederivjacobian}\f$) to differentiate
  * the Jacobian, and Eq. (\f$\ref{eq:derivf}\f$) to differentiate the 3-metric.
  * We have also refrained from raising and lowering indices
- * on \f$n_\hat{i}\f$, \f$s_\hat{i}\f$, and \f$\xi^\hat{i}\f$
+ * on \f$\hat{n}_\hat{i}\f$, \f$\hat{s}_\hat{i}\f$, and \f$\xi^\hat{i}\f$
  * to alleviate potential confusion over whether to raise or lower using
  * \f$\gamma_{\hat{i} \hat{j}}\f$ or using \f$\delta_{\hat{i}\hat{j}}\f$.
  * The factor \f$\hat{s}_k \partial x^k/\partial \hat{x}^\hat{i}\f$

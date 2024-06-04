@@ -58,39 +58,54 @@ namespace control_system::size {
  * **outward-pointing** (i.e. pointing out of the black hole,
  * toward larger radius)
  * normal one-form to the excision boundary in the grid frame.
- * (Note that the usual expression for the characteristic speed has
+ * (Note that the usual expression for the characteristic speed, as in
+ * eq. 87 of \cite Hemberger20212jz, has
  * a minus sign and defines \f$n_i\f$ as the inward-pointing (i.e. out of the
  * computational domain) normal; here
  * we have a plus sign and we define \f$n_i\f$ as outward-pointing because
  * the outward-pointing normal is passed into comoving_char_speed_derivative.)
  *
- * For the size/shape map at the excision boundary,
+ * For the size/shape map at the excision boundary, Eq. 72 of
+ * \cite Hemberger20212jz tells us that
  * \f{align}
- *   \hat{x}^i &= x^i (1 - \lambda_{00} Y_{00}/r_{\mathrm{EB}} + B),
+ *   \hat{x}^i &= \frac{x^i}{r_{\mathrm{EB}}}
+ *      \left(1 - \lambda_{00} Y_{00}
+ *      -\sum_{\ell>0} Y_{\ell m} \lambda_{\ell m}\right),
  *   \label{eq:map}
  * \f}
  * where \f$\hat{x}^i\f$ are the distorted-frame coordinates and \f$x^i\f$
- * are the grid-frame coordinates.
- * Here \f$Y_{00}\f$ is a
- * spherical harmonic, \f$\lambda_{00}\f$ is
- * the map parameter, and \f$r_{\mathrm{EB}}\f$ is the radius of the
+ * are the grid-frame coordinates, and where we have separated the \f$\ell=0\f$
+ * piece from the sum.
+ * Here \f$Y_{\ell m}\f$ are
+ * spherical harmonics, \f$\lambda_{\ell m}\f$ are
+ * the map parameters, and \f$r_{\mathrm{EB}}\f$ is the radius of the
  * excision boundary in the
- * grid frame (where the excision boundary is a sphere). Here
- * \f$B\f$ represents terms that depend on angles but are independent of
- * \f$\lambda_{00}\f$.  These \f$B\f$ terms depend on \f$\lambda_{\ell m}\f$ for
- * \f$\ell>0\f$ but the precise form of these terms will not be important here,
+ * grid frame (where the excision boundary is a sphere). The final term with
+ * the sum over $\ell>0$ is independent of \f$\lambda_{00}\f$,
+ * and will not be important
  * because below we will be differentiating the map with respect
  * to \f$\lambda_{00}\f$.
  *
- * The comoving characteristic speed is
+ * The comoving characteristic speed is given by rewriting Eq. 98
+ * of \cite Hemberger20212jz in terms of the distorted-frame shift:
  * \f{align}
- *     v_c &= -\alpha +\hat{n}_\hat{i}\beta^\hat{i}
+ *     v_c &= -\alpha +\hat{n}_\hat{i}\hat{\beta}^\hat{i}
+ *           - Y_{00} \hat{n}_{\hat i} \xi^{\hat i}
+ *           \left[ \dot{\hat{S}}_{00} (\lambda_{00}
+ *                   - r_{\mathrm{EB}}/Y_{00}) / \hat{S}_{00}
+ *           + \frac{1}{Y_{00}} \sum_{\ell>0} Y_{\ell m} \dot{\lambda}_{\ell m}
+ *         \right], \\
+ *         &= -\alpha +\hat{n}_\hat{i}\beta^\hat{i}
  *           - Y_{00} \hat{n}_{\hat i} \xi^{\hat i}
  *           \left[ \dot{\hat{S}}_{00} (\lambda_{00}
  *                   - r_{\mathrm{EB}}/Y_{00}) / \hat{S}_{00}
  *           -\dot{\lambda}_{00} \right], \label{eq:comovingspeed}
  * \f}
- * where \f$\dot{\lambda}_{00}\f$ is the time derivative of
+ * where in the last line we have rewritten $\hat{\beta}^\hat{i}$
+ * in terms of $\beta^\hat{i}$ (see Eq. (\f$\ref{eq:framecompsshiftdef}\f$)
+ * below) and we have substituted
+ * the time derivative of Eq. (\f$\ref{eq:map}\f$).
+ * Here \f$\dot{\lambda}_{00}\f$ is the time derivative of
  * \f$\lambda_{00}\f$, and
  * \f$\hat{S}_{00}\f$ is the constant spherical-harmonic coefficient of the
  * horizon and \f$\dot{\hat{S}}_{00}\f$ is its time derivative.
@@ -128,7 +143,8 @@ namespace control_system::size {
  * \beta^\hat{i} &= \beta^i \frac{\partial \hat{x}^\hat{i}}{\partial x^i}.
  * \label{eq:shiftyquantity}
  * \f}
- * This is **not** the shift in the distorted frame, because the shift does
+ * This is **not** the shift in the distorted frame \f$\hat{\beta}^\hat{i}\f$,
+ * because the shift does
  * not transform like a spatial tensor under the maps.
  *
  * If the comoving characteristic speed \f$v_c\f$ is negative and remains
@@ -173,7 +189,9 @@ namespace control_system::size {
  *    &= (1 - \lambda_{00} Y_{00}/r_{\mathrm{EB}} + B) \delta^i_j
  *    + x^i \frac{\partial B}{\partial x^j},
  * \f}
- * where the last term is independent of \f$\lambda_{00}\f$.
+ * where \f$B\f$ represents the term with the sum over \f$\ell>0\f$
+ * in Eq. (\f$\ref{eq:map}\f$); this term is independent
+ * of \f$\lambda_{00}\f$.
  * Therefore, we have
  * \f{align}
  *  \frac{d}{d\lambda_{00}}\frac{\partial \hat{x}^i}{\partial x^j} &=
@@ -227,6 +245,7 @@ namespace control_system::size {
  * \beta^\hat{i} &=
  *   \beta^i \frac{\partial \hat{x}^\hat{i}}{\partial x^i} \\
  *   &= \hat{\beta}^\hat{i} + \frac{\partial \hat{x}^\hat{i}}{\partial t},
+ *  \label{eq:framecompsshiftdef}
  * \f}
  * where \f$\hat{\beta}^\hat{i} \equiv \alpha^2 g^{\hat{0}\hat{i}}\f$ is
  * the shift in the distorted frame.

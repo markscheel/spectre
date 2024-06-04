@@ -303,16 +303,17 @@ namespace control_system::size {
  * Now
  * \f{align}
  *  \frac{d}{d\lambda_{00}} \hat{s}_{\hat i} &=
- *  \hat{s}_k\frac{Y_{00}}{r_{\mathrm{EB}}}
- *   \frac{\partial x^k}{\partial \hat{x}^\hat{i}}, \\
- *  \frac{d}{d\lambda_{00}} a^2 &= 2 \hat{s}_k\frac{Y_{00}}{r_{\mathrm{EB}}}
- *   \frac{\partial x^k}{\partial \hat{x}^\hat{i}}
+ *  \frac{Y_{00}}{r_{\mathrm{EB}}}
+ *  \hat{s}_k\frac{\partial x^k}{\partial \hat{x}^\hat{i}}, \\
+ *  \frac{d}{d\lambda_{00}} a^2 &= 2 \frac{Y_{00}}{r_{\mathrm{EB}}}
+ *  \hat{s}_k\frac{\partial x^k}{\partial \hat{x}^\hat{i}}
  *  \hat{s}_{\hat j} \gamma^{\hat{i} \hat{j}}
  *  + \hat{s}_{\hat i} \hat{s}_{\hat j}
  *  \gamma^{\hat{i} \hat{k}} \gamma^{\hat{j} \hat{l}}
  *  \xi^\hat{m} Y_{00} \partial_{\hat m} \gamma_{\hat{k} \hat{l}}.
  * \f}
- * Here we have used Eq. (\f$\ref{eq:derivf}\f$) to differentiate the 3-metric.
+ * Here we have used Eq. (\f$\ref{eq:strangederivjacobian}\f$) to differentiate
+ * the Jacobian, and Eq. (\f$\ref{eq:derivf}\f$) to differentiate the 3-metric.
  * We have also refrained from raising and lowering indices
  * on \f$n_\hat{i}\f$, \f$s_\hat{i}\f$, and \f$\xi^\hat{i}\f$
  * to alleviate potential confusion over whether to raise or lower using

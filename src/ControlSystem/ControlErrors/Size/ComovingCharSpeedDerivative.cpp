@@ -29,7 +29,9 @@ void comoving_char_speed_derivative(
     const tnsr::Ijj<DataVector, 3, Frame::Distorted>&
         spatial_christoffel_second_kind,
     const tnsr::i<DataVector, 3, Frame::Distorted>& deriv_lapse,
-    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_of_distorted_shift) {
+    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_of_distorted_shift,
+    const InverseJacobian<DataVector, 3, Frame::Grid, Frame::Distorted>&
+        inverse_jacobian) {
   const double Y00 = 0.25 * M_2_SQRTPI;
 
   // Define temporary storage.

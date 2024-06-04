@@ -10,6 +10,7 @@
 class DataVector;
 namespace Frame {
 struct Distorted;
+struct Grid;
 }  // namespace Frame
 /// \endcond
 
@@ -47,7 +48,9 @@ namespace control_system::size {
  *        distorted frame
  *        \f$\partial_\hat{j} \hat{\beta}^\hat{i}\f$. This is not the
  *        derivative of distorted_components_of_grid_shift.
- *
+ * \param inverse_jacobian the quantity \f$J^i_\hat{k}=partial_\hat{k} x^i\f$,
+ *        where \f$x^i\f$ are the grid frame coordinates and
+ *        \f$x^{\hat k}\f$ are the distorted frame coordinates.
  * ## Background
  *
  * The characteristic speed on the excision boundary is
@@ -398,5 +401,7 @@ void comoving_char_speed_derivative(
     const tnsr::Ijj<DataVector, 3, Frame::Distorted>&
         spatial_christoffel_second_kind,
     const tnsr::i<DataVector, 3, Frame::Distorted>& deriv_lapse,
-    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_of_distorted_shift);
+    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_of_distorted_shift,
+    const InverseJacobian<DataVector, 3, Frame::Grid, Frame::Distorted>&
+        inverse_jacobian);
 }  // namespace control_system::size

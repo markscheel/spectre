@@ -10,7 +10,6 @@
 class DataVector;
 namespace Frame {
 struct Distorted;
-struct Inertial;
 }  // namespace Frame
 /// \endcond
 
@@ -20,7 +19,6 @@ namespace control_system::size {
  * \brief Computes the derivative of the comoving characteristic speed
  * with respect to the size map parameter.
  *
- * \tparam Frame should be ::Frame::Distorted if ::Frame::Distorted exists.
  * \param result the derivative of the comoving char speed
  *        \f$d v_c/d\lambda_{00}\f$, which is computed here using
  *        Eq. (\f$\ref{eq:result}\f$).
@@ -30,22 +28,25 @@ namespace control_system::size {
  * \param dt_horizon_00 the time derivative of horizon_00
  * \param grid_frame_excision_sphere_radius radius of the excision boundary
  *        in the grid frame, \f$r_{\mathrm{EB}}\f$.
- * \param excision_rhat the direction cosine \f$\xi_\hat{i}\f$
+ * \param excision_rhat the direction cosine \f$\xi_\hat{i}\f$. Not a
+ *        spacetime tensor: it is raised/lowered with \f$\delta_{ij}\f$
  * \param excision_normal_one_form the unnormalized one-form
  *        \f$\hat{s}_\hat{i}\f$
  * \param excision_normal_one_form_norm the norm of the one-form \f$a\f$
- * \param frame_components_of_grid_shift the quantity
+ * \param distorted_components_of_grid_shift the quantity
  *        \f$\beta^i \frac{\partial x^\hat{i}}{\partial x_i}\f$
  *        evaluated on the excision boundary.  This is not the shift in
  *        the distorted frame.
- * \param inverse_spatial_metric_on_excision_boundary metric in frame Frame.
+ * \param inverse_spatial_metric_on_excision_boundary metric in
+ *        the distorted frame.
  * \param spatial_christoffel_second_kind the Christoffel symbols
  *        \f$\Gamma^\hat{k}_{\hat{i}\hat{j}}\f$
  * \param deriv_lapse the spatial derivative of the lapse
  *        \f$\partial_\hat{i} \alpha\f$
- * \param deriv_shift the spatial derivative of the shift
+ * \param deriv_shift the spatial derivative of the shift in the
+ *        distorted frame
  *        \f$\partial_\hat{j} \hat{\beta}^\hat{i}\f$. This is not the
- *        derivative of frame_components_of_grid_shift.
+ *        derivative of distorted_components_of_grid_shift.
  *
  * ## Background
  *
@@ -59,14 +60,14 @@ namespace control_system::size {
  * toward larger radius)
  * normal one-form to the excision boundary in the grid frame.
  * (Note that the usual expression for the characteristic speed, as in
- * eq. 87 of \cite Hemberger20212jz, has
+ * eq. 87 of \cite Hemberger2012jz, has
  * a minus sign and defines \f$n_i\f$ as the inward-pointing (i.e. out of the
  * computational domain) normal; here
  * we have a plus sign and we define \f$n_i\f$ as outward-pointing because
  * the outward-pointing normal is passed into comoving_char_speed_derivative.)
  *
- * For the size/shape map at the excision boundary, Eq. 72 of
- * \cite Hemberger20212jz tells us that
+ * The size/shape map at the excision boundary is given by Eq. 72 of
+ * \cite Hemberger2012jz :
  * \f{align}
  *   \hat{x}^i &= \frac{x^i}{r_{\mathrm{EB}}}
  *      \left(1 - \lambda_{00} Y_{00}
@@ -87,7 +88,7 @@ namespace control_system::size {
  * to \f$\lambda_{00}\f$.
  *
  * The comoving characteristic speed is given by rewriting Eq. 98
- * of \cite Hemberger20212jz in terms of the distorted-frame shift:
+ * of \cite Hemberger2012jz in terms of the distorted-frame shift:
  * \f{align}
  *     v_c &= -\alpha +\hat{n}_\hat{i}\hat{\beta}^\hat{i}
  *           - Y_{00} \hat{n}_{\hat i} \xi^{\hat i}
@@ -381,18 +382,19 @@ namespace control_system::size {
  * where \f$\frac{d}{d\lambda_{00}} \hat{n}_{\hat i}\f$ is given by
  * Eq. (\f$\ref{eq:dnormalgamma}\f$).
  */
-template <typename Frame>
 void comoving_char_speed_derivative(
     gsl::not_null<Scalar<DataVector>*> result, double lambda_00,
     double dt_lambda_00, double horizon_00, double dt_horizon_00,
     double grid_frame_excision_sphere_radius,
-    const tnsr::i<DataVector, 3, Frame>& excision_rhat,
-    const tnsr::i<DataVector, 3, Frame>& excision_normal_one_form,
+    const tnsr::i<DataVector, 3, Frame::Distorted>& excision_rhat,
+    const tnsr::i<DataVector, 3, Frame::Distorted>& excision_normal_one_form,
     const Scalar<DataVector>& excision_normal_one_form_norm,
-    const tnsr::I<DataVector, 3, Frame>& frame_components_of_grid_shift,
-    const tnsr::II<DataVector, 3, Frame>&
+    const tnsr::I<DataVector, 3, Frame::Distorted>&
+        distorted_components_of_grid_shift,
+    const tnsr::II<DataVector, 3, Frame::Distorted>&
         inverse_spatial_metric_on_excision_boundary,
-    const tnsr::Ijj<DataVector, 3, Frame>& spatial_christoffel_second_kind,
-    const tnsr::i<DataVector, 3, Frame>& deriv_lapse,
-    const tnsr::iJ<DataVector, 3, Frame>& deriv_shift);
+    const tnsr::Ijj<DataVector, 3, Frame::Distorted>&
+        spatial_christoffel_second_kind,
+    const tnsr::i<DataVector, 3, Frame::Distorted>& deriv_lapse,
+    const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_distorted_shift);
 }  // namespace control_system::size

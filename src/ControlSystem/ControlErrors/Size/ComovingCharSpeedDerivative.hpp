@@ -361,8 +361,9 @@ namespace control_system::size {
  *  \xi^\hat{m} \Gamma^\hat{j}_{\hat{k} \hat{m}}
  *  \label{eq:dnormalgamma},
  * \f}
- * where we have substituted \f$\hat{n}_{\hat i}\f$ for
- * \f$\hat{s}_{\hat i}\f$ and we have substituted 3-Christoffel symbols for
+ * where we have eliminated \f$\hat{s}_{\hat i}\f$ and \f$a\f$ in favor
+ * of \f$\hat{n}_{\hat i}\f$
+ * and we have substituted 3-Christoffel symbols for
  * spatial derivatives of the 3-metric. Note that the last term in Eq.
  * (\f$\ref{eq:dnormalgamma}\f$) could also be derived by differentiating
  * \f$\hat{n}_\hat{i}\hat{n}_\hat{j}\gamma^{\hat{i}\hat{j}}=1\f$.

@@ -63,65 +63,71 @@ void comoving_char_speed_derivative(
       excision_normal_one_form(ti::j) *
           inverse_spatial_metric_on_excision_boundary(ti::J, ti::I));
 
-  // Fill result temporarily with most of the terms in d/dlambda00 (n_hati).
-  //   First, fill result temporarily with xi_k n_j gamma^jk/rEB
-  tenex::evaluate<>(result, excision_normal_vector(ti::I) *
-                                excision_rhat(ti::i) /
-                                grid_frame_excision_sphere_radius);
-  //   Second, add n_p n_j gamma^{pk} xi^m Gamma^j_{km} to result
+  // Fill result temporarily with all the terms in d/dlambda00 (n_hati)
+  // that are proportional to n_hati.
+  //   First, fill result with s_p s_j gamma^{pk} xi^i Gamma^j_{ki},
+  //   which is (almost) the last term in d/dlambda00(n_hati).
+  tenex::evaluate<>(
+      result, excision_normal_vector(ti::K) * excision_normal_one_form(ti::j) *
+                  excision_rhat_vector(ti::I) *
+                  spatial_christoffel_second_kind(ti::J, ti::k, ti::i));
+  //   Second, add to result s^k s_j InvJac^j_k / r_EB, which is
+  //   (almost) the second term in d/dlambda00(n_hati)
   tenex::update<>(result, (*result)() + excision_normal_vector(ti::K) *
                                             excision_normal_one_form(ti::j) *
-                                            excision_rhat_vector(ti::I) *
-                                            spatial_christoffel_second_kind(
-                                                ti::J, ti::k, ti::i));
-  //   Third, scale so result contains most of the terms in
-  //   d/dlambda00 (n_hati)
+                                            inverse_jacobian_grid_to_distorted(
+                                                ti::J, ti::k) /
+                                            grid_frame_excision_sphere_radius);
+  //   Third, scale by norm^3 so that result contains
+  //   1/a (n^k n_j InvJac^j_k / r_EB + n_p n_j gamma^{pk} xi^i Gamma^j_{ki}),
+  //   which is (almost) the last two terms of d/dlambda00(n_hati).
   get(*result) /= cube(get(excision_normal_one_form_norm));
 
-  // Set deriv_normal_one_form to d/dlambda00 (n_hati).
+  // Set deriv_normal_one_form to the first two terms of d/dlambda00 (n_hati).
   // Possible memory optimization: excision_normal_vector isn't used anymore,
   // so that storage could be used for deriv_normal_one_form.
-  for (size_t i = 0; i < 3; ++i) {
-    deriv_normal_one_form.get(i) =
-        Y00 * (excision_rhat.get(i) / grid_frame_excision_sphere_radius -
-               get(*result) * excision_normal_one_form.get(i));
-  }
+  tenex::evaluate<ti::i>(make_not_null(&deriv_normal_one_form),
+                         -Y00 * (*result)() * excision_normal_one_form(ti::i));
 
-  // Overwrite result term by term. First do the n_i xi^i term
-  // (without the Y00 or norm factor)
-  get(*result) = get<0>(excision_normal_one_form) * get<0>(excision_rhat);
-  for (size_t i = 1; i < 3; ++i) {
-    get(*result) += excision_normal_one_form.get(i) * excision_rhat.get(i);
-  }
-  get(*result) *= -dt_horizon_00 / horizon_00;
+  // Add the first term to deriv_normal_one_form, so that deriv_normal_one_form
+  // contains the entire d/dlambda00 (n_hati).
+  tenex::update<ti::i>(make_not_null(&deriv_normal_one_form),
+                       deriv_normal_one_form(ti::i) +
+                           (excision_normal_one_form(ti::j) *
+                            inverse_jacobian_grid_to_distorted(ti::J, ti::i)) *
+                               Y00 / excision_normal_one_form_norm());
 
-  // Add the n_i xi^j partial_j \beta^i term (without the Y00 or norm
-  // factor)
-  for (size_t i = 0; i < 3; ++i) {
-    for (size_t j = 0; j < 3; ++j) {
-      get(*result) += excision_rhat.get(j) * excision_normal_one_form.get(i) *
-                      deriv_of_distorted_shift.get(j, i);
-    }
-  }
+  // Now put the actual result, i.e. d/dlambda00 (v_c), into result.
+  // Do this term by term.  Ignore the overall factor of Y00 until the
+  // end.
+  //   First do the dt_horizon_00 term (without the normalization)
+  tenex::evaluate<>(result, -excision_normal_one_form(ti::i) *
+                                excision_rhat_vector(ti::I) * dt_horizon_00 /
+                                horizon_00);
+  //   Next do the shift term (again without the normalization)
+  tenex::update<>(result,
+                  (*result)() - excision_normal_one_form(ti::i) *
+                                    excision_rhat_vector(ti::J) *
+                                    deriv_of_distorted_shift(ti::j, ti::I));
 
   // Put in the norm factor.
   get(*result) /= get(excision_normal_one_form_norm);
 
   // Add the dlapse term (without the Y00 factor).
-  for (size_t i = 0; i < 3; ++i) {
-    get(*result) += deriv_lapse.get(i) * excision_rhat.get(i);
-  }
+  tenex::update<>(
+      result, (*result)() + deriv_lapse(ti::i) * excision_rhat_vector(ti::I));
 
   // Put in the Y00 factor.
   get(*result) *= Y00;
 
-  // Add the final factor to result
-  for (size_t i = 0; i < 3; ++i) {
-    get(*result) += deriv_normal_one_form.get(i) *
-                    (Y00 * dt_lambda_00 * excision_rhat.get(i) +
-                     distorted_components_of_grid_shift.get(i) -
-                     excision_rhat.get(i) * (dt_horizon_00 / horizon_00) *
-                         (Y00 * lambda_00 - grid_frame_excision_sphere_radius));
-  }
+  // Add the final term to result
+  tenex::update<>(
+      result,
+      (*result)() +
+          deriv_normal_one_form(ti::i) *
+              (Y00 * dt_lambda_00 * excision_rhat_vector(ti::I) +
+               distorted_components_of_grid_shift(ti::I) -
+               excision_rhat_vector(ti::I) * (dt_horizon_00 / horizon_00) *
+                   (Y00 * lambda_00 - grid_frame_excision_sphere_radius)));
 }
 }  // namespace control_system::size

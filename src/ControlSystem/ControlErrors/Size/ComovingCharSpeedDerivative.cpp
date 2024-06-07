@@ -48,10 +48,11 @@ void comoving_char_speed_derivative(
   // But excision_rhat is a coordinate quantity, not a physical tensor, so
   // it can also be used as a tnsr::I.  Here we create a tnsr::I called
   // excision_rhat_vector that points into excision_rhat.
-  const tnsr::I<DataVector, 3, Frame::Distorted> excision_rhat_vector;
+  tnsr::I<DataVector, 3, Frame::Distorted> excision_rhat_vector{};
   for (size_t i = 0; i < 3; ++i) {
+    // Is there a way to do this without the const_cast?
     excision_rhat_vector.get(i).set_data_ref(
-        make_not_null(&excision_rhat.get(i)));
+        const_cast<DataVector*>(&excision_rhat.get(i)));
   }
 
   tenex::evaluate<ti::I>(
@@ -59,25 +60,19 @@ void comoving_char_speed_derivative(
       excision_normal_one_form(ti::j) *
           inverse_spatial_metric_on_excision_boundary(ti::J, ti::I));
 
-  // Fill result temporarily with xi_k n_j gamma^jk/rEB
-  get(*result) = get<0>(excision_normal_vector) * get<0>(excision_rhat) /
-                 grid_frame_excision_sphere_radius;
-  for (size_t k = 1; k < 3; ++k) {
-    get(*result) += excision_normal_vector.get(k) * excision_rhat.get(k) /
-                    grid_frame_excision_sphere_radius;
-  }
-  // Add n_p n_j gamma^{pk} xi^m Gamma^j_{km} to result
-  for (size_t k = 0; k < 3; ++k) {
-    for (size_t j = 0; j < 3; ++j) {
-      for (size_t m = 0; m < 3; ++m) {
-        get(*result) += excision_normal_vector.get(k) *
-                        excision_normal_one_form.get(j) * excision_rhat.get(m) *
-                        spatial_christoffel_second_kind.get(j, k, m);
-      }
-    }
-  }
-  // scale so result contains most of the terms in
-  // d/dlambda00 (n_hati)
+  // Fill result temporarily with most of the terms in d/dlambda00 (n_hati).
+  //   First, fill result temporarily with xi_k n_j gamma^jk/rEB
+  tenex::evaluate<>(result, excision_normal_vector(ti::I) *
+                                excision_rhat(ti::i) /
+                                grid_frame_excision_sphere_radius);
+  //   Second, add n_p n_j gamma^{pk} xi^m Gamma^j_{km} to result
+  tenex::update<>(result, (*result)() + excision_normal_vector(ti::K) *
+                                            excision_normal_one_form(ti::j) *
+                                            excision_rhat_vector(ti::I) *
+                                            spatial_christoffel_second_kind(
+                                                ti::J, ti::k, ti::i));
+  //   Third, scale so result contains most of the terms in
+  //   d/dlambda00 (n_hati)
   get(*result) /= cube(get(excision_normal_one_form_norm));
 
   // Set deriv_normal_one_form to d/dlambda00 (n_hati).

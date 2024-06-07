@@ -48,7 +48,8 @@ namespace control_system::size {
  *        distorted frame
  *        \f$\partial_\hat{j} \hat{\beta}^\hat{i}\f$. This is not the
  *        derivative of distorted_components_of_grid_shift.
- * \param inverse_jacobian the quantity \f$J^i_\hat{k}=partial_\hat{k} x^i\f$,
+ * \param inverse_jacobian_grid_to_distorted the quantity
+ *        \f$J^i_\hat{k}=partial_\hat{k} x^i\f$,
  *        where \f$x^i\f$ are the grid frame coordinates and
  *        \f$x^{\hat k}\f$ are the distorted frame coordinates.
  * ## Background

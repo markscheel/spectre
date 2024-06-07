@@ -51,6 +51,8 @@ void comoving_char_speed_derivative(
   tnsr::I<DataVector, 3, Frame::Distorted> excision_rhat_vector{};
   for (size_t i = 0; i < 3; ++i) {
     // Is there a way to do this without the const_cast?
+    // Note that excision_rhat_vector must be non-const because
+    // we are changing it (by calling set_data_ref).
     excision_rhat_vector.get(i).set_data_ref(
         const_cast<DataVector*>(&excision_rhat.get(i)));
   }

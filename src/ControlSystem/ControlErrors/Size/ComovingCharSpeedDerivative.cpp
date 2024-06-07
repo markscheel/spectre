@@ -111,7 +111,8 @@ void comoving_char_speed_derivative(
       deriv_normal_one_form.get(i) +=
           excision_normal_one_form.get(j) *
           inverse_jacobian_grid_to_distorted.get(j, i) * Y00 /
-          get(excision_normal_one_form_norm);
+          (grid_frame_excision_sphere_radius *
+           get(excision_normal_one_form_norm));
     }
   }
 

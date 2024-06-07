@@ -16,15 +16,16 @@ def deriv_normalized_normal(
     Y00 = 0.5 / np.sqrt(np.pi)
 
     return Y00 * (
-        np.einsum("k,ki->i",
+        np.einsum("j,ji->i",
                   normalized_normal_one_form,
                   inverse_jacobian_grid_to_distorted,
         )
         / grid_frame_excision_sphere_radius
         - np.einsum(
-            "j,jk,k,i->i",
+            "j,jk,kl,l,i->i",
             normalized_normal_one_form,
             inverse_jacobian_grid_to_distorted,
+            inverse_spatial_metric_on_excision_boundary,
             normalized_normal_one_form,
             normalized_normal_one_form,
         )
@@ -90,7 +91,7 @@ def comoving_char_speed_derivative(
             "i,j,ji", normalized_normal_one_form, excision_rhat,
             deriv_of_distorted_shift
         )
-        + np.einsum("i,i", excision_rhat, deriv_lapse)
-        - (dt_horizon_00 / horizon_00)
+        - np.einsum("i,i", excision_rhat, deriv_lapse)
+        + (dt_horizon_00 / horizon_00)
         * np.einsum("i,i", excision_rhat, normalized_normal_one_form)
     )

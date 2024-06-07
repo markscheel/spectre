@@ -31,25 +31,33 @@ void comoving_char_speed_derivative(
     const tnsr::i<DataVector, 3, Frame::Distorted>& deriv_lapse,
     const tnsr::iJ<DataVector, 3, Frame::Distorted>& deriv_of_distorted_shift,
     const InverseJacobian<DataVector, 3, Frame::Grid, Frame::Distorted>&
-        inverse_jacobian) {
+        inverse_jacobian_grid_to_distorted) {
   const double Y00 = 0.25 * M_2_SQRTPI;
 
   // Define temporary storage.
   using excision_normal_vector_tag =
       ::Tags::TempI<1, 3, Frame::Distorted, DataVector>;
-  TempBuffer<tmpl::list<excision_normal_vector_tag>> buffer(
-      get<0>(excision_rhat).size());
+  using deriv_normal_one_form_tag =
+      ::Tags::Tempi<2, 3, Frame::Distorted, DataVector>;
+  TempBuffer<tmpl::list<excision_normal_vector_tag, deriv_normal_one_form_tag>>
+      buffer(get<0>(excision_rhat).size());
   auto& excision_normal_vector = get<excision_normal_vector_tag>(buffer);
+  auto& deriv_normal_one_form = get<deriv_normal_one_form_tag>(buffer);
 
+  // excision_rhat is a tnsr:i when it is returned from a Strahlkorper.
+  // But excision_rhat is a coordinate quantity, not a physical tensor, so
+  // it can also be used as a tnsr::I.  Here we create a tnsr::I called
+  // excision_rhat_vector that points into excision_rhat.
+  const tnsr::I<DataVector, 3, Frame::Distorted> excision_rhat_vector;
   for (size_t i = 0; i < 3; ++i) {
-    excision_normal_vector.get(i) =
-        get<0>(excision_normal_one_form) *
-            inverse_spatial_metric_on_excision_boundary.get(0, i) +
-        get<1>(excision_normal_one_form) *
-            inverse_spatial_metric_on_excision_boundary.get(1, i) +
-        get<2>(excision_normal_one_form) *
-            inverse_spatial_metric_on_excision_boundary.get(2, i);
+    excision_rhat_vector.get(i).set_data_ref(
+        make_not_null(&excision_rhat.get(i)));
   }
+
+  tenex::evaluate<ti::I>(
+      make_not_null(&excision_normal_vector),
+      excision_normal_one_form(ti::j) *
+          inverse_spatial_metric_on_excision_boundary(ti::J, ti::I));
 
   // Fill result temporarily with xi_k n_j gamma^jk/rEB
   get(*result) = get<0>(excision_normal_vector) * get<0>(excision_rhat) /
@@ -72,10 +80,11 @@ void comoving_char_speed_derivative(
   // d/dlambda00 (n_hati)
   get(*result) /= cube(get(excision_normal_one_form_norm));
 
-  // Now overwrite excision_normal_vector to contain
-  // d/dlambda00 (n_hati).
+  // Set deriv_normal_one_form to d/dlambda00 (n_hati).
+  // Possible memory optimization: excision_normal_vector isn't used anymore,
+  // so that storage could be used for deriv_normal_one_form.
   for (size_t i = 0; i < 3; ++i) {
-    excision_normal_vector.get(i) =
+    deriv_normal_one_form.get(i) =
         Y00 * (excision_rhat.get(i) / grid_frame_excision_sphere_radius -
                get(*result) * excision_normal_one_form.get(i));
   }
@@ -110,7 +119,7 @@ void comoving_char_speed_derivative(
 
   // Add the final factor to result
   for (size_t i = 0; i < 3; ++i) {
-    get(*result) += excision_normal_vector.get(i) *
+    get(*result) += deriv_normal_one_form.get(i) *
                     (Y00 * dt_lambda_00 * excision_rhat.get(i) +
                      distorted_components_of_grid_shift.get(i) -
                      excision_rhat.get(i) * (dt_horizon_00 / horizon_00) *

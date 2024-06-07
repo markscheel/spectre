@@ -73,11 +73,20 @@ void comoving_char_speed_derivative(
                   spatial_christoffel_second_kind(ti::J, ti::k, ti::i));
   //   Second, add to result s^k s_j InvJac^j_k / r_EB, which is
   //   (almost) the second term in d/dlambda00(n_hati)
-  tenex::update<>(result, (*result)() + excision_normal_vector(ti::K) *
-                                            excision_normal_one_form(ti::j) *
-                                            inverse_jacobian_grid_to_distorted(
-                                                ti::J, ti::k) /
-                                            grid_frame_excision_sphere_radius);
+  //     Note that the for the contraction s_j InvJac^j_k, the j on the s is
+  //     a distorted-frame index but the j on the InvJac is a grid-frame index.
+  //     This is really weird but it happens because some of the things are
+  //     not tensors. (In particular, the map itself looks like
+  //     x^{i_distorted} = x^{i_grid} * stuff, which equates grid and
+  //     distorted incides).
+  for (size_t j = 0; j < 3; ++j) {
+    for (size_t k = 0; k < 3; ++k) {
+      get(*result) += excision_normal_vector.get(k) *
+                      excision_normal_one_form.get(j) *
+                      inverse_jacobian_grid_to_distorted.get(j, k) /
+                      grid_frame_excision_sphere_radius;
+    }
+  }
   //   Third, scale by norm^3 so that result contains
   //   1/a (n^k n_j InvJac^j_k / r_EB + n_p n_j gamma^{pk} xi^i Gamma^j_{ki}),
   //   which is (almost) the last two terms of d/dlambda00(n_hati).
@@ -91,11 +100,20 @@ void comoving_char_speed_derivative(
 
   // Add the first term to deriv_normal_one_form, so that deriv_normal_one_form
   // contains the entire d/dlambda00 (n_hati).
-  tenex::update<ti::i>(make_not_null(&deriv_normal_one_form),
-                       deriv_normal_one_form(ti::i) +
-                           (excision_normal_one_form(ti::j) *
-                            inverse_jacobian_grid_to_distorted(ti::J, ti::i)) *
-                               Y00 / excision_normal_one_form_norm());
+  //     Note that the for the contraction s_j InvJac^j_i, the j on the s is
+  //     a distorted-frame index but the j on the InvJac is a grid-frame index.
+  //     This is really weird but it happens because some of the things are
+  //     not tensors. (In particular, the map itself looks like
+  //     x^{i_distorted} = x^{i_grid} * stuff, which equates grid and
+  //     distorted incides).
+  for (size_t i = 0; i < 3; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
+      deriv_normal_one_form.get(i) +=
+          excision_normal_one_form.get(j) *
+          inverse_jacobian_grid_to_distorted.get(j, i) * Y00 /
+          get(excision_normal_one_form_norm);
+    }
+  }
 
   // Now put the actual result, i.e. d/dlambda00 (v_c), into result.
   // Do this term by term.  Ignore the overall factor of Y00 until the

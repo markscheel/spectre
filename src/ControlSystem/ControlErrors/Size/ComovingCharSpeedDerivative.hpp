@@ -203,7 +203,8 @@ namespace control_system::size {
  * \label{eq:derivjacobian}
  * \f}
  *
- * By taking the derivative of the identity
+ * But we want the derivative of the inverse Jacobian, not the forward
+ * Jacobian. By taking the derivative of the identity
  * \f{align}
  *  \frac{\partial \hat{x}^\hat{i}}{\partial x^k}
  *  \frac{\partial x^k}{\partial \hat{x}^\hat{j}} &= \delta^\hat{i}_\hat{j}
@@ -285,7 +286,8 @@ namespace control_system::size {
  * \f{align}
  *    s_i &= \xi^j \delta_{ij},
  * \f}
- * because the excision boundary is a sphere in the grid frame. Therefore
+ * because the excision boundary is a sphere of fixed radius in the
+ * grid frame. Therefore
  * \f$s_i\f$ doesn't depend on \f$\lambda_{00}\f$.
  *
  * The normalized one-form \f$\hat{n}_\hat{i}\f$ is given by
@@ -367,11 +369,16 @@ namespace control_system::size {
  * where we have eliminated \f$\hat{s}_{\hat i}\f$ and \f$a\f$ in favor
  * of \f$\hat{n}_{\hat i}\f$
  * and we have substituted 3-Christoffel symbols for
- * spatial derivatives of the 3-metric. Note that the last term in Eq.
+ * spatial derivatives of the 3-metric (and the factor of 2 on the penultimate
+ * line has been absorbed into the 3-Christoffel symbol on the last line).
+ * Note that the last term in Eq.
  * (\f$\ref{eq:dnormalgamma}\f$) could also be derived by differentiating
  * \f$\hat{n}_\hat{i}\hat{n}_\hat{j}\gamma^{\hat{i}\hat{j}}=1\f$.
+ * The first term in Eq. (\f$\ref{eq:dnormalgamma}\f$) is strange because
+ * the inverse Jacobian (as opposed to the forward Jacobian) is contracted
+ * with \f$\hat{n}_i\f$, so that is not a tensor transformation.
  *
- * So we can now differentiate Eq. (\f$\ref{eq:comovingspeed}\f$) to obtain
+ * We can now differentiate Eq. (\f$\ref{eq:comovingspeed}\f$) to obtain
  * \f{align}
  *  \frac{d}{d\lambda_{00}} v_c &=
  *  \xi^\hat{i} Y_{00} \partial_\hat{i} \alpha

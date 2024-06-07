@@ -10,10 +10,10 @@
 
 namespace {
 
-template <typename Frame, typename DataType>
+template <typename DataType>
 void test_comoving_char_speed_derivative(const DataType& used_for_size) {
-  pypp::check_with_random_values<13>(
-      &control_system::size::comoving_char_speed_derivative<Frame>,
+  pypp::check_with_random_values<14>(
+      &control_system::size::comoving_char_speed_derivative,
       "ComovingCharSpeedDerivative", {{"comoving_char_speed_derivative"}},
       {{
           {-0.5, 0.},
@@ -29,6 +29,7 @@ void test_comoving_char_speed_derivative(const DataType& used_for_size) {
           {-1., 1.},
           {-1., 1.},
           {-1., 1.},
+          {-1., 1.},
       }},
       used_for_size);
 }
@@ -40,5 +41,5 @@ SPECTRE_TEST_CASE(
   pypp::SetupLocalPythonEnvironment local_python_env(
       "ControlSystem/ControlErrors/");
   DataVector used_for_size(3);
-  test_comoving_char_speed_derivative<Frame::Distorted>(used_for_size);
+  test_comoving_char_speed_derivative(used_for_size);
 }

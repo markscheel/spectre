@@ -48,13 +48,14 @@ void comoving_char_speed_derivative(
   // But excision_rhat is a coordinate quantity, not a physical tensor, so
   // it can also be used as a tnsr::I.  Here we create a tnsr::I called
   // excision_rhat_vector that points into excision_rhat.
-  tnsr::I<DataVector, 3, Frame::Distorted> excision_rhat_vector{};
+  const tnsr::I<DataVector, 3, Frame::Distorted> excision_rhat_vector{};
   for (size_t i = 0; i < 3; ++i) {
-    // Is there a way to do this without the const_cast?
+    // Is there a way to do this without the const_casts?
     // Note that excision_rhat_vector must be non-const because
     // we are changing it (by calling set_data_ref).
-    excision_rhat_vector.get(i).set_data_ref(
-        const_cast<DataVector*>(&excision_rhat.get(i)));
+    // And set_data_ref expects a non-const argument.
+    const_cast<DataVector*>(&excision_rhat_vector.get(i))
+        ->set_data_ref(const_cast<DataVector*>(&excision_rhat.get(i)));
   }
 
   tenex::evaluate<ti::I>(

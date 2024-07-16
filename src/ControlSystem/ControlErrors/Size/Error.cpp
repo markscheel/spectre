@@ -40,6 +40,7 @@ ErrorDiagnostics control_error(
     const double time, const double control_error_delta_r,
     const std::optional<double> control_error_delta_r_outward,
     const std::optional<double> max_allowed_radial_distance,
+    const double horizon_00,
     const double dt_lambda_00, const ylm::Strahlkorper<Frame>& apparent_horizon,
     const ylm::Strahlkorper<Frame>& excision_boundary,
     const Scalar<DataVector>& lapse_on_excision_boundary,
@@ -126,6 +127,8 @@ ErrorDiagnostics control_error(
   //
   // Minus sign is because we want the normal pointing into the hole,
   // not out of the hole.
+  //
+  // Note that distorted_normal_dot_unit_coord_vector is negative.
   get(distorted_normal_dot_unit_coord_vector) =
       -get<0>(excision_normal_one_form) * get<0>(excision_rhat);
   for (size_t i = 1; i < 3; ++i) {
@@ -137,6 +140,8 @@ ErrorDiagnostics control_error(
 
   // Average value of distorted_normal_dot_unit_coord_vector on the excision
   // boundary.  Compute the average by integrating.
+  //
+  // Note that avg_distorted_normal_dot_unit_coord_vector is negative.
   get(unity) = 1.0;
   const double avg_distorted_normal_dot_unit_coord_vector =
       gr::surfaces::surface_integral_of_scalar(
@@ -146,6 +151,10 @@ ErrorDiagnostics control_error(
                                                excision_boundary);
 
   // Compute char speed on excision boundary, Eq. 87 in ArXiv:1211.6079
+  //
+  // Note that characteristic_speed_on_excision_boundary should normally
+  // be positive, and one of the control system states (AhSpeed) is designed
+  // to keep it positive.
   get(characteristic_speed_on_excision_boundary) =
       -get(lapse_on_excision_boundary);
   for (size_t i = 0; i < 3; ++i) {
@@ -200,7 +209,7 @@ ErrorDiagnostics control_error(
   // Update the info, possibly changing the state inside of info.
   std::string update_message = info->state->get_clone()->update(
       info,
-      StateUpdateArgs{min_char_speed, min_comoving_char_speed,
+      StateUpdateArgs{min_char_speed, min_comoving_char_speed, horizon_00,
                       control_error_delta_r, average_radial_distance,
                       max_allowed_radial_distance},
       CrossingTimeInfo{char_speed_crossing_time,

@@ -31,6 +31,9 @@ struct StateUpdateArgs {
   /// min_comoving_char_speed is the minimum over the excision boundary
   /// of Eq. 28 of \cite Hemberger2012jz.
   double min_comoving_char_speed;
+  /// horizon_00 is the spherepack coefficient of the apparent
+  /// horizon.
+  double horizon_00;
   /// control_error_delta_r is the control error when the control system
   /// is in state Label::DeltaR.
   /// This is Q in Eq. 96 of \cite Hemberger2012jz.

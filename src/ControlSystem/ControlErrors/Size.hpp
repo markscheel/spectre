@@ -432,7 +432,7 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
             ? std::optional<double>(delta_r_drift_outward_options_.value()
                                         .max_allowed_radial_distance)
             : std::nullopt,
-        dt_lambda_00, apparent_horizon, excision_surface, lapse,
+        horizon_00, dt_lambda_00, apparent_horizon, excision_surface, lapse,
         shifty_quantity, spatial_metric_on_excision,
         inverse_spatial_metric_on_excision);
 

@@ -233,9 +233,38 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
     double outward_drift_timescale{};
   };
 
-  using options = tmpl::list<MaxNumTimesForZeroCrossingPredictor,
-                             SmoothAvgTimescaleFraction, SmootherTuner,
-                             InitialState, DeltaRDriftOutwardOptions>;
+  struct DeltaRDriftInwardOptions {
+    using type =
+        Options::Auto<DeltaRDriftInwardOptions, Options::AutoLabel::None>;
+    static constexpr Options::String help{
+        "Options for State DeltaRDriftInward. Specify 'None' to disable State "
+        "DeltaRDriftInward."};
+    struct MinAllowedRadialDistance {
+      using type = double;
+      static constexpr Options::String help{
+          "Drift excision boundary inward if distance from horizon to "
+          "excision is less than this."};
+    };
+    struct InwardDriftVelocity {
+      using type = double;
+      static constexpr Options::String help{
+          "Constant drift velocity term, if triggered by "
+          "MinAllowedRadialDistance."};
+    };
+    using options = tmpl::list<MinAllowedRadialDistance, InwardDriftVelocity>;
+    void pup(PUP::er& p) {
+      p | min_allowed_radial_distance;
+      p | inward_drift_velocity;
+    }
+
+    double min_allowed_radial_distance{};
+    double inward_drift_velocity{};
+  };
+
+  using options =
+      tmpl::list<MaxNumTimesForZeroCrossingPredictor,
+                 SmoothAvgTimescaleFraction, SmootherTuner, InitialState,
+                 DeltaRDriftOutwardOptions, DeltaRDriftInwardOptions>;
   static constexpr Options::String help{
       "Computes the control error for size control. Will also write a "
       "diagnostics file if the control systems are allowed to write data to "
@@ -258,7 +287,8 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   Size(const int max_times, const double smooth_avg_timescale_frac,
        TimescaleTuner<true> smoother_tuner,
        std::unique_ptr<size::State> initial_state,
-       std::optional<DeltaRDriftOutwardOptions> delta_r_drift_outward_options);
+       std::optional<DeltaRDriftOutwardOptions> delta_r_drift_outward_options,
+       std::optional<DeltaRDriftInwardOptions> delta_r_drift_inward_options);
 
   /// Returns the internal `control_system::size::Info::suggested_time_scale`. A
   /// std::nullopt means that no timescale is suggested.
@@ -496,6 +526,7 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   std::vector<std::string> legend_{};
   std::string subfile_name_{};
   std::optional<DeltaRDriftOutwardOptions> delta_r_drift_outward_options_{};
+  std::optional<DeltaRDriftInwardOptions> delta_r_drift_inward_options_{};
 };
 }  // namespace ControlErrors
 }  // namespace control_system

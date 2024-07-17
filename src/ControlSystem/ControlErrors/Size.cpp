@@ -13,6 +13,7 @@
 #include "ControlSystem/ControlErrors/Size/AhSpeed.hpp"
 #include "ControlSystem/ControlErrors/Size/DeltaR.hpp"
 #include "ControlSystem/ControlErrors/Size/DeltaRDriftOutward.hpp"
+#include "ControlSystem/ControlErrors/Size/DeltaRDriftInward.hpp"
 #include "ControlSystem/ControlErrors/Size/Info.hpp"
 #include "ControlSystem/ControlErrors/Size/Initial.hpp"
 #include "Domain/Structure/ObjectLabel.hpp"
@@ -45,9 +46,11 @@ Size<DerivOrder, Horizon>::Size(
     const int max_times, const double smooth_avg_timescale_frac,
     TimescaleTuner<true> smoother_tuner,
     std::unique_ptr<size::State> initial_state,
-    std::optional<DeltaRDriftOutwardOptions> delta_r_drift_outward_options)
+    std::optional<DeltaRDriftOutwardOptions> delta_r_drift_outward_options,
+    std::optional<DeltaRDriftInwardOptions> delta_r_drift_inward_options)
     : smoother_tuner_(std::move(smoother_tuner)),
-      delta_r_drift_outward_options_(delta_r_drift_outward_options) {
+      delta_r_drift_outward_options_(delta_r_drift_outward_options),
+      delta_r_drift_inward_options_(delta_r_drift_inward_options) {
   if (not smoother_tuner_.timescales_have_been_set()) {
     smoother_tuner_.resize_timescales(1);
   }
@@ -125,6 +128,7 @@ void Size<DerivOrder, Horizon>::pup(PUP::er& p) {
   p | legend_;
   p | subfile_name_;
   p | delta_r_drift_outward_options_;
+  p | delta_r_drift_inward_options_;
 }
 
 #define DERIV_ORDER(data) BOOST_PP_TUPLE_ELEM(0, data)

@@ -47,6 +47,23 @@ struct StateUpdateArgs {
   /// Label::DeltaRDriftOutward.  If std::nullopt, then DeltaRDriftOutward
   /// will never be triggered.
   std::optional<double> max_allowed_radial_distance;
+  /// avg_distorted_normal_dot_unit_coord_vector is the same quantity as
+  /// ControlErrorArgs::avg_distorted_normal_dot_unit_coord_vector.
+  double avg_distorted_normal_dot_unit_coord_vector;
+  /// inward_drift_velocity is a positive quantity that represents how
+  /// fast the horizon and the excision boundary move apart in state
+  /// DeltaRDriftInward.  If std::nullopt, then DeltaRDriftInward will
+  /// never be triggered.
+  std::optional<double> inward_drift_velocity;
+  /// min_allowed_radial_distance is the minimum distance between the horizon
+  /// and the excision boundary that will trigger state
+  /// Label::DeltaRDriftInward.
+  std::optional<double> min_allowed_radial_distance;
+  /// min_allowed_char_speed is the minimum char speed that will
+  /// trigger state Label::DeltaRDriftInward.  If both
+  /// min_allowed_radial_distance and min_allowed_char_speed are
+  /// std::nullopt, then DeltaRDriftInward will never be triggered.
+  std::optional<double> min_allowed_char_speed;
 };
 
 /*!

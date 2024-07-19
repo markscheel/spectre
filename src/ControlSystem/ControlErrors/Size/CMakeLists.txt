@@ -9,6 +9,7 @@ spectre_target_sources(
   AhSpeed.cpp
   DeltaR.cpp
   DeltaRDriftInward.cpp
+  DeltaRDriftInwardHelpers.cpp
   DeltaRDriftOutward.cpp
   Error.cpp
   Initial.cpp

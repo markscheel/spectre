@@ -245,19 +245,28 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
           "Drift excision boundary inward if distance from horizon to "
           "excision is less than this."};
     };
+    struct MinAllowedCharSpeed {
+      using type = double;
+      static constexpr Options::String help{
+          "Drift excision boundary inward if min char speed is less than "
+          "this."};
+    };
     struct InwardDriftVelocity {
       using type = double;
       static constexpr Options::String help{
           "Constant drift velocity term, if triggered by "
           "MinAllowedRadialDistance."};
     };
-    using options = tmpl::list<MinAllowedRadialDistance, InwardDriftVelocity>;
+    using options = tmpl::list<MinAllowedRadialDistance, MinAllowedCharSpeed,
+                               InwardDriftVelocity>;
     void pup(PUP::er& p) {
       p | min_allowed_radial_distance;
+      p | min_allowed_char_speed;
       p | inward_drift_velocity;
     }
 
     double min_allowed_radial_distance{};
+    double min_allowed_char_speed{};
     double inward_drift_velocity{};
   };
 
@@ -450,6 +459,21 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
                                         delta_r_drift_outward_options_.value()
                                             .outward_drift_timescale)
             : std::nullopt;
+    const std::optional<double> inward_drift_velocity =
+        delta_r_drift_inward_options_.has_value()
+            ? std::optional<double>(
+                  delta_r_drift_inward_options_.value().inward_drift_velocity)
+            : std::nullopt;
+    const std::optional<double> min_allowed_radial_distance =
+        delta_r_drift_inward_options_.has_value()
+            ? std::optional<double>(delta_r_drift_inward_options_.value()
+                                        .min_allowed_radial_distance)
+            : std::nullopt;
+    const std::optional<double> min_allowed_char_speed =
+        delta_r_drift_inward_options_.has_value()
+            ? std::optional<double>(
+                  delta_r_drift_inward_options_.value().min_allowed_char_speed)
+            : std::nullopt;
 
     info_.damping_time = min(tuner.current_timescale());
 
@@ -462,8 +486,9 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
             ? std::optional<double>(delta_r_drift_outward_options_.value()
                                         .max_allowed_radial_distance)
             : std::nullopt,
-        horizon_00, dt_lambda_00, apparent_horizon, excision_surface, lapse,
-        shifty_quantity, spatial_metric_on_excision,
+        inward_drift_velocity, min_allowed_radial_distance,
+        min_allowed_char_speed, horizon_00, dt_lambda_00, apparent_horizon,
+        excision_surface, lapse, shifty_quantity, spatial_metric_on_excision,
         inverse_spatial_metric_on_excision);
 
     state_history_.store(time, info_, error_diagnostics.control_error_args);

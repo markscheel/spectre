@@ -11,6 +11,7 @@
 
 #include "ControlSystem/ControlErrors/Size/AhSpeed.hpp"
 #include "ControlSystem/ControlErrors/Size/DeltaR.hpp"
+#include "ControlSystem/ControlErrors/Size/DeltaRDriftInwardHelpers.hpp"
 #include "Utilities/StdHelpers.hpp"
 
 namespace control_system::size::States {
@@ -48,6 +49,18 @@ std::string DeltaRDriftInward::update(
           std::numeric_limits<double>::infinity()) < info->damping_time and
       not delta_radius_is_in_danger;
 
+  constexpr double inward_drift_limit_buffer_factor = 0.9;
+  const bool delta_r_almost_above_inward_drift_limit =
+      update_args.min_allowed_radial_distance.has_value() and
+      average_radial_distance >
+          inward_drift_limit_buffer_factor *
+              update_args.min_allowed_radial_distance.value();
+  const bool char_speed_almost_above_inward_drift_limit =
+      update_args.min_allowed_char_speed.has_value() and
+      update_args.min_char_speed >
+          inward_drift_limit_buffer_factor *
+              update_args.min_allowed_char_speed.value();
+
   std::stringstream ss{};
 
   if (char_speed_is_in_danger) {
@@ -72,14 +85,19 @@ std::string DeltaRDriftInward::update(
     // speed automatically (since it drives char speed to comoving
     // char speed, plus a small difference).  But we should decrease
     // the timescale in any case.
-    info->suggested_time_scale = crossing_time_info.t_char_speed;
+    info->suggested_time_scale = crossing_time_info.t_char_speed.value();
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (delta_radius_is_in_danger) {
-    info->suggested_time_scale = crossing_time_info.t_delta_radius;
+    info->suggested_time_scale = crossing_time_info.t_delta_radius.value();
     ss << "Current state DeltaRDriftInward. Delta radius in danger. Staying "
           "in DeltaRDriftInward.\n";
     ss << " Suggested timescale = " << info->suggested_time_scale;
-  } else if (not ShouldEnterState3FromState2) {
+  } else if (should_transition_from_state_inward_drift_to_delta_r_no_drift(
+                 crossing_time_info.t_state_3.value(), info->damping_time,
+                 update_args.inward_drift_velocity,
+                 delta_r_almost_above_inward_drift_limit,
+                 char_speed_almost_above_inward_drift_limit,
+                 comoving_char_speed_increasing_inward)) {
     ss << "Current state DeltaRDriftInward. Switching to DeltaRNoDrift.\n";
     info->discontinuous_change_has_occurred = true;
     info->state = std::make_unique<States::DeltaRNoDrift>();
@@ -96,7 +114,9 @@ std::string DeltaRDriftInward::update(
     constexpr double delta_r_drift_inward_decrease_factor = 0.99;  // Arbitrary
     info->suggested_time_scale =
         info->damping_time * delta_r_drift_inward_decrease_factor;
-    info->target_char_speed = ComputeTargetSpeedForState3;
+    info->target_char_speed = target_speed_for_inward_drift(
+        update_args.inward_drift_velocity.value(), update_args.min_char_speed,
+        update_args.avg_distorted_normal_dot_unit_coord_vector);
     ss << " Target char speed = " << info->target_char_speed << "\n";
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (update_args.average_radial_distance.has_value() and

@@ -29,7 +29,7 @@ std::string DeltaRDriftInward::update(
   // oscillations between states.  The value was chosen in SpEC, but
   // nothing should be sensitive to small changes in this value as
   // long as it is slightly greater than unity.
-  constexpr double non_oscillation_drift_outward_factor = 1.1;
+  constexpr double non_oscillation_drift_inward_factor = 1.1;
 
   // Note that delta_radius_is_in_danger and char_speed_is_in_danger
   // can be different for different States.
@@ -93,7 +93,7 @@ std::string DeltaRDriftInward::update(
           "in DeltaRDriftInward.\n";
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (should_transition_from_state_inward_drift_to_delta_r_no_drift(
-                 crossing_time_info.t_state_3.value(), info->damping_time,
+                 crossing_time_info.t_drift_limit.value(), info->damping_time,
                  update_args.inward_drift_velocity,
                  delta_r_almost_above_inward_drift_limit,
                  char_speed_almost_above_inward_drift_limit,
@@ -102,7 +102,7 @@ std::string DeltaRDriftInward::update(
     info->discontinuous_change_has_occurred = true;
     info->state = std::make_unique<States::DeltaRNoDrift>();
     info->suggested_time_scale =
-        crossing_time_info.t_state_3.value_or(info->damping_time);
+        crossing_time_info.t_drift_limit.value_or(info->damping_time);
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (crossing_time_info.t_delta_radius.has_value() and
              info->damping_time > 2.0 * update_args.horizon_00 * Y00) {
@@ -121,7 +121,7 @@ std::string DeltaRDriftInward::update(
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (update_args.average_radial_distance.has_value() and
              update_args.average_radial_distance.value() >
-                 non_oscillation_drift_outward_factor *
+                 non_oscillation_drift_inward_factor *
                      update_args.max_allowed_radial_distance.value()) {
     info->discontinuous_change_has_occurred = true;
     ss << "Current state DeltaRDriftInward. We have drifted too far, so "

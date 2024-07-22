@@ -37,13 +37,16 @@ ErrorDiagnostics control_error(
     const gsl::not_null<intrp::ZeroCrossingPredictor*>
         predictor_comoving_char_speed,
     const gsl::not_null<intrp::ZeroCrossingPredictor*> predictor_delta_radius,
+    const gsl::not_null<intrp::ZeroCrossingPredictor*>
+        predictor_drift_limit_char_speed,
+    const gsl::not_null<intrp::ZeroCrossingPredictor*>
+        predictor_drift_limit_delta_radius,
     const double time, const double control_error_delta_r,
     const std::optional<double> control_error_delta_r_outward,
     const std::optional<double> max_allowed_radial_distance,
     const std::optional<double> inward_drift_velocity,
     const std::optional<double> min_allowed_radial_distance,
-    const std::optional<double> min_allowed_char_speed,
-    const double horizon_00,
+    const std::optional<double> min_allowed_char_speed, const double horizon_00,
     const double dt_lambda_00, const ylm::Strahlkorper<Frame>& apparent_horizon,
     const ylm::Strahlkorper<Frame>& excision_boundary,
     const Scalar<DataVector>& lapse_on_excision_boundary,
@@ -190,6 +193,15 @@ ErrorDiagnostics control_error(
                             get(characteristic_speed_on_excision_boundary));
   predictor_comoving_char_speed->add(time, get(comoving_char_speed));
   predictor_delta_radius->add(time, get(radial_distance));
+  if (min_allowed_char_speed.has_value()) {
+    predictor_drift_limit_char_speed->add(
+        time, min_allowed_char_speed.value() -
+                  get(characteristic_speed_on_excision_boundary));
+  }
+  if (min_allowed_radial_distance.has_value()) {
+    predictor_drift_limit_delta_radius->add(
+        time, min_allowed_radial_distance.value() - get(radial_distance));
+  }
 
   // Compute crossing times for state-change logic.
   const std::optional<double> char_speed_crossing_time =
@@ -198,6 +210,16 @@ ErrorDiagnostics control_error(
       predictor_comoving_char_speed->min_positive_zero_crossing_time(time);
   const std::optional<double> delta_radius_crossing_time =
       predictor_delta_radius->min_positive_zero_crossing_time(time);
+  const std::optional<double> drift_limit_delta_radius_crossing_time =
+      min_allowed_radial_distance.has_value()
+          ? predictor_drift_limit_delta_radius->min_positive_zero_crossing_time(
+                time)
+          : std::nullopt;
+  const std::optional<double> drift_limit_char_speed_crossing_time =
+      min_allowed_char_speed.has_value()
+          ? predictor_drift_limit_char_speed->min_positive_zero_crossing_time(
+                time)
+          : std::nullopt;
 
   // Compute average radial distance for state DeltaRDriftOutward.
   const std::optional<double> average_radial_distance =
@@ -218,9 +240,10 @@ ErrorDiagnostics control_error(
                       avg_distorted_normal_dot_unit_coord_vector,
                       inward_drift_velocity, min_allowed_radial_distance,
                       min_allowed_char_speed},
-      CrossingTimeInfo{char_speed_crossing_time,
-                       comoving_char_speed_crossing_time,
-                       delta_radius_crossing_time});
+      CrossingTimeInfo{
+          char_speed_crossing_time, comoving_char_speed_crossing_time,
+          delta_radius_crossing_time, drift_limit_char_speed_crossing_time,
+          drift_limit_delta_radius_crossing_time});
 
   const ControlErrorArgs control_error_args{
       min_char_speed, control_error_delta_r, control_error_delta_r_outward,
@@ -258,9 +281,17 @@ ErrorDiagnostics control_error(
           predictor_comoving_char_speed,                                       \
       const gsl::not_null<intrp::ZeroCrossingPredictor*>                       \
           predictor_delta_radius,                                              \
+      const gsl::not_null<intrp::ZeroCrossingPredictor*>                       \
+          predictor_drift_limit_char_speed,                                    \
+      const gsl::not_null<intrp::ZeroCrossingPredictor*>                       \
+          predictor_drift_limit_delta_radius,                                  \
       double time, double control_error_delta_r,                               \
       std::optional<double> control_error_delta_r_outward,                     \
-      std::optional<double> max_allowed_radial_distance, double dt_lambda_00,  \
+      std::optional<double> max_allowed_radial_distance,                       \
+      std::optional<double> inward_drift_velocity,                             \
+      std::optional<double> min_allowed_radial_distance,                       \
+      std::optional<double> min_allowed_char_speed, double horizon_00,         \
+      double dt_lambda_00,                                                     \
       const ylm::Strahlkorper<FRAME(data)>& apparent_horizon,                  \
       const ylm::Strahlkorper<FRAME(data)>& excision_boundary,                 \
       const Scalar<DataVector>& lapse_on_excision_boundary,                    \

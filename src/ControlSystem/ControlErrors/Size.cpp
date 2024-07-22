@@ -62,6 +62,10 @@ Size<DerivOrder, Horizon>::Size(
   comoving_char_speed_predictor_ =
       intrp::ZeroCrossingPredictor{3, max_times_size_t};
   delta_radius_predictor_ = intrp::ZeroCrossingPredictor{3, max_times_size_t};
+  drift_limit_char_speed_predictor_ =
+      intrp::ZeroCrossingPredictor{3, max_times_size_t};
+  drift_limit_delta_radius_predictor_ =
+      intrp::ZeroCrossingPredictor{3, max_times_size_t};
   state_history_ = size::StateHistory{DerivOrder + 1};
   legend_ = std::vector<std::string>{"Time",
                                      "ControlError",
@@ -124,6 +128,8 @@ void Size<DerivOrder, Horizon>::pup(PUP::er& p) {
   p | char_speed_predictor_;
   p | comoving_char_speed_predictor_;
   p | delta_radius_predictor_;
+  p | drift_limit_char_speed_predictor_;
+  p | drift_limit_delta_radius_predictor_;
   p | state_history_;
   p | legend_;
   p | subfile_name_;

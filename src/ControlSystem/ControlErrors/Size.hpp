@@ -480,8 +480,10 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
     const size::ErrorDiagnostics error_diagnostics = size::control_error(
         make_not_null(&info_), make_not_null(&char_speed_predictor_),
         make_not_null(&comoving_char_speed_predictor_),
-        make_not_null(&delta_radius_predictor_), time, control_error_delta_r,
-        control_error_delta_r_outward,
+        make_not_null(&delta_radius_predictor_),
+        make_not_null(&drift_limit_char_speed_predictor_),
+        make_not_null(&drift_limit_delta_radius_predictor_), time,
+        control_error_delta_r, control_error_delta_r_outward,
         delta_r_drift_outward_options_.has_value()
             ? std::optional<double>(delta_r_drift_outward_options_.value()
                                         .max_allowed_radial_distance)
@@ -547,6 +549,8 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   intrp::ZeroCrossingPredictor char_speed_predictor_{};
   intrp::ZeroCrossingPredictor comoving_char_speed_predictor_{};
   intrp::ZeroCrossingPredictor delta_radius_predictor_{};
+  intrp::ZeroCrossingPredictor drift_limit_char_speed_predictor_{};
+  intrp::ZeroCrossingPredictor drift_limit_delta_radius_predictor_{};
   size::StateHistory state_history_{};
   std::vector<std::string> legend_{};
   std::string subfile_name_{};

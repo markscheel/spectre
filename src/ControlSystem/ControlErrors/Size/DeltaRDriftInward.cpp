@@ -12,6 +12,7 @@
 #include "ControlSystem/ControlErrors/Size/AhSpeed.hpp"
 #include "ControlSystem/ControlErrors/Size/DeltaR.hpp"
 #include "ControlSystem/ControlErrors/Size/DeltaRDriftInwardHelpers.hpp"
+#include "ControlSystem/ControlErrors/Size/DeltaRDriftOutward.hpp"
 #include "Utilities/StdHelpers.hpp"
 
 namespace control_system::size::States {
@@ -52,7 +53,7 @@ std::string DeltaRDriftInward::update(
   constexpr double inward_drift_limit_buffer_factor = 0.9;
   const bool delta_r_almost_above_inward_drift_limit =
       update_args.min_allowed_radial_distance.has_value() and
-      average_radial_distance >
+      update_args.average_radial_distance.value() >
           inward_drift_limit_buffer_factor *
               update_args.min_allowed_radial_distance.value();
   const bool char_speed_almost_above_inward_drift_limit =
@@ -62,6 +63,10 @@ std::string DeltaRDriftInward::update(
               update_args.min_allowed_char_speed.value();
 
   std::stringstream ss{};
+
+  // TEMPORARY WHILE TESTING. Eventually this will be
+  // passed in from outside.
+  const bool comoving_char_speed_increasing_inward = true;
 
   if (char_speed_is_in_danger) {
     ss << "Current state DeltaRDriftInward. Char speed in danger."
@@ -100,7 +105,7 @@ std::string DeltaRDriftInward::update(
                  comoving_char_speed_increasing_inward)) {
     ss << "Current state DeltaRDriftInward. Switching to DeltaRNoDrift.\n";
     info->discontinuous_change_has_occurred = true;
-    info->state = std::make_unique<States::DeltaRNoDrift>();
+    // TEMPORARY FOR TESTING info->state = std::make_unique<States::DeltaRNoDrift>();
     info->suggested_time_scale =
         crossing_time_info.t_drift_limit.value_or(info->damping_time);
     ss << " Suggested timescale = " << info->suggested_time_scale;
@@ -140,7 +145,7 @@ double DeltaRDriftInward::control_error(
   // We increase the control error by the target speed, so as to make
   // control_error_delta_r more negative, which gives a negative velocity
   // to delta_r (i.e. a positive velocity to the excision boundary).
-  return control_error_args.control_error_delta_r + info->target_char_speed;
+  return control_error_args.control_error_delta_r + info.target_char_speed;
 }
 
 PUP::able::PUP_ID DeltaRDriftInward::my_PUP_ID = 0;

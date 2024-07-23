@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include <pup.h>
+#include <string>
+
+#include "ControlSystem/ControlErrors/Size/Info.hpp"
+#include "ControlSystem/ControlErrors/Size/State.hpp"
 #include "Options/String.hpp"
 #include "Utilities/Serialization/CharmPupable.hpp"
 #include "Utilities/TMPL.hpp"

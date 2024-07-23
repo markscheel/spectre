@@ -143,9 +143,16 @@ ErrorDiagnostics control_error(
     const gsl::not_null<intrp::ZeroCrossingPredictor*>
         predictor_comoving_char_speed,
     const gsl::not_null<intrp::ZeroCrossingPredictor*> predictor_delta_radius,
+    const gsl::not_null<intrp::ZeroCrossingPredictor*>
+        predictor_drift_limit_char_speed,
+    const gsl::not_null<intrp::ZeroCrossingPredictor*>
+        predictor_drift_limit_delta_radius,
     double time, double control_error_delta_r,
     std::optional<double> control_error_delta_r_outward,
-    std::optional<double> max_allowed_radial_distance, double horizon_00,
+    std::optional<double> max_allowed_radial_distance,
+    std::optional<double> inward_drift_velocity,
+    std::optional<double> min_allowed_radial_distance,
+    std::optional<double> min_allowed_char_speed, double horizon_00,
     double dt_lambda_00, const ylm::Strahlkorper<Frame>& apparent_horizon,
     const ylm::Strahlkorper<Frame>& excision_boundary,
     const Scalar<DataVector>& lapse_on_excision_boundary,

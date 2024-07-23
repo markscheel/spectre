@@ -72,14 +72,14 @@ CrossingTimeInfo::CrossingTimeInfo(
       t_delta_radius(delta_radius_crossing_time),
       t_drift_limit_char_speed(drift_limit_char_speed_crossing_time),
       t_drift_limit_delta_radius(drift_limit_delta_radius_crossing_time),
-      t_drift_limit(
-          (drift_limit_char_speed_crossing_time.has_value() or
-           drift_limit_delta_radius_crossing_time.has_value())
-              ? std::min(drift_limit_char_speed_crossing_time.value_or(
-                             std::numeric_limits<double>::max()),
-                         drift_limit_delta_radius_crossing_time.value_or(
-                             std::numeric_limits<double>::max()))
-              : std::nullopt) {
+      t_drift_limit((drift_limit_char_speed_crossing_time.has_value() or
+                     drift_limit_delta_radius_crossing_time.has_value())
+                        ? std::optional<double>(std::min(
+                              drift_limit_char_speed_crossing_time.value_or(
+                                  std::numeric_limits<double>::max()),
+                              drift_limit_delta_radius_crossing_time.value_or(
+                                  std::numeric_limits<double>::max())))
+                        : std::nullopt) {
   if (t_char_speed.value_or(-1.0) > 0.0) {
     if (t_delta_radius.value_or(-1.0) > 0.0 and
         t_delta_radius.value() <= t_char_speed.value()) {

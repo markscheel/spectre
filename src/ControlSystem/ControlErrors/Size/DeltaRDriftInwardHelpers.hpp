@@ -28,13 +28,7 @@ bool should_transition_from_state_inward_drift_to_delta_r_no_drift(
     const std::optional<double>& inward_drift_velocity,
     const bool delta_r_almost_above_inward_drift_limit,
     const bool char_speed_almost_above_inward_drift_limit,
-    const bool comoving_char_speed_increasing_inward) {
-  return (not should_transition_from_state_delta_r_to_inward_drift(
-      crossing_time_state_3, damping_time, inward_drift_velocity,
-      delta_r_almost_above_inward_drift_limit,
-      char_speed_almost_above_inward_drift_limit,
-      comoving_char_speed_increasing_inward));
-}
+    const bool comoving_char_speed_increasing_inward);
 
 /// Returns true if we should transition to DeltaRDriftInward rather than
 /// to DeltaR.

@@ -8,7 +8,10 @@ spectre_target_sources(
   Info.cpp
   AhSpeed.cpp
   DeltaR.cpp
+  DeltaRDriftInward.cpp
+  DeltaRDriftInwardHelpers.cpp
   DeltaRDriftOutward.cpp
+  DeltaRNoDrift.cpp
   Error.cpp
   Initial.cpp
   RegisterDerivedWithCharm.cpp
@@ -25,7 +28,10 @@ spectre_target_headers(
   StateHistory.hpp
   AhSpeed.hpp
   DeltaR.hpp
+  DeltaRDriftInward.hpp
+  DeltaRDriftInwardHelpers.hpp
   DeltaRDriftOutward.hpp
+  DeltaRNoDrift.hpp
   Error.hpp
   Factory.hpp
   Initial.hpp

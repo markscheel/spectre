@@ -9,7 +9,6 @@ spectre_target_sources(
   AhSpeed.cpp
   DeltaR.cpp
   DeltaRDriftInward.cpp
-  DeltaRDriftInwardHelpers.cpp
   DeltaRDriftOutward.cpp
   DeltaRNoDrift.cpp
   Error.cpp
@@ -29,7 +28,6 @@ spectre_target_headers(
   AhSpeed.hpp
   DeltaR.hpp
   DeltaRDriftInward.hpp
-  DeltaRDriftInwardHelpers.hpp
   DeltaRDriftOutward.hpp
   DeltaRNoDrift.hpp
   Error.hpp

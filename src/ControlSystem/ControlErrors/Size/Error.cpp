@@ -229,13 +229,14 @@ ErrorDiagnostics control_error(
   // NOTE: This choice corresponds to SpEC's "DeltaRPolicy=Absolute"
   // and SpEC's "FunctionVsTimeMinDeltaRNoLam00=<NONE>".
   // However, the default in SpEC is "DeltaRPolicy=Relative" and
-  // "FunctionVsTimeMinDeltaRNoLam00" being an actual ComputeItem.
+  // "FunctionVsTimeMinDeltaRNoLam00" being an actual FunctionOfTime.
   //
   // If we were to make this change here, it means reinterpreting the
   // meaning of max_allowed_radial_distance and
   // min_allowed_radial_distance and using a different formula for
   // average_radial_distance, but all the logic other than those
   // changes remains unchanged.
+  // Such a change is possible to make, but we do not (yet) make it here.
   const std::optional<double> average_radial_distance =
       (max_allowed_radial_distance.has_value() or
        min_allowed_radial_distance.has_value())

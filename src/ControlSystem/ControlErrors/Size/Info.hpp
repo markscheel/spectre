@@ -81,13 +81,8 @@ struct CrossingTimeInfo {
   /// predicted to cross zero (or nullopt if the minimum distance is
   /// increasing).
   std::optional<double> t_delta_radius;
-  /// t_drift_limit_char_speed is the time (relative to the current time) when
-  /// the minimum characteristic speed is predicted to cross the
-  /// min_allowed_char_speed associated with state DeltaRDriftInward (or nullopt
-  /// if the minimum characteristic speed is increasing).
-  std::optional<double> t_drift_limit_char_speed;
-  /// t_delta_radius is the time (relative to the current time) when the
-  /// minimum distance between the horizon and the excision boundary is
+  /// t_drift_limit_delta_radius is the time (relative to the current time) when
+  /// the minimum distance between the horizon and the excision boundary is
   /// predicted to cross the min_allowed_radial_distance associated with the
   /// state DeltaRDriftInward (or nullopt if the minimum distance is
   /// decreasing).

@@ -256,8 +256,8 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
     struct InwardDriftVelocity {
       using type = double;
       static constexpr Options::String help{
-          "Constant drift velocity term, if triggered by "
-          "MinAllowedRadialDistance."};
+          "Maximum value of drift velocity term, if State DeltaRDriftInward is "
+          "triggered by MinAllowedRadialDistance or MinAllowedCharSpeed."};
     };
     using options = tmpl::list<MinAllowedRadialDistance, MinAllowedCharSpeed,
                                InwardDriftVelocity>;

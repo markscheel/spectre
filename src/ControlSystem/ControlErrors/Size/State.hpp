@@ -60,7 +60,7 @@ struct StateUpdateArgs {
   /// Label::DeltaRDriftInward.
   std::optional<double> min_allowed_radial_distance;
   /// min_allowed_char_speed is the minimum char speed that will
-  /// trigger state Label::DeltaRDriftInward.  If both
+  /// trigger state DeltaRDriftInward.  If both
   /// min_allowed_radial_distance and min_allowed_char_speed are
   /// std::nullopt, then DeltaRDriftInward will never be triggered.
   std::optional<double> min_allowed_char_speed;

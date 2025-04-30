@@ -58,11 +58,12 @@ std::string DeltaRNoDrift::update(
       // staying in DeltaRNoDrift mode will not work.  So switch to AhSpeed
       // mode.
 
-      // This factor prevents oscillating between states Initial and
-      // AhSpeed.  It needs to be slightly greater than unity, but the
-      // control system should not be sensitive to the exact
-      // value. The value of 1.01 was chosen arbitrarily in SpEC and
-      // never needed to be changed.
+      // This factor prevents oscillations between
+      // DeltaR/DeltaRInward/DeltaRNoDrift/DeltaROutward and AhSpeed.
+      // It needs to be slightly greater than unity, but the control
+      // system should not be sensitive to the exact value. The value of
+      // 1.01 was chosen arbitrarily in SpEC and never needed to be
+      // changed.
       constexpr double non_oscillation_factor = 1.01;
       info->discontinuous_change_has_occurred = true;
       info->state = std::make_unique<States::AhSpeed>();

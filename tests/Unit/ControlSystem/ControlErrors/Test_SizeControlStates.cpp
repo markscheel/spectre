@@ -168,23 +168,25 @@ void test_transition_to_delta_r_inward(
   // Should_activate_inward_drift is true iff all of the following are true:
   //  1. inward_drift_velocity has a value.
   //  2. min_char_speed <= 0.9*min_allowed_char_speed or
-  //     min_allowed_char_speed==0
+  //     min_allowed_char_speed has no value
   //  3. avg_radial_distance <= 0.9*min_allowed_radial_distance or
-  //     min_allowed_radial_distance==0
+  //     min_allowed_radial_distance has no value
   //  4. comoving_char_speed_increasing_inward is true
-  //  5. min_allowed_char_speed!=0 or min_allowed_radial_distance!=0
+  //  5. min_allowed_char_speed has a value or
+  //     min_allowed_radial_distance has a value
   //
   // should_transition_from_state_delta_r_to_inward_drift is true iff
   // all of the following are true:
   // A. should_activate_inward_drift is true
-  // B. crossing_time_state_3 >= damping time or crossing_time_state_3 == 0
-  //    or inward_drift_velocity==0
+  // B. t_drift_limit >= damping time or t_drift_limit has no value
   //
   // should_transition_from_state_inward_drift_to_delta_r_no_drift is
   // true iff should_transition_from_state_delta_r_to_inward_drift is false.
 
   // On entry to this function, 1, 2, and 3 above are true, but 4 and 5
   // above are false.
+  // Also, on entry to this function, t_drift_limit has no value so B.
+  // is satisfied.
 
   // Here we make 4 true, but 5 is still false.
   // So 1,2,3,4 are true and 5 is false so we stay in state DeltaR.

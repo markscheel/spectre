@@ -89,7 +89,8 @@ struct ErrorDiagnostics {
  *        DeltaRDriftInward state.  If std::nullopt, then
  *        DeltaRDriftInward will not be used.
  * \param horizon_00 The l=0,m=0 component of the spherepack decomposition
- *        of the apparent horizon.
+ *        of the apparent horizon.  This is passed separately from the
+ *        full apparent_horizon below because horizon_00 is time-averaged.
  * \param dt_lambda_00 the time derivative of the map parameter lambda_00
  * \param apparent_horizon the current horizon in frame Frame.
  * \param excision_boundary a Strahlkorper representing the excision

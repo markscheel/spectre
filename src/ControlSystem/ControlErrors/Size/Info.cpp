@@ -70,7 +70,6 @@ CrossingTimeInfo::CrossingTimeInfo(
     : t_char_speed(char_speed_crossing_time),
       t_comoving_char_speed(comoving_char_speed_crossing_time),
       t_delta_radius(delta_radius_crossing_time),
-      t_drift_limit_char_speed(drift_limit_char_speed_crossing_time),
       t_drift_limit_delta_radius(drift_limit_delta_radius_crossing_time),
       t_drift_limit((drift_limit_char_speed_crossing_time.has_value() or
                      drift_limit_delta_radius_crossing_time.has_value())

@@ -28,22 +28,22 @@ double target_speed_for_inward_drift(
 }
 
 bool should_transition_from_state_delta_r_to_inward_drift(
-    const std::optional<double>& crossing_time_state_3,
+    const std::optional<double>& crossing_time_drift_limit,
     const double damping_time, const StateUpdateArgs& update_args) {
   // This function is called ShouldEnterState3FromState2 in SpEC.
   if (update_args.inward_drift_velocity.has_value() and
-      crossing_time_state_3.has_value() and
-      crossing_time_state_3.value() < damping_time) {
+      crossing_time_drift_limit.has_value() and
+      crossing_time_drift_limit.value() < damping_time) {
     return false;
   }
   return should_activate_inward_drift(update_args);
 }
 
 bool should_transition_from_state_inward_drift_to_delta_r_no_drift(
-    const std::optional<double>& crossing_time_state_3,
+    const std::optional<double>& crossing_time_drift_limit,
     const double damping_time, const StateUpdateArgs& update_args) {
   return (not should_transition_from_state_delta_r_to_inward_drift(
-      crossing_time_state_3, damping_time, update_args));
+      crossing_time_drift_limit, damping_time, update_args));
 }
 
 bool should_activate_inward_drift(const StateUpdateArgs& update_args) {

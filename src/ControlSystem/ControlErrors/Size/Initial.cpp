@@ -80,9 +80,9 @@ std::string Initial::update(const gsl::not_null<Info*> info,
     ss << "Current state Initial. "
        << (delta_radius_is_in_danger ? "DeltaR is in danger"
                                      : "Comoving char speed positive")
-       << ". Switching to "
-       << (drift_inward ? "DeltaRDriftInward." : "DeltaR.")
-       << " with target char speed " << info->target_char_speed;
+       << ". Switching to " << (drift_inward ? "DeltaRDriftInward." : "DeltaR.")
+       << "\n";
+    ss << " Target char speed = " << info->target_char_speed;
   } else if (update_args.average_radial_distance.has_value() and
              update_args.average_radial_distance.value() >
                  non_oscillation_drift_outward_factor *

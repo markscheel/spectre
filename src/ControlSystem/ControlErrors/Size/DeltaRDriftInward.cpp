@@ -64,11 +64,12 @@ std::string DeltaRDriftInward::update(
     // Switch to AhSpeed mode. Note that we don't check ComovingCharSpeed
     // like we do in state DeltaR; this behavior agrees with SpEC.
 
-    // This factor prevents oscillating between states Initial and
-    // AhSpeed.  It needs to be slightly greater than unity, but the
-    // control system should not be sensitive to the exact
-    // value. The value of 1.01 was chosen arbitrarily in SpEC and
-    // never needed to be changed.
+    // This factor prevents oscillations between
+    // DeltaR/DeltaRInward/DeltaRNoDrift/DeltaROutward and AhSpeed.
+    // It needs to be slightly greater than unity, but the control
+    // system should not be sensitive to the exact value. The value of
+    // 1.01 was chosen arbitrarily in SpEC and never needed to be
+    // changed.
     constexpr double non_oscillation_factor = 1.01;
     info->discontinuous_change_has_occurred = true;
     info->state = std::make_unique<States::AhSpeed>();
@@ -97,12 +98,33 @@ std::string DeltaRDriftInward::update(
   } else if (crossing_time_info.t_delta_radius.has_value() and
              info->damping_time >
                  2.0 * spherepack_factor * update_args.horizon_00 * Y00) {
+    // Explaination of the above 'if':
+    //
+    // If crossing_time_info.t_delta_radius has a value, this means
+    // that delta_radius is decreasing.  But the entire point of state
+    // DeltaRDriftInward is to make delta_radius increase, not
+    // decrease.  So if we are in state DeltaRDriftInward and
+    // crossing_time_info.t_delta_radius has a value
+    // (i.e. delta_radius is decreasing), something is wrong.
+    //
+    // The thing that is usually wrong is that damping_time is too
+    // large, and hence DeltaRDriftInward doesn't have time to make
+    // delta_radius increase.  So the fix is to decrease the damping
+    // time (a.k.a. suggested_time_scale below).  But we stop
+    // decreasing the damping time if it is less than twice the
+    // average horizon radius, which is the same criterion SpEC
+    // uses. (Here we are assuming that timescales and length scales
+    // have the same units, which should be true for horizons).
     ss << "Current state DeltaRDriftInward. RelativeDeltaR is decreasing, "
           "which is probably because timescale is too big (DeltaRDriftInward "
           "should be increasing RelativeDeltaR if control system is working "
           "properly). Decreasing timescale and staying in DeltaRDriftInward.\n";
     // delta_r_drift_inward_decrease_factor is an arbitrary factor
-    // chosen by trial and error in SpEC.
+    // chosen by trial and error in SpEC. If this factor is too close
+    // to 1, then the timescale does not decrease fast enough.  If
+    // this factor is too far from 1, then repeated calls of
+    // DeltaRDriftInward::update will decrease the timescale to
+    // 2*average_horizon_radius too quickly.
     constexpr double delta_r_drift_inward_decrease_factor = 0.99;
     info->suggested_time_scale =
         info->damping_time * delta_r_drift_inward_decrease_factor;

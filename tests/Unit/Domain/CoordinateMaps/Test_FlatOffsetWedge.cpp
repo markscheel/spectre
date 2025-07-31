@@ -80,6 +80,89 @@ void test_flat_offset_wedge() {
   // point with z < lower_face_y_half_width
   CHECK_FALSE(map.inverse(
       {{0.5 * lower_face_x_width, 0.0, 0.5 * lower_face_y_half_width}}));
+
+#ifdef SPECTRE_DEBUG
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(0.0, lower_face_x_width,
+                                            outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring(
+          "Cannot have zero lower_face_y_half_width"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(-lower_face_y_half_width,
+                                            lower_face_x_width, outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring(
+          "Cannot have negative lower_face_y_half_width"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(lower_face_y_half_width,
+                                            -lower_face_x_width, outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring(
+          "Cannot have negative lower_face_x_width"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(lower_face_y_half_width, 0.0,
+                                            outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring(
+          "Cannot have zero lower_face_x_width"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(lower_face_y_half_width,
+                                            lower_face_x_width, -outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring("Cannot have negative outer_radius"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(lower_face_y_half_width,
+                                            lower_face_x_width, 0.0);
+      }(),
+      Catch::Matchers::ContainsSubstring("Cannot have zero outer_radius"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(
+            sqrt(square(outer_radius) - square(lower_face_x_width)),
+            lower_face_x_width, outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring("Must have R^2-D^2 > 2 L^2"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(lower_face_y_half_width,
+                                            0.99 * epsilon * outer_radius,
+                                            outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring(
+          "The map is not tested if lower_face_x_width"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(
+            outer_radius * sqrt(1.0 - square(1.001 * (1.0 - epsilon))) /
+                sqrt(2.01),
+            1.001 * (1 - epsilon) * outer_radius, outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring(
+          "The map is not tested if lower_face_x_width"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(0.99 * epsilon * outer_radius,
+                                            lower_face_x_width, outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring(
+          "The map is not tested if lower_face_y_half_width"));
+  CHECK_THROWS_WITH(
+      [&]() {
+        CoordinateMaps::FlatOffsetWedge map(
+            sqrt(square(outer_radius) - square(lower_face_x_width)) *
+                (1 - epsilon) / sqrt(1.999),
+            lower_face_x_width, outer_radius);
+      }(),
+      Catch::Matchers::ContainsSubstring(
+          "The map is not tested if 2L^2 > (1-epsilon)"));
+#endif
 }
 
 }  // namespace

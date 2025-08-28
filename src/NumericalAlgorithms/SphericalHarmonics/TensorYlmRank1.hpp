@@ -4,9 +4,9 @@
 #pragma once
 
 /*!
- * \brief Converts from scalar-Ylm to tensor-Ylm basis.
+ * \brief Converts between scalar-Ylm and tensor-Ylm basis.
  *
- * Background: We expand a tensor of arbitrary rank
+ * \details We expand a tensor of arbitrary rank
  * in terms of Cartesian components as follows:
  * \begin{align}
  * {\mathbf T} &= \sum_{\ell,m,\tilde{A}} {}_0 Y_{\ell m}
@@ -45,6 +45,8 @@
  * \end{align}
  * where the above transformations define the coefficients
  * $C_{\ell' m' A}^{\ell m\tilde{B}}$ and $C_{\ell' m'\tilde{A}}^{\ell mB}$.
+ * Analytic expressions for these coefficients are derived in Klinger
+ * and Scheel (in prep) and will be used here to compute the coefficients.
  *
  * For real-valued tensors, the coefficients $T^A_{\ell m}$ and
  * $T^{\tilde A}_{\ell m}$ for negative $m$ can be computed from the
@@ -139,8 +141,8 @@ namespace ylm::TensorYlm {
  * Cartesian to Spherical.
  *
  * Assumes that $T^{\tilde A}_{\ell' m'}$ is stored in a
- * Tensor<ModalVector>.  Multiplying the resulting
- * SparseMatrixCollection by the Tensor<ModalVector> is equivalent to
+ * Tensor<DataVector>.  Multiplying the resulting
+ * SparseMatrixCollection by the Tensor<DataVector> is equivalent to
  * evaluating the right-hand side of Eq.~(\ref{eq:C2S}).
  */
 void FillCartToSphere(gsl::not_null<SparseMatrixCollection*> matrices);
@@ -150,8 +152,8 @@ void FillCartToSphere(gsl::not_null<SparseMatrixCollection*> matrices);
  * Spherical to Cartesian.
  *
  * Assumes that $T^A_{\ell' m'}$ is stored in a
- * Tensor<ModalVector>.  Multiplying the resulting
- * SparseMatrixCollection by the Tensor<ModalVector> is equivalent to
+ * Tensor<DataVector>.  Multiplying the resulting
+ * SparseMatrixCollection by the Tensor<DataVector> is equivalent to
  * evaluating the right-hand side of Eq.~(\ref{eq:S2C}).
  */
 void FillSphereToCart(gsl::not_null<SparseMatrixCollection*> matrices);
@@ -160,8 +162,8 @@ void FillSphereToCart(gsl::not_null<SparseMatrixCollection*> matrices);
  * \brief Fills a SparseMatrixCollection that does a TensorYlm filter operation.
  *
  * Assumes that $T^{\tilde A}_{\ell' m'}$ is stored in a
- * Tensor<ModalVector>.  Multiplying the resulting
- * SparseMatrixCollection by the Tensor<ModalVector> is equivalent to
+ * Tensor<DataVector>.  Multiplying the resulting
+ * SparseMatrixCollection by the Tensor<DataVector> is equivalent to
  * evaluating the right-hand side of Eq.~(\ref{eq:Filter}).
  *
  * If half_power is std::nullopt, implements a Heaviside filter:

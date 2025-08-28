@@ -20,7 +20,8 @@ class SparseMatrixCollection;
 
 /*!
  * \brief Holds a set of sparse matrices that act as a larger sparse matrix
- * that can be used to multiply an entire tensor.
+ * that can be used to multiply an entire tensor, without needing to
+ * know the relationship-in-RAM between different tensor components.
  *
  * \tparam Symm Symmetry specification, as in Tensor
  * \tparam IndexList indices typelist, as in Tensor

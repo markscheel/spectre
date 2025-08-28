@@ -145,7 +145,8 @@ namespace ylm::TensorYlm {
  * SparseMatrixCollection by the Tensor<DataVector> is equivalent to
  * evaluating the right-hand side of Eq.~(\ref{eq:C2S}).
  */
-void FillCartToSphere(gsl::not_null<SparseMatrixCollection*> matrices);
+void FillCartToSphere(gsl::not_null<SparseMatrixCollection*> matrices,
+                      size_t ell_max);
 
 /*!
  * \brief Fills a SparseMatrixCollection that transforms from
@@ -156,7 +157,8 @@ void FillCartToSphere(gsl::not_null<SparseMatrixCollection*> matrices);
  * SparseMatrixCollection by the Tensor<DataVector> is equivalent to
  * evaluating the right-hand side of Eq.~(\ref{eq:S2C}).
  */
-void FillSphereToCart(gsl::not_null<SparseMatrixCollection*> matrices);
+void FillSphereToCart(gsl::not_null<SparseMatrixCollection*> matrices,
+                      size_t ell_max);
 
 /*!
  * \brief Fills a SparseMatrixCollection that does a TensorYlm filter operation.
@@ -179,8 +181,8 @@ void FillSphereToCart(gsl::not_null<SparseMatrixCollection*> matrices);
  * equal to half_power and $\ell_{\mathrm{cut}}^+$ equal to
  * $\ell_{\rm max}$ minus number_of_ell_modes_to_kill.
  */
-void FillFilter(gsl::not_null<SparseMatrixCollection*> matrices,
-                const size_t number_of_ell_modes_to_kill,
-                const std::optional<size_t> half_power);
+void FillFilter(gsl::not_null<SparseMatrixCollection*> matrices, size_t ell_max,
+                size_t number_of_ell_modes_to_kill,
+                std::optional<size_t> half_power);
 
 };  // namespace ylm::TensorYlm

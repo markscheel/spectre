@@ -1,95 +1,15 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
-#include "NumericalAlgorithms/SphericalHarmonics/TensorYlmRank1.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/TensorYlmFilter.hpp"
 
 namespace ylm::TensorYlm {
 
-namespace detail {
-enum class BasisVector { x, y, z, l, m, mbar };
-
-// Returns a Cartesian BasisVector for every index.
-template <size_t SIZE>
-std::array<BasisVector, SIZE> to_cart_basis_vector(
-    const cpp20::array<size_t, SIZE>& indices) {
-  std::array<BasisVector, SIZE> result;
-  for (size_t i = 0; i < SIZE; ++i) {
-    switch (indices[i]) {
-      case 0:
-        result[i] = BasisVector::x;
-        break;
-      case 1:
-        result[i] = BasisVector::y;
-        break;
-      case 2:
-        result[i] = BasisVector::z;
-        break;
-      default:
-        ASSERT(false, "Cannot get here");
-    }
-  }
-  return result;
-}
-
-// Returns a Spin-weighted BasisVector for every index.
-template <size_t SIZE>
-std::array<BasisVector, SIZE> to_sw_basis_vector(
-    const cpp20::array<size_t, SIZE>& indices) {
-  std::array<BasisVector, SIZE> result;
-  for (size_t i = 0; i < SIZE; ++i) {
-    switch (indices[i]) {
-      case 0:
-        result[i] = BasisVector::l;
-        break;
-      case 1:
-        result[i] = BasisVector::m;
-        break;
-      case 2:
-        result[i] = BasisVector::bmar;
-        break;
-      default:
-        ASSERT(false, "Cannot get here");
-    }
-  }
-  return result;
-}
-
-// Maps spherical BasisVectors to negative spin, written as s(B).
-static const std::unordered_map<BasisVector, int> bv_to_minus_spin{
-    {BasisVector::l, 0}, {BasisVector::m, -1}, {BasisVector::mbar, 1}};
-
-// Returns the m value (m3 in the 2nd Wigner 3j symbol) associated with each
-// Cartesian basis vector.
-int bv_to_m(const TensorYlmHelper::BasisVector& basis_vector, const int i) {
-  switch (basis_vector) {
-    case BasisVector::z:
-      return 0.0;
-    case BasisVector::y:
-    case BasisVector::x:
-      return i;
-    default:
-      ASSERT(false, "Unknown basisvector");
-  }
-}
-
-// Returns the prefactor k associated with each Cartesian basis vector.
-std::complex<double> bv_to_k(const TensorYlmHelper::BasisVector& basis_vector,
-                             const int i) {
-  switch (basis_vector) {
-    case BasisVector::z:
-      return {1.0 / sqrt(2.0), 0.0};
-    case BasisVector::y:
-      return {0, 1};
-    case BasisVector::x:
-      return {double(-i), 0.0};
-    default:
-      ASSERT(false, "Unknown basisvector");
-  }
-}
-
-}  // namespace detail
-
 namespace {
+// Inner loops of the rank-1 calculation.  The purpose of this
+// function is so that there are not so many nested loops inside of
+// the main function, making the main function and this function more
+// readable.
 void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                      SpherepackIterator& iter_dest, const size_t src_comp_index,
                      const size_t dest_comp_index, const size_t ell_max,
@@ -155,6 +75,10 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
   }
 }
 
+// Inner loops of the rank-2 calculation.  The purpose of this
+// function is so that there are not so many nested loops inside of
+// the main function, making the main function and this function more
+// readable.
 void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                      SpherepackIterator& iter_dest, const size_t src_comp_index,
                      const size_t dest_comp_index, const size_t ell_max,
@@ -257,6 +181,10 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
   }
 };
 
+// Inner loops of the rank-3 calculation.  The purpose of this
+// function is so that there are not so many nested loops inside of
+// the main function, making the main function and this function more
+// readable.
 template <typename Symm>
 void inner_loops_three(
     SparseMatrixFiller& filler, SpherepackIterator& iter_src,
@@ -590,4 +518,23 @@ void FillFilter(
   }
   filler.fill(matrix);
 }
+
+// Explicit instantiations
+template FillFilter<tnsr::i::structure>(
+    gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
+    tnsr::i::structure, size_t ell_max, size_t number_of_ell_modes_to_kill,
+    std::optional<size_t> half_power);
+template FillFilter<tnsr::ii::structure>(
+    gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
+    tnsr::ii::structure, size_t ell_max, size_t number_of_ell_modes_to_kill,
+    std::optional<size_t> half_power);
+template FillFilter<tnsr::ij::structure>(
+    gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
+    tnsr::ij::structure, size_t ell_max, size_t number_of_ell_modes_to_kill,
+    std::optional<size_t> half_power);
+template FillFilter<tnsr::ijj::structure>(
+    gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
+    tnsr::ijj::structure, size_t ell_max, size_t number_of_ell_modes_to_kill,
+    std::optional<size_t> half_power);
+
 };  // namespace ylm::TensorYlm

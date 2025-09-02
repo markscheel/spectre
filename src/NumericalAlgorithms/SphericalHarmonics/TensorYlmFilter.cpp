@@ -487,10 +487,10 @@ void FillFilter(
         const double coeflprime =
             half_power.has_value() and lprime <= lcutplus
                 ? 0.5 * (2 * lprime + 1) *
-                      (1.0 -
-                       exp(-36.0 *
-                           IPow(double(lprime) / double(lcutplus + 1),
-                                2 * static_cast<int>(half_power.value()))))
+                      (1.0 - exp(-36.0 *
+                                 integer_pow(
+                                     double(lprime) / double(lcutplus + 1),
+                                     2 * static_cast<int>(half_power.value()))))
                 : 0.5 * (2 * lprime + 1);
         for (int mprime = -lprime; mprime <= static_cast<int>(lprime);
              ++mprime) {
@@ -516,14 +516,14 @@ void FillFilter(
                     coefjp *= -1.0;
                   }
                   inner_loops_one(filler, iter_src, iter_dest, src_comp_index,
-                                  dest_comp_index, ell_max, mdest, msrc, coefjb,
+                                  dest_comp_index, ell_max, mdest, msrc, coefjp,
                                   threej_j, threej_p);
                 }
               }
             }
           } else if constexpr (rank == 2) {
             for (int lbar = 0; lbar <= 2; ++lbar) {
-              const double SymmFactor = [&src_multiplicity]() {
+              const double SymmFactor = [src_multiplicity, lbar]() {
                 if constexpr (std::is_same_v<Symmetry<0, 1>,
                                              TensorStructure::symmetry>) {
                   // "ab" symmetry
@@ -531,14 +531,14 @@ void FillFilter(
                   return 1.0;
                 } else {
                   // "aa" symmetry
-                  return (src_multiplicity / 2.0) *
-                         (1 + (lbar % 2 == 0 ? 1.0 : -1.0));
+                  return (src_multiplicity / 2.0) * (lbar % 2 == 0 ? 2.0 : 0.0);
                 }
               }();
               const double coeflbar = 0.5 * (2 * lbar + 1);
               for (int mbar = -lbar; mbar <= lbar; ++mbar) {
                 WignerThreeJ threej_lbar(lprime, mprime, lbar, mbar);
-                for (int mtilde = -lbar; mtilde <= lbar; ++mtilde) {
+                for (int mtilde = -static_cast<int>(lbar);
+                     mtilde <= static_cast<int>(lbar); ++mtilde) {
                   WignerThreeJ threej_ltilde(lprime, -mprime, lbar, mtilde);
                   inner_loops_two(filler, iter_src, iter_dest, src_comp_index,
                                   dest_comp_index, ell_max, lprime, mprime,
@@ -550,8 +550,9 @@ void FillFilter(
               }
             }
           } else if constexpr (rank == 3) {
-            for (int lhat = 0; lhat <= 3; ++lhat) {
-              for (int mhat = -lhat; mhat <= lhat; ++mhat) {
+            for (size_t lhat = 0; lhat <= 3; ++lhat) {
+              for (int mhat = -static_cast<int>(lhat);
+                   mhat <= static_cast<int>(lhat); ++mhat) {
                 WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
                 for (int mcheck = -lhat; mcheck <= lhat; ++mcheck) {
                   WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);

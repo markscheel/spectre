@@ -598,19 +598,19 @@ void FillFilter(
 }
 
 // Explicit instantiations
-template FillFilter<typename tnsr::i<DataVector, 3>::structure>(
+template void FillFilter<typename tnsr::i<DataVector, 3>::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
-template FillFilter<typename tnsr::ii<DataVector, 3>::structure>(
+template void FillFilter<typename tnsr::ii<DataVector, 3>::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
-template FillFilter<typename tnsr::ij<DataVector, 3>::structure>(
+template void FillFilter<typename tnsr::ij<DataVector, 3>::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
-template FillFilter<typename tnsr::ijj<DataVector, 3>::structure>(
+template void FillFilter<typename tnsr::ijj<DataVector, 3>::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);

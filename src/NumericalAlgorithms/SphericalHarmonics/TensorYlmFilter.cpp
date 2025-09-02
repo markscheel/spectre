@@ -275,7 +275,7 @@ void inner_loops_three(
               lhat <= lbar + 1) {
             const int m_src = mprime - mhat;
             const double SymmFactor = [src_multiplicity, lbar]() {
-              if constexpr (std::is_same_v<Symmetry<0, 1, 2>, Symm>) {
+              if constexpr (std::is_same_v<Symmetry<3, 2, 1>, Symm>) {
                 // "abc" symmetry
                 (void)src_multiplicity;
                 return 1.0;
@@ -524,7 +524,7 @@ void FillFilter(
           } else if constexpr (rank == 2) {
             for (size_t lbar = 0; lbar <= 2; ++lbar) {
               const double SymmFactor = [src_multiplicity, lbar]() {
-                if constexpr (std::is_same_v<Symmetry<0, 1>,
+                if constexpr (std::is_same_v<Symmetry<2, 1>,
                                              TensorStructure::symmetry>) {
                   // "ab" symmetry
                   (void)src_multiplicity;

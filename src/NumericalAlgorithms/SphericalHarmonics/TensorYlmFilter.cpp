@@ -469,7 +469,8 @@ void FillFilter(
                            IPow(double(lprime) / double(lcutplus + 1),
                                 2 * static_cast<int>(half_power.value()))))
                 : 0.5 * (2 * lprime + 1);
-        for (int mprime = -lprime; mprime <= lprime; ++mprime) {
+        for (int mprime = -lprime; mprime <= static_cast<int>(lprime);
+             ++mprime) {
           // Here is where the formulas differ for different ranks.
           if constexpr (rank == 1) {
             for (int p = -1; p <= 1; p += 2) {

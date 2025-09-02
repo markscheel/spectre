@@ -4,9 +4,9 @@
 #pragma once
 
 /*!
- * \brief Converts between scalar-Ylm and tensor-Ylm basis.
+ * \brief Converts spatial tensors between scalar-Ylm and tensor-Ylm basis.
  *
- * \details We expand a tensor of arbitrary rank
+ * \details We expand a spatial tensor of arbitrary rank
  * in terms of Cartesian components as follows:
  * \begin{align}
  * {\mathbf T} &= \sum_{\ell,m,\tilde{A}} {}_0 Y_{\ell m}
@@ -20,7 +20,8 @@
  * either $\mathbf{e}_x$, $\mathbf{e}_y$, or $\mathbf{e}_z$.
  * The sum over $\tilde A$ goes over all $\tilde A$ of the same rank.
  *
- * Similarly, we can expand the same tensor in terms of a complex tetrad:
+ * Similarly, we can expand the same spatial
+ * tensor in terms of a complex tetrad:
  * \begin{align}
  * {\mathbf T} &= \sum_{\ell,m,A} {}_{s(\!A\!)}Y_{\ell m}
  *                T^A_{\ell m} \mathbf{e}_A,
@@ -91,7 +92,7 @@
  * \end{align}
  *
  * The functions FillCartToSphere and FillSphereToCart fill
- * SparseMatrixCollections that encode Eqs.(\ref{eq:C2S}) and
+ * sparse matrices that encode Eqs.(\ref{eq:C2S}) and
  * (\ref{eq:S2C}).
  *
  * ## Filtering
@@ -147,5 +148,7 @@
  *                (1-\delta_{0m'})F_{\ell m \tilde{A}}^{\ell' -m' \tilde{B}}
  *                 (-1)^{m'}.
  * \end{align}
+ *
+ * The function FillFilter encapsulates Eq.~\ref{eq:Filter}.
  */
 namespace ylm::TensorYlm {}  // namespace ylm::TensorYlm

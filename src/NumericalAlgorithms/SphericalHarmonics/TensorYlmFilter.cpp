@@ -94,7 +94,7 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
 void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                      SpherepackIterator& iter_dest, const size_t src_comp_index,
                      const size_t dest_comp_index, const size_t ell_max,
-                     const int lprime, const int mprime, const int lbar,
+                     const size_t lprime, const int mprime, const int lbar,
                      const int mbar, const int mtilde, const double coeflbar,
                      const double coeflprime, WignerThreeJ& threej_lbar,
                      WignerThreeJ& threej_ltilde, const std::vector<int>& mbars,
@@ -130,9 +130,11 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
               const int m_src = mprime - mtilde;
               std::complex<double> coef3j =
                   -coeflprime * coeflbar * k_coefs * sign_y;
-              for (int l_dest = std::max(
-                       std::max(abs(lprime - lbar), abs(mprime + mbar)),
-                       std::max(abs(mtilde - mprime), m_dest));
+              for (size_t l_dest =
+                       std::max(std::max(abs(static_cast<int>(lprime) -
+                                             static_cast<int>(lbar)),
+                                         abs(mprime + mbar)),
+                                std::max(abs(mtilde - mprime), m_dest));
                    l_dest <= std::min(lprime + lbar, ell_max); ++l_dest) {
                 const double sign_lbar =
                     ((lprime + l_dest + lbar) % 2 == 0 ? 1.0 : -1.0);
@@ -218,7 +220,7 @@ template <typename Symm>
 void inner_loops_three(
     SparseMatrixFiller& filler, SpherepackIterator& iter_src,
     SpherepackIterator& iter_dest, const size_t src_comp_index,
-    const size_t dest_comp_index, const size_t ell_max, const int lprime,
+    const size_t dest_comp_index, const size_t ell_max, const size_t lprime,
     const double coeflprime, const int mprime, const int lhat, const int mhat,
     WignerThreeJ& threej_mhat, const int mcheck, WignerThreeJ& threej_mcheck,
     const size_t mbar_indx, const int p, const int q, const int r, const int mr,
@@ -240,7 +242,7 @@ void inner_loops_three(
   size_t mtilde_indx = 0;
   for (int u = -1; u <= 1; u += 2) {
     for (int v = -1; v <= 1; v += 2, ++mtilde_indx) {
-      for (int lbar =
+      for (size_t lbar =
                std::max(abs(mbars[mbar_indx]), abs(mtildes[mtilde_indx]));
            lbar <= 2; ++lbar) {
         for (int w = -1; w <= 1; w += 2) {
@@ -275,8 +277,8 @@ void inner_loops_three(
                                            helpers::bv_to_k(src_bvs[0], w);
             const std::complex<double> coef3j =
                 -coeflprime * coeflbar * coeflhat * k_coefs * sign_coef3j;
-            for (int l_dest = std::max(
-                     abs(lprime - lhat),
+            for (size_t l_dest = std::max(
+                     abs(static_cast<int>(lprime) - static_cast<int>(lhat)),
                      std::max(abs(mhat - mprime), abs(mcheck + mprime)));
                  l_dest <= lprime + lhat; ++l_dest) {
               if (l_dest <= ell_max and l_dest >= m_dest) {
@@ -458,7 +460,7 @@ void FillFilter(
         (void)threej_rs;
         (void)threej_ws;
       }
-      for (int lprime = lcutminus; lprime <= ell_max + rank; ++lprime) {
+      for (size_t lprime = lcutminus; lprime <= ell_max + rank; ++lprime) {
         const double coeflprime =
             half_power.has_value() and lprime <= lcutplus
                 ? 0.5 * (2 * lprime + 1) *
@@ -559,19 +561,19 @@ void FillFilter(
 }
 
 // Explicit instantiations
-template FillFilter<tnsr::i::structure>(
+template FillFilter<typename tnsr::i::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
-template FillFilter<tnsr::ii::structure>(
+template FillFilter<typename tnsr::ii::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
-template FillFilter<tnsr::ij::structure>(
+template FillFilter<typename tnsr::ij::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
-template FillFilter<tnsr::ijj::structure>(
+template FillFilter<typename tnsr::ijj::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);

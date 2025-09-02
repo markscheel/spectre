@@ -34,7 +34,7 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
         iter_src() + src_comp_index * iter_src.spherepack_array_size();
     filler.add(element, indx_dest, indx_src);
   };
-  for (int ell = threej_j.l1_min(); ell <= threej_j.l1_max(); ++ell) {
+  for (size_t ell = threej_j.l1_min(); ell <= threej_j.l1_max(); ++ell) {
     if (ell <= ell_max and ell >= mdest) {
       const std::complex<double> correction =
           coefjp * threej_j(ell) * threej_p(ell);
@@ -368,12 +368,13 @@ void FillFilter(
 
   static_assert(rank > 0 and rank < 4, "Implemented only for ranks 1,2,3");
 
-  const int lcutplus = ell_max - static_cast<int>(number_of_ell_modes_to_kill);
-  const int lcutminus =
+  const size_t lcutplus =
+      ell_max - static_cast<int>(number_of_ell_modes_to_kill);
+  const size_t lcutminus =
       half_power.has_value()
-          ? int(std::ceil((lcutplus + 1) *
-                          pow(std::numeric_limits<double>::epsilon() / 36.0,
-                              1.0 / (2.0 * double(half_power.value())))))
+          ? size_t(std::ceil((lcutplus + 1) *
+                             pow(std::numeric_limits<double>::epsilon() / 36.0,
+                                 1.0 / (2.0 * double(half_power.value())))))
           : lcutplus + 1;
 
   SpherepackIterator iter_src(ell_max, ell_max, 1, zero_m_is_real = true);

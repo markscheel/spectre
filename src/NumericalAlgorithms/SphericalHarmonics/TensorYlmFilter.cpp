@@ -12,6 +12,7 @@
 #include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/TensorYlmHelpers.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/WignerThreeJ.hpp"
+#include "Utilities/Math.hpp"
 
 namespace ylm::TensorYlm {
 
@@ -300,7 +301,7 @@ void inner_loops_three(
                      abs(static_cast<int>(lprime) - static_cast<int>(lhat)),
                      std::max(abs(mhat - mprime), abs(mcheck + mprime))));
                  l_dest <= lprime + lhat; ++l_dest) {
-              if (l_dest <= ell_max and l_dest >= m_dest) {
+              if (l_dest <= ell_max and static_cast<int>(l_dest) >= m_dest) {
                 const double sign_lhat =
                     ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
                 // The division inside the index of the following
@@ -311,9 +312,11 @@ void inner_loops_three(
                 const double threej_uv =
                     threej_uvs[static_cast<size_t>((v + 1) / 2 + u + 1)](lbar);
                 const double threej_r = threej_rs[static_cast<size_t>(
-                    lbar + (r + 1) * 3 / 2 + 6 * ((q + 1) / 2 + p + 1))](lhat);
+                    static_cast<int>(lbar) + (r + 1) * 3 / 2 +
+                    6 * ((q + 1) / 2 + p + 1))](lhat);
                 const double threej_w = threej_ws[static_cast<size_t>(
-                    lbar + (w + 1) * 3 / 2 + 6 * ((v + 1) / 2 + u + 1))](lhat);
+                    static_cast<int>(lbar) + (w + 1) * 3 / 2 +
+                    6 * ((v + 1) / 2 + u + 1))](lhat);
                 const std::complex<double> correction =
                     coef3j * threej_pq * threej_uv * threej_r * threej_w *
                     threej_mhat(l_dest) * threej_mcheck(l_dest) * sign_lhat *
@@ -396,8 +399,8 @@ void FillFilter(
                                  1.0 / (2.0 * double(half_power.value())))))
           : lcutplus + 1;
 
-  SpherepackIterator iter_src(ell_max, ell_max, 1, zero_m_is_real = true);
-  SpherepackIterator iter_dest(ell_max, ell_max, 1, zero_m_is_real = true);
+  SpherepackIterator iter_src(ell_max, ell_max, 1, true);
+  SpherepackIterator iter_dest(ell_max, ell_max, 1, true);
   SparseMatrixFiller filler(square(num_independent_components) *
                                 iter_src.spherepack_array_size() *
                                 iter_dest.spherepack_array_size(),

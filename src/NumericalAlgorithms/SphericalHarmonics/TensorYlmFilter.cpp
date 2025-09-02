@@ -25,7 +25,8 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                      const int mdest, const int msrc,
                      const std::complex<double>& coefjp, WignerThreeJ& threej_j,
                      WignerThreeJ& threej_p) {
-  auto add_element = [&filler, &iter_src, &iter_dest](const double element) {
+  auto add_element = [&filler, &iter_src, &iter_dest, dest_comp_index,
+                      src_comp_index](const double element) {
     const size_t indx_dest =
         iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
     const size_t indx_src =
@@ -102,7 +103,8 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                      const double SymmFactor, const double sign_y,
                      std::vector<WignerThreeJ>& threej_pqs,
                      std::vector<WignerThreeJ>& threej_uvs) {
-  auto add_element = [&filler, &iter_src, &iter_dest](const double element) {
+  auto add_element = [&filler, &iter_src, &iter_dest, src_comp_index,
+                      dest_comp_index](const double element) {
     const size_t indx_dest =
         iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
     const size_t indx_src =
@@ -225,13 +227,15 @@ void inner_loops_three(
     const size_t src_multiplicity, std::vector<WignerThreeJ>& threej_pqs,
     std::vector<WignerThreeJ>& threej_uvs, std::vector<WignerThreeJ>& threej_ws,
     std::vector<WignerThreeJ>& threej_rs, const double sign_coef3j) {
-  auto add_element = [&filler, &iter_src, &iter_dest](const double element) {
-    const size_t indx_dest =
-        iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
-    const size_t indx_src =
-        iter_src() + src_comp_index * iter_src.spherepack_array_size();
-    filler.add(element, indx_dest, index_src);
-  };
+  auto add_element =
+      [&filler, &iter_src, &iter_dest, src_comp_index,
+       dest_comp_index](const double element) {
+        const size_t indx_dest =
+            iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
+        const size_t indx_src =
+            iter_src() + src_comp_index * iter_src.spherepack_array_size();
+        filler.add(element, indx_dest, index_src);
+      };
   const int m_dest = mprime + mcheck;
   size_t mtilde_indx = 0;
   for (int u = -1; u <= 1; u += 2) {

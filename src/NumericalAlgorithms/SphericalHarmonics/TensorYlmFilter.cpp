@@ -522,7 +522,7 @@ void FillFilter(
               }
             }
           } else if constexpr (rank == 2) {
-            for (int lbar = 0; lbar <= 2; ++lbar) {
+            for (size_t lbar = 0; lbar <= 2; ++lbar) {
               const double SymmFactor = [src_multiplicity, lbar]() {
                 if constexpr (std::is_same_v<Symmetry<0, 1>,
                                              TensorStructure::symmetry>) {
@@ -535,7 +535,8 @@ void FillFilter(
                 }
               }();
               const double coeflbar = 0.5 * (2 * lbar + 1);
-              for (int mbar = -lbar; mbar <= lbar; ++mbar) {
+              for (int mbar = -static_cast<int>(lbar);
+                   mbar <= static_cast<int>(lbar); ++mbar) {
                 WignerThreeJ threej_lbar(lprime, mprime, lbar, mbar);
                 for (int mtilde = -static_cast<int>(lbar);
                      mtilde <= static_cast<int>(lbar); ++mtilde) {
@@ -587,7 +588,7 @@ void FillFilter(
 }
 
 // Explicit instantiations
-template FillFilter<typename tnsr::i::structure>(
+template FillFilter<typename tnsr::i<DataVector, 3>::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
     size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);

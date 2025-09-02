@@ -239,10 +239,11 @@ void inner_loops_three(
     SparseMatrixFiller& filler, SpherepackIterator& iter_src,
     SpherepackIterator& iter_dest, const size_t src_comp_index,
     const size_t dest_comp_index, const size_t ell_max, const size_t lprime,
-    const double coeflprime, const int mprime, const int lhat, const int mhat,
-    WignerThreeJ& threej_mhat, const int mcheck, WignerThreeJ& threej_mcheck,
-    const size_t mbar_indx, const int p, const int q, const int r, const int mr,
-    const std::vector<int>& mbars, const std::vector<int>& mtildes,
+    const double coeflprime, const int mprime, const size_t lhat,
+    const int mhat, WignerThreeJ& threej_mhat, const int mcheck,
+    WignerThreeJ& threej_mcheck, const size_t mbar_indx, const int p,
+    const int q, const int r, const int mr, const std::vector<int>& mbars,
+    const std::vector<int>& mtildes,
     const std::array<helpers::BasisVector, 3>& src_bvs,
     const std::array<helpers::BasisVector, 3>& dest_bvs,
     const size_t src_multiplicity, std::vector<WignerThreeJ>& threej_pqs,
@@ -295,9 +296,9 @@ void inner_loops_three(
                                            helpers::bv_to_k(src_bvs[0], w);
             const std::complex<double> coef3j =
                 -coeflprime * coeflbar * coeflhat * k_coefs * sign_coef3j;
-            for (size_t l_dest = std::max(
+            for (size_t l_dest = static_cast<size_t>(std::max(
                      abs(static_cast<int>(lprime) - static_cast<int>(lhat)),
-                     std::max(abs(mhat - mprime), abs(mcheck + mprime)));
+                     std::max(abs(mhat - mprime), abs(mcheck + mprime))));
                  l_dest <= lprime + lhat; ++l_dest) {
               if (l_dest <= ell_max and l_dest >= m_dest) {
                 const double sign_lhat =
@@ -305,14 +306,14 @@ void inner_loops_three(
                 // The division inside the index of the following
                 // quantities is integer division.  Note that
                 // q,v,r,w,v are always odd.
-                const double threej_pq = threej_pqs[(q + 1) / 2 + p + 1](lbar);
-                const double threej_uv = threej_uvs[(v + 1) / 2 + u + 1](lbar);
-                const double threej_r =
-                    threej_rs[lbar + (r + 1) * 3 / 2 +
-                              6 * ((q + 1) / 2 + p + 1)](lhat);
-                const double threej_w =
-                    threej_ws[lbar + (w + 1) * 3 / 2 +
-                              6 * ((v + 1) / 2 + u + 1)](lhat);
+                const double threej_pq =
+                    threej_pqs[static_cast<size_t>((q + 1) / 2 + p + 1)](lbar);
+                const double threej_uv =
+                    threej_uvs[static_cast<size_t>((v + 1) / 2 + u + 1)](lbar);
+                const double threej_r = threej_rs[static_cast<size_t>(
+                    lbar + (r + 1) * 3 / 2 + 6 * ((q + 1) / 2 + p + 1))](lhat);
+                const double threej_w = threej_ws[static_cast<size_t>(
+                    lbar + (w + 1) * 3 / 2 + 6 * ((v + 1) / 2 + u + 1))](lhat);
                 const std::complex<double> correction =
                     coef3j * threej_pq * threej_uv * threej_r * threej_w *
                     threej_mhat(l_dest) * threej_mcheck(l_dest) * sign_lhat *

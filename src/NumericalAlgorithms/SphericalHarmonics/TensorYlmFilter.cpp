@@ -118,8 +118,8 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                      const double coeflprime, WignerThreeJ& threej_lbar,
                      WignerThreeJ& threej_ltilde, const std::vector<int>& mbars,
                      const std::vector<int>& mtildes,
-                     const std::array<helpers::BasisVector, 3>& src_bvs,
-                     const std::array<helpers::BasisVector, 3>& dest_bvs,
+                     const std::array<helpers::BasisVector, 2>& src_bvs,
+                     const std::array<helpers::BasisVector, 2>& dest_bvs,
                      const double SymmFactor, const double sign_y,
                      std::vector<WignerThreeJ>& threej_pqs,
                      std::vector<WignerThreeJ>& threej_uvs) {
@@ -280,6 +280,7 @@ void inner_loops_three(
               if constexpr (std::is_same_v<Symmetry<3, 2, 1>, Symm>) {
                 // "abc" symmetry
                 (void)src_multiplicity;
+                (void)lbar;
                 return 1.0;
               } else {
                 // any other symmetry
@@ -534,6 +535,7 @@ void FillFilter(
                                   typename TensorStructure::symmetry>) {
                   // "ab" symmetry
                   (void)src_multiplicity;
+                  (void)lbar;
                   return 1.0;
                 } else {
                   // "aa" symmetry
@@ -580,8 +582,9 @@ void FillFilter(
                               dest_comp_index, ell_max, lprime, coeflprime,
                               mprime, lhat, mhat, threej_mhat, mcheck,
                               threej_mcheck, mbar_indx, p, q, r, mr, mbars,
-                              mtildes, src_bvs, dest_bvs, threej_pqs,
-                              threej_uvs, threej_ws, threej_rs, sign_coef3j);
+                              mtildes, src_bvs, dest_bvs, src_multiplicity,
+                              threej_pqs, threej_uvs, threej_ws, threej_rs,
+                              sign_coef3j);
                         }
                       }
                     }

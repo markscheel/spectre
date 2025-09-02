@@ -5,6 +5,12 @@
 
 #include "NumericalAlgorithms/SphericalHarmonics/TensorYlm.hpp"
 
+#include <blaze/math/CompressedMatrix.h>
+#include <cstddef>
+#include <optional>
+
+#include "Utilities/Gsl.hpp"
+
 namespace ylm::TensorYlm {
 
 /*!

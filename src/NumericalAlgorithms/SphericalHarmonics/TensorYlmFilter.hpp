@@ -149,7 +149,78 @@ namespace ylm::TensorYlm {
  *  (\hbox{Last term in Eq.~(\ref{eq:RankTwoTransformWithCut})})
  *  (1+(-1)^{\bar{\ell}})
  *  \frac{2-\delta(\tilde{D_1},\tilde{D_2})}{2}.
- *\end{align}
+ * \end{align}
+ *
+ * For third-rank tensors, the expression for
+ * $F_{l m \tilde{D}}^{\ell'' m''\tilde{A}}$ is
+ * \begin{align}
+ *  F_{l m \tilde{D}}^{\ell'' m''\tilde{A}}
+ *  &=
+ *  \delta(\tilde{D},\tilde{A})\delta_{\ell \ell''}\delta_{m m''}
+ *  \nonumber \\
+ * &-
+ *  \frac{1}{8}
+ *  (-1)^{\delta(\tilde{D}_1,\mathbf{e}_y)}
+ *  (-1)^{\delta(\tilde{D}_2,\mathbf{e}_y)}
+ *  (-1)^{\delta(\tilde{D}_3,\mathbf{e}_y)}
+ *  \delta_{\ell \ell''}
+ *  \nonumber \\
+ *  &\times
+ *  \sum_{\ell'=\ell_{\mathrm{cut}}+1}^{\ell_{\mathrm{max}}+3}
+ *  (2\ell'+1)
+ *  \sum_{u,v,w,p,q,r,\tilde{m},\bar{\ell},\bar{m},
+ *  \hat{\ell},\hat{m},\check{m},m'}
+ *  (2 \bar{\ell}+1)
+ *  (2 \hat{\ell}+1)
+ *  \nonumber \\
+ *  &\qquad\times
+ *  k_u(\tilde{D}_2) k_v(\tilde{D}_3) k_w(\tilde{D}_1)
+ *  k_p(\tilde{A}_2) k_q(\tilde{A}_3) k_r(\tilde{A}_1)
+ *  (-1)^{\tilde{m}-\bar{m}}
+ *  \nonumber \\
+ *  &\qquad\times
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *     m_p(\tilde{A}_2)&m_q(\tilde{A}_3)&-\bar{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *     m_u(\tilde{D}_2)&m_v(\tilde{D}_3)&\tilde{m}
+ *    \end{array}\right)
+ *  \nonumber \\
+ *  &\qquad\times
+ *    \left(\begin{array}{rrr}
+ *     \ell&\ell'&\hat{\ell}\cr
+ *     -m&m'&\check{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     \ell'&\ell&\hat{\ell}\cr
+ *     -m'&m''&\hat{m}
+ *    \end{array}\right)
+ *  \nonumber \\
+ *  &\qquad\times
+ *    \left(\begin{array}{rrr}
+ *     1&\bar{\ell}&\hat{\ell}\cr
+ *     m_r(\tilde{A}_1)&\bar{m}&-\check{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&\bar{\ell}&\hat{\ell}\cr
+ *     m_w(\tilde{D}_1)&-\tilde{m}&\hat{m}.
+ *    \end{array}\right)
+ *    \label{eq:RankThreeTransformWithCut}
+ * \end{align}
+ *
+ * For rank-3 tensors symmetric on the last two indices, we do
+ * the same thing as rank-2 symmetric tensors and write
+ * \begin{align}
+ *  \breve{F}_{l m \tilde{D}}^{\ell'' m''\tilde{A}}
+ *  &=
+ *  \delta(\tilde{D},\tilde{A})\delta_{\ell \ell''}\delta_{m m''}\nonumber\\
+ *  &-\sum_{\tilde{D_2}\geq \tilde{D_3}}
+ *  (\hbox{Last term in Eq.~(\ref{eq:RankThreeTransformWithCut})})
+ *  (1+(-1)^{\bar{\ell}})
+ *  \frac{2-\delta(\tilde{D_2},\tilde{D_3})}{2}.
+ * \end{align}
  *
  * \tparam TensorStructure A Tensor_detail::Structure
  *

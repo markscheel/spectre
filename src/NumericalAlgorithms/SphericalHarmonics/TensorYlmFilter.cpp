@@ -391,7 +391,7 @@ void FillFilter(
   static_assert(rank > 0 and rank < 4, "Implemented only for ranks 1,2,3");
 
   const size_t lcutplus =
-      ell_max - static_cast<int>(number_of_ell_modes_to_kill);
+      static_cast<size_t>(ell_max - number_of_ell_modes_to_kill);
   const size_t lcutminus =
       half_power.has_value()
           ? size_t(std::ceil((lcutplus + 1) *
@@ -522,10 +522,14 @@ void FillFilter(
               }
             }
           } else if constexpr (rank == 2) {
+            const double sign_y =
+                (src_bvs[0] == helpers::BasisVector::y ? -1.0 : 1.0) *
+                (src_bvs[1] == helpers::BasisVector::y ? -1.0 : 1.0);
             for (size_t lbar = 0; lbar <= 2; ++lbar) {
               const double SymmFactor = [src_multiplicity, lbar]() {
-                if constexpr (std::is_same_v<Symmetry<2, 1>,
-                                             TensorStructure::symmetry>) {
+                if constexpr (std::is_same_v<
+                                  Symmetry<2, 1>,
+                                  typename TensorStructure::symmetry>) {
                   // "ab" symmetry
                   (void)src_multiplicity;
                   return 1.0;
@@ -565,7 +569,7 @@ void FillFilter(
                         const int mr = helpers::bv_to_m(dest_bvs[0], r);
                         if (mcheck == mr + mbars[mbar_indx] and
                             mprime + mcheck >= 0) {
-                          inner_loops_three<TensorStructure::symmetry>(
+                          inner_loops_three<typename TensorStructure::symmetry>(
                               filler, iter_src, iter_dest, src_comp_index,
                               dest_comp_index, ell_max, lprime, coeflprime,
                               mprime, lhat, mhat, threej_mhat, mcheck,

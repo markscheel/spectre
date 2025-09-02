@@ -78,7 +78,8 @@ namespace ylm::TensorYlm {
  *      -m&m'&m_p(\tilde{A})
  *    \end{array}\right),
  * \end{align}
- * where
+ * where the 6-element "matrices"
+ * in parentheses are Wigner 3-J symbols, and where
  * \begin{align}
  *  g(\ell') &=
  *  \left\{\begin{array}{lr}

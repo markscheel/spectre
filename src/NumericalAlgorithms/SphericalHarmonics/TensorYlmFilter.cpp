@@ -3,6 +3,15 @@
 
 #include "NumericalAlgorithms/SphericalHarmonics/TensorYlmFilter.hpp"
 
+#include <blaze/math/CompressedMatrix.h>
+#include <complex>
+#include <optional>
+
+#include "DataStructures/SparseMatrixFiller.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/TensorYlmHelpers.hpp"
+#include "NumericalAlgorithms/SphericalHarmonics/WignerThreeJ.hpp"
+
 namespace ylm::TensorYlm {
 
 namespace {

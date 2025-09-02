@@ -35,7 +35,7 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
     filler.add(element, indx_dest, indx_src);
   };
   for (size_t ell = threej_j.l1_min(); ell <= threej_j.l1_max(); ++ell) {
-    if (ell <= ell_max and ell >= mdest) {
+    if (ell <= ell_max and static_cast<int>(ell) >= mdest) {
       const std::complex<double> correction =
           coefjp * threej_j(ell) * threej_p(ell);
       if (msrc > 0) {
@@ -110,7 +110,7 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
 void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                      SpherepackIterator& iter_dest, const size_t src_comp_index,
                      const size_t dest_comp_index, const size_t ell_max,
-                     const size_t lprime, const int mprime, const int lbar,
+                     const size_t lprime, const int mprime, const size_t lbar,
                      const int mbar, const int mtilde, const double coeflbar,
                      const double coeflprime, WignerThreeJ& threej_lbar,
                      WignerThreeJ& threej_ltilde, const std::vector<int>& mbars,
@@ -146,11 +146,13 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
               const int m_src = mprime - mtilde;
               std::complex<double> coef3j =
                   -coeflprime * coeflbar * k_coefs * sign_y;
-              for (size_t l_dest =
-                       std::max(std::max(abs(static_cast<int>(lprime) -
-                                             static_cast<int>(lbar)),
-                                         abs(mprime + mbar)),
-                                std::max(abs(mtilde - mprime), m_dest));
+              for (size_t l_dest = std::max(
+                       std::max(
+                           static_cast<size_t>(abs(static_cast<int>(lprime) -
+                                                   static_cast<int>(lbar))),
+                           abs(mprime + mbar)),
+                       static_cast<size_t>(
+                           std::max(abs(mtilde - mprime), m_dest)));
                    l_dest <= std::min(lprime + lbar, ell_max); ++l_dest) {
                 const double sign_lbar =
                     ((lprime + l_dest + lbar) % 2 == 0 ? 1.0 : -1.0);

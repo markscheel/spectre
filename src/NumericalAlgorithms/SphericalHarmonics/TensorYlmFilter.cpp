@@ -31,9 +31,9 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
         iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
     const size_t indx_src =
         iter_src() + src_comp_index * iter_src.spherepack_array_size();
-    filler.add(element, indx_dest, index_src);
+    filler.add(element, indx_dest, indx_src);
   };
-  for (int ell = threej_j.L1Min(); ell <= threej_j.L1Max(); ++ell) {
+  for (int ell = threej_j.l1_min(); ell <= threej_j.l1_max(); ++ell) {
     if (ell <= ell_max and ell >= mdest) {
       const std::complex<double> correction =
           coefjp * threej_j(ell) * threej_p(ell);
@@ -109,7 +109,7 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
         iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
     const size_t indx_src =
         iter_src() + src_comp_index * iter_src.spherepack_array_size();
-    filler.add(element, indx_dest, index_src);
+    filler.add(element, indx_dest, indx_src);
   };
   size_t mbar_indx = 0;
   for (int p = -1; p <= 1; p += 2) {
@@ -233,7 +233,7 @@ void inner_loops_three(
         iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
     const size_t indx_src =
         iter_src() + src_comp_index * iter_src.spherepack_array_size();
-    filler.add(element, indx_dest, index_src);
+    filler.add(element, indx_dest, indx_src);
   };
   const int m_dest = mprime + mcheck;
   size_t mtilde_indx = 0;

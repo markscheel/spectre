@@ -98,8 +98,8 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                      const double coeflprime, WignerThreeJ& threej_lbar,
                      WignerThreeJ& threej_ltilde, const std::vector<int>& mbars,
                      const std::vector<int>& mtildes,
-                     const std::array<detail::BasisVector, 3>& src_bvs,
-                     const std::array<detail::BasisVector, 3>& dest_bvs,
+                     const std::array<helpers::BasisVector, 3>& src_bvs,
+                     const std::array<helpers::BasisVector, 3>& dest_bvs,
                      const double SymmFactor, const double sign_y,
                      std::vector<WignerThreeJ>& threej_pqs,
                      std::vector<WignerThreeJ>& threej_uvs) {
@@ -122,10 +122,10 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
         for (int u = -1; u <= 1; u += 2) {
           for (int v = -1; v <= 1; v += 2, ++mtilde_indx) {
             if (mtilde == mtildes[mtilde_indx]) {
-              std::complex<double> k_coefs = detail::bv_to_k(src_bvs[0], u) *
-                                             detail::bv_to_k(dest_bvs[0], p) *
-                                             detail::bv_to_k(src_bvs[1], v) *
-                                             detail::bv_to_k(dest_bvs[1], q);
+              std::complex<double> k_coefs = helpers::bv_to_k(src_bvs[0], u) *
+                                             helpers::bv_to_k(dest_bvs[0], p) *
+                                             helpers::bv_to_k(src_bvs[1], v) *
+                                             helpers::bv_to_k(dest_bvs[1], q);
               const int m_src = mprime - mtilde;
               std::complex<double> coef3j =
                   -coeflprime * coeflbar * k_coefs * sign_y;
@@ -222,20 +222,19 @@ void inner_loops_three(
     WignerThreeJ& threej_mhat, const int mcheck, WignerThreeJ& threej_mcheck,
     const size_t mbar_indx, const int p, const int q, const int r, const int mr,
     const std::vector<int>& mbars, const std::vector<int>& mtildes,
-    const std::array<detail::BasisVector, 3>& src_bvs,
-    const std::array<detail::BasisVector, 3>& dest_bvs,
+    const std::array<helpers::BasisVector, 3>& src_bvs,
+    const std::array<helpers::BasisVector, 3>& dest_bvs,
     const size_t src_multiplicity, std::vector<WignerThreeJ>& threej_pqs,
     std::vector<WignerThreeJ>& threej_uvs, std::vector<WignerThreeJ>& threej_ws,
     std::vector<WignerThreeJ>& threej_rs, const double sign_coef3j) {
-  auto add_element =
-      [&filler, &iter_src, &iter_dest, src_comp_index,
-       dest_comp_index](const double element) {
-        const size_t indx_dest =
-            iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
-        const size_t indx_src =
-            iter_src() + src_comp_index * iter_src.spherepack_array_size();
-        filler.add(element, indx_dest, index_src);
-      };
+  auto add_element = [&filler, &iter_src, &iter_dest, src_comp_index,
+                      dest_comp_index](const double element) {
+    const size_t indx_dest =
+        iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
+    const size_t indx_src =
+        iter_src() + src_comp_index * iter_src.spherepack_array_size();
+    filler.add(element, indx_dest, index_src);
+  };
   const int m_dest = mprime + mcheck;
   size_t mtilde_indx = 0;
   for (int u = -1; u <= 1; u += 2) {
@@ -244,7 +243,7 @@ void inner_loops_three(
                std::max(abs(mbars[mbar_indx]), abs(mtildes[mtilde_indx]));
            lbar <= 2; ++lbar) {
         for (int w = -1; w <= 1; w += 2) {
-          const int mw = detail::bv_to_m(src_bv[0], w);
+          const int mw = helpers::bv_to_m(src_bv[0], w);
           if (mtildes[mtilde_indx] - mw == mhat and
               lhat >= std::max(abs(lbar - 1),
                                std::max(abs(mr + mbars[mbar_indx]),
@@ -267,12 +266,12 @@ void inner_loops_three(
                                                                     : -1.0);
             const double coeflhat = 0.5 * (2 * lhat + 1);
             const double coeflbar = 0.5 * (2 * lbar + 1);
-            std::complex<double> k_coefs = detail::bv_to_k(src_bvs[1], u) *
-                                           detail::bv_to_k(dest_bvs[1], p) *
-                                           detail::bv_to_k(src_bvs[2], v) *
-                                           detail::bv_to_k(dest_bvs[2], q) *
-                                           detail::bv_to_k(dest_bvs[0], r) *
-                                           detail::bv_to_k(src_bvs[0], w);
+            std::complex<double> k_coefs = helpers::bv_to_k(src_bvs[1], u) *
+                                           helpers::bv_to_k(dest_bvs[1], p) *
+                                           helpers::bv_to_k(src_bvs[2], v) *
+                                           helpers::bv_to_k(dest_bvs[2], q) *
+                                           helpers::bv_to_k(dest_bvs[0], r) *
+                                           helpers::bv_to_k(src_bvs[0], w);
             const std::complex<double> coef3j =
                 -coeflprime * coeflbar * coeflhat * k_coefs * sign_coef3j;
             for (int l_dest = std::max(
@@ -384,7 +383,7 @@ void FillFilter(
   for (size_t dest_comp_index = 0; dest_comp_index < num_independent_components;
        dest_comp_index++) {
     const auto dest_indices = tensor_index_list[dest_comp_index];
-    const auto dest_bvs = detail::to_cart_basis_vector(dest_indices);
+    const auto dest_bvs = helpers::to_cart_basis_vector(dest_indices);
 
     std::vector<WignerThreeJ> threej_pqs;
     std::vector<int> mbars;
@@ -393,10 +392,10 @@ void FillFilter(
       mbars.reserve(4);
       for (int p = -1; p <= 1; p += 2) {
         for (int q = -1; q <= 1; q += 2) {
-          mbars.push_back(detail::bv_to_m(dest_bvs[rank - 2], p) +
-                          detail::bv_to_m(dest_bvs[rank - 1], q));
-          threej_pqs.emplace_back(1, detail::bv_to_m(dest_bvs[rank - 2], p), 1,
-                                  detail::bv_to_m(dest_bvs[rank - 1], q));
+          mbars.push_back(helpers::bv_to_m(dest_bvs[rank - 2], p) +
+                          helpers::bv_to_m(dest_bvs[rank - 1], q));
+          threej_pqs.emplace_back(1, helpers::bv_to_m(dest_bvs[rank - 2], p), 1,
+                                  helpers::bv_to_m(dest_bvs[rank - 1], q));
         }
       }
     } else {
@@ -408,7 +407,7 @@ void FillFilter(
     for (size_t src_comp_index = 0; src_comp_index < num_independent_components;
          src_comp_index++) {
       const auto src_indices = tensor_index_list[src_comp_index];
-      const auto src_bvs = detail::to_cart_basis_vector(src_indices);
+      const auto src_bvs = helpers::to_cart_basis_vector(src_indices);
       const size_t src_multiplicity =
           TensorStructure::multiplicity(src_comp_index);
 
@@ -419,10 +418,10 @@ void FillFilter(
         mtildes.reserve(4);
         for (int u = -1; u <= 1; u += 2) {
           for (int v = -1; v <= 1; v += 2) {
-            mtildes.push_back(-(detail::bv_to_m(src_bvs[rank - 2], u) +
-                                detail::bv_to_m(src_bvs[rank - 1], v)));
-            threej_uvs.emplace_back(1, detail::bv_to_m(src_bvs[rank - 2], u), 1,
-                                    detail::bv_to_m(src_bvs[rank - 1], v));
+            mtildes.push_back(-(helpers::bv_to_m(src_bvs[rank - 2], u) +
+                                helpers::bv_to_m(src_bvs[rank - 1], v)));
+            threej_uvs.emplace_back(1, helpers::bv_to_m(src_bvs[rank - 2], u),
+                                    1, helpers::bv_to_m(src_bvs[rank - 1], v));
           }
         }
       } else {
@@ -438,7 +437,7 @@ void FillFilter(
         threej_rs.reserve(24);
         for (int mbar : mbars) {
           for (int r = -1; r <= 1; r += 2) {
-            const int mr = detail::bv_to_m(dest_bvs[0], r);
+            const int mr = helpers::bv_to_m(dest_bvs[0], r);
             for (int lbar = 0; lbar <= 2; ++lbar) {
               threej_rs.emplace_back(1, mr, lbar, mbar);
             }
@@ -447,7 +446,7 @@ void FillFilter(
         threej_ws.reserve(24);
         for (int mtilde : mtildes) {
           for (int w = -1; w <= 1; w += 2) {
-            const int mw = detail::bv_to_m(src_bvs[0], w);
+            const int mw = helpers::bv_to_m(src_bvs[0], w);
             for (int lbar = 0; lbar <= 2; ++lbar) {
               threej_ws.emplace_back(1, mw, lbar, -mtilde);
             }
@@ -472,22 +471,22 @@ void FillFilter(
         // Here is where the formulas differ for different ranks.
         if constexpr (rank == 1) {
           for (int p = -1; p <= 1; p += 2) {
-            const int mdest = mprime + detail::bv_to_m(dest_bvs[0], p);
+            const int mdest = mprime + helpers::bv_to_m(dest_bvs[0], p);
             if (mdest >= 0) {
               // Fill only nonnegative m, since that is all we store
               WignerThreeJ threej_p(lprime, mprime, 1,
-                                    detail::bv_to_m(dest_bvs[0], p));
+                                    helpers::bv_to_m(dest_bvs[0], p));
               for (int j = -1; j <= 1; j += 2) {
                 WignerThreeJ threej_j(lprime, mprime, 1,
-                                      detail::bv_to_m(src_bvs[0], j));
-                const int msrc = mprime + detail::bv_to_m(src_bvs[0], j);
+                                      helpers::bv_to_m(src_bvs[0], j));
+                const int msrc = mprime + helpers::bv_to_m(src_bvs[0], j);
                 std::complex<double> coefjp = -coeflp *
-                                              detail::bv_to_k(src_bvs[0], j) *
-                                              detail::bv_to_k(dest_bvs[0], p);
+                                              helpers::bv_to_k(src_bvs[0], j) *
+                                              helpers::bv_to_k(dest_bvs[0], p);
                 if ((mdest + msrc) % 2 != 0.0) {
                   coefjp *= -1.0;
                 }
-                if (src_bv == detail::BasisVector::y) {
+                if (src_bv == helpers::BasisVector::y) {
                   coefjp *= -1.0;
                 }
                 inner_loops_one(filler, iter_src, iter_dest, src_comp_index,
@@ -534,7 +533,7 @@ void FillFilter(
                 for (int p = -1; p <= 1; p += 2) {
                   for (int q = -1; q <= 1; q += 2, ++mbar_indx) {
                     for (int r = -1; r <= 1; r += 2) {
-                      const int mr = detail::bv_to_m(dest_bvs[0], r);
+                      const int mr = helpers::bv_to_m(dest_bvs[0], r);
                       if (mcheck == mr + mbars[mbar_indx] and
                           mprime + mcheck >= 0) {
                         inner_loops_three<TensorStructure::symmetry>(

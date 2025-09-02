@@ -281,7 +281,7 @@ void inner_loops_three(
             return (src_multiplicity / 2.0) * (lbar % 2 == 0 ? 2.0 : 0.0);
           }
         }();
-        if(SymmFactor == 0.0) {
+        if (SymmFactor == 0.0) {
           // In this case we don't add any matrix elements so
           // just return here.
           return;
@@ -550,7 +550,7 @@ void FillFilter(
                   return (src_multiplicity / 2.0) * (lbar % 2 == 0 ? 2.0 : 0.0);
                 }
               }();
-              if(Symmfactor != 0.0) {
+              if (SymmFactor != 0.0) {
                 const double coeflbar = 0.5 * (2 * lbar + 1);
                 for (int mbar = -static_cast<int>(lbar);
                      mbar <= static_cast<int>(lbar); ++mbar) {

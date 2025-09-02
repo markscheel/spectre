@@ -466,83 +466,83 @@ void FillFilter(
                            IPow(double(lprime) / double(lcutplus + 1),
                                 2 * static_cast<int>(half_power.value()))))
                 : 0.5 * (2 * lprime + 1);
-      }
-      for (int mprime = -lprime; mprime <= lprime; ++mprime) {
-        // Here is where the formulas differ for different ranks.
-        if constexpr (rank == 1) {
-          for (int p = -1; p <= 1; p += 2) {
-            const int mdest = mprime + helpers::bv_to_m(dest_bvs[0], p);
-            if (mdest >= 0) {
-              // Fill only nonnegative m, since that is all we store
-              WignerThreeJ threej_p(lprime, mprime, 1,
-                                    helpers::bv_to_m(dest_bvs[0], p));
-              for (int j = -1; j <= 1; j += 2) {
-                WignerThreeJ threej_j(lprime, mprime, 1,
-                                      helpers::bv_to_m(src_bvs[0], j));
-                const int msrc = mprime + helpers::bv_to_m(src_bvs[0], j);
-                std::complex<double> coefjp = -coeflp *
-                                              helpers::bv_to_k(src_bvs[0], j) *
-                                              helpers::bv_to_k(dest_bvs[0], p);
-                if ((mdest + msrc) % 2 != 0.0) {
-                  coefjp *= -1.0;
+        for (int mprime = -lprime; mprime <= lprime; ++mprime) {
+          // Here is where the formulas differ for different ranks.
+          if constexpr (rank == 1) {
+            for (int p = -1; p <= 1; p += 2) {
+              const int mdest = mprime + helpers::bv_to_m(dest_bvs[0], p);
+              if (mdest >= 0) {
+                // Fill only nonnegative m, since that is all we store
+                WignerThreeJ threej_p(lprime, mprime, 1,
+                                      helpers::bv_to_m(dest_bvs[0], p));
+                for (int j = -1; j <= 1; j += 2) {
+                  WignerThreeJ threej_j(lprime, mprime, 1,
+                                        helpers::bv_to_m(src_bvs[0], j));
+                  const int msrc = mprime + helpers::bv_to_m(src_bvs[0], j);
+                  std::complex<double> coefjp =
+                      -coeflprime * helpers::bv_to_k(src_bvs[0], j) *
+                      helpers::bv_to_k(dest_bvs[0], p);
+                  if ((mdest + msrc) % 2 != 0.0) {
+                    coefjp *= -1.0;
+                  }
+                  if (src_bvs[0] == helpers::BasisVector::y) {
+                    coefjp *= -1.0;
+                  }
+                  inner_loops_one(filler, iter_src, iter_dest, src_comp_index,
+                                  dest_comp_index, ell_max, mdest, msrc, coefjb,
+                                  threej_j, threej_p);
                 }
-                if (src_bv == helpers::BasisVector::y) {
-                  coefjp *= -1.0;
-                }
-                inner_loops_one(filler, iter_src, iter_dest, src_comp_index,
-                                dest_comp_index, ell_max, mdest, msrc, coefjb,
-                                threej_j, threej_p);
               }
             }
-          }
-        } else if constexpr (rank == 2) {
-          for (int lbar = 0; lbar <= 2; ++lbar) {
-            const double SymmFactor = [&src_multiplicity]() {
-              if constexpr (std::is_same_v<Symmetry<0, 1>,
-                                           TensorStructure::symmetry>) {
-                // "ab" symmetry
-                (void)src_multiplicity;
-                return 1.0;
-              } else {
-                // "aa" symmetry
-                return (src_multiplicity / 2.0) *
-                       (1 + (lbar % 2 == 0 ? 1.0 : -1.0));
-              }
-            }();
-            const double coeflbar = 0.5 * (2 * lbar + 1);
-            for (int mbar = -lbar; mbar <= lbar; ++mbar) {
-              WignerThreeJ threej_lbar(lprime, mprime, lbar, mbar);
-              for (int mtilde = -lbar; mtilde <= lbar; ++mtilde) {
-                WignerThreeJ threej_ltilde(lprime, -mprime, lbar, mtilde);
-                inner_loops_two(filler, iter_src, iter_dest, src_comp_index,
-                                dest_comp_index, ell_max, lprime, mprime, lbar,
-                                mbar, mtilde, coeflbar, coeflprime, threej_lbar,
-                                threej_ltilde, mbars, mtildes, src_bvs,
-                                dest_bvs, SymmFactor, sign_y, threej_pqs,
-                                threej_uvs);
+          } else if constexpr (rank == 2) {
+            for (int lbar = 0; lbar <= 2; ++lbar) {
+              const double SymmFactor = [&src_multiplicity]() {
+                if constexpr (std::is_same_v<Symmetry<0, 1>,
+                                             TensorStructure::symmetry>) {
+                  // "ab" symmetry
+                  (void)src_multiplicity;
+                  return 1.0;
+                } else {
+                  // "aa" symmetry
+                  return (src_multiplicity / 2.0) *
+                         (1 + (lbar % 2 == 0 ? 1.0 : -1.0));
+                }
+              }();
+              const double coeflbar = 0.5 * (2 * lbar + 1);
+              for (int mbar = -lbar; mbar <= lbar; ++mbar) {
+                WignerThreeJ threej_lbar(lprime, mprime, lbar, mbar);
+                for (int mtilde = -lbar; mtilde <= lbar; ++mtilde) {
+                  WignerThreeJ threej_ltilde(lprime, -mprime, lbar, mtilde);
+                  inner_loops_two(filler, iter_src, iter_dest, src_comp_index,
+                                  dest_comp_index, ell_max, lprime, mprime,
+                                  lbar, mbar, mtilde, coeflbar, coeflprime,
+                                  threej_lbar, threej_ltilde, mbars, mtildes,
+                                  src_bvs, dest_bvs, SymmFactor, sign_y,
+                                  threej_pqs, threej_uvs);
+                }
               }
             }
-          }
-        } else if constexpr (rank == 3) {
-          for (int lhat = 0; lhat <= 3; ++lhat) {
-            for (int mhat = -lhat; mhat <= lhat; ++mhat) {
-              WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
-              for (int mcheck = -lhat; mcheck <= lhat; ++mcheck) {
-                WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);
-                size_t mbar_indx = 0;
-                for (int p = -1; p <= 1; p += 2) {
-                  for (int q = -1; q <= 1; q += 2, ++mbar_indx) {
-                    for (int r = -1; r <= 1; r += 2) {
-                      const int mr = helpers::bv_to_m(dest_bvs[0], r);
-                      if (mcheck == mr + mbars[mbar_indx] and
-                          mprime + mcheck >= 0) {
-                        inner_loops_three<TensorStructure::symmetry>(
-                            filler, iter_src, iter_dest, src_comp_index,
-                            dest_comp_index, ell_max, lprime, coeflprime,
-                            mprime, lhat, mhat, threej_mhat, mcheck,
-                            threej_mcheck, mbar_indx, p, q, r, mr, mbars,
-                            mtildes, src_bvs, dest_bvs, threej_pqs, threej_uvs,
-                            threej_ws, threej_rs, sign_coef3j);
+          } else if constexpr (rank == 3) {
+            for (int lhat = 0; lhat <= 3; ++lhat) {
+              for (int mhat = -lhat; mhat <= lhat; ++mhat) {
+                WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
+                for (int mcheck = -lhat; mcheck <= lhat; ++mcheck) {
+                  WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);
+                  size_t mbar_indx = 0;
+                  for (int p = -1; p <= 1; p += 2) {
+                    for (int q = -1; q <= 1; q += 2, ++mbar_indx) {
+                      for (int r = -1; r <= 1; r += 2) {
+                        const int mr = helpers::bv_to_m(dest_bvs[0], r);
+                        if (mcheck == mr + mbars[mbar_indx] and
+                            mprime + mcheck >= 0) {
+                          inner_loops_three<TensorStructure::symmetry>(
+                              filler, iter_src, iter_dest, src_comp_index,
+                              dest_comp_index, ell_max, lprime, coeflprime,
+                              mprime, lhat, mhat, threej_mhat, mcheck,
+                              threej_mcheck, mbar_indx, p, q, r, mr, mbars,
+                              mtildes, src_bvs, dest_bvs, threej_pqs,
+                              threej_uvs, threej_ws, threej_rs, sign_coef3j);
+                        }
                       }
                     }
                   }

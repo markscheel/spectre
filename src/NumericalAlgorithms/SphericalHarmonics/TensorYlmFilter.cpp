@@ -554,7 +554,8 @@ void FillFilter(
               for (int mhat = -static_cast<int>(lhat);
                    mhat <= static_cast<int>(lhat); ++mhat) {
                 WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
-                for (int mcheck = -lhat; mcheck <= lhat; ++mcheck) {
+                for (int mcheck = -static_cast<int>(lhat);
+                     mcheck <= static_cast<int>(lhat); ++mcheck) {
                   WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);
                   size_t mbar_indx = 0;
                   for (int p = -1; p <= 1; p += 2) {

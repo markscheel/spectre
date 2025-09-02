@@ -317,8 +317,7 @@ void inner_loops_three(
 template <typename TensorStructure>
 void FillFilter(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
-    const TensorStructure /*structure*/, const size_t ell_max,
-    const size_t number_of_ell_modes_to_kill,
+    const size_t ell_max, const size_t number_of_ell_modes_to_kill,
     const std::optional<size_t> half_power) {
   static constexpr size_t num_independent_components = TensorStructure::size();
   static constexpr size_t rank = TensorStructure::rank();
@@ -522,19 +521,19 @@ void FillFilter(
 // Explicit instantiations
 template FillFilter<tnsr::i::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
-    tnsr::i::structure, size_t ell_max, size_t number_of_ell_modes_to_kill,
+    size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
 template FillFilter<tnsr::ii::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
-    tnsr::ii::structure, size_t ell_max, size_t number_of_ell_modes_to_kill,
+    size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
 template FillFilter<tnsr::ij::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
-    tnsr::ij::structure, size_t ell_max, size_t number_of_ell_modes_to_kill,
+    size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
 template FillFilter<tnsr::ijj::structure>(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
-    tnsr::ijj::structure, size_t ell_max, size_t number_of_ell_modes_to_kill,
+    size_t ell_max, size_t number_of_ell_modes_to_kill,
     std::optional<size_t> half_power);
 
 };  // namespace ylm::TensorYlm

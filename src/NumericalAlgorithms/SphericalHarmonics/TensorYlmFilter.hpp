@@ -60,7 +60,6 @@ namespace ylm::TensorYlm {
  * \tparam TensorStructure A Tensor_detail::Structure
  *
  * \param matrix The CompressedMatrix to fill
- * \param structure A Tensor_detail::Structure passed in for template deduction.
  * \param ell_max The maximum ylm ell value.
  * \param number_of_ell_modes_to_kill How many top ell modes to set to zero.
  * \param half_power The half power $\sigma$ for more complicated filtering.
@@ -68,7 +67,7 @@ namespace ylm::TensorYlm {
 template <typename TensorStructure>
 void FillFilter(
     gsl::not_null<blaze::CompressedMatrix<double, blaze::rowMajor>*> matrix,
-    TensorStructure /*structure*/, size_t ell_max,
-    size_t number_of_ell_modes_to_kill, std::optional<size_t> half_power);
+    size_t ell_max, size_t number_of_ell_modes_to_kill,
+    std::optional<size_t> half_power);
 
 };  // namespace ylm::TensorYlm

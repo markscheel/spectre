@@ -8,6 +8,8 @@
 #include <optional>
 
 #include "DataStructures/SparseMatrixFiller.hpp"
+#include "DataStructures/Tensor/Structure.hpp"
+#include "DataStructures/Tensor/Tensor.hpp"
 #include "DataStructures/Tensor/TypeAliases.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/TensorYlmHelpers.hpp"

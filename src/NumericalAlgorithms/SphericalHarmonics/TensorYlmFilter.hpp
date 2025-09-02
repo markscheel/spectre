@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <optional>
 
+#include "DataStructures/DataVector.hpp"
 #include "Utilities/Gsl.hpp"
 
 namespace ylm::TensorYlm {

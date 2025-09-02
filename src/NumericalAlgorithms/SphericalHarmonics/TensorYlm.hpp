@@ -134,4 +134,4 @@
  *                 (-1)^{m'}.
  * \end{align}
  */
-namespace ylm::TensorYlm;
+namespace ylm::TensorYlm {}  // namespace ylm::TensorYlm

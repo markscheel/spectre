@@ -58,6 +58,99 @@ namespace ylm::TensorYlm {
  * $\ell_{\mathrm{cut}}^+$ equal to $\ell_{\rm max}$ minus
  * number_of_ell_modes_to_kill.
  *
+ * For rank-1 tensors, the expression for
+ * $F_{l m \tilde{D}}^{\ell'' m''\tilde{A}}$ is
+ * \begin{align}
+ *  F_{l m \tilde{D}}^{\ell'' m''\tilde{A}} &=
+ *  \delta(\tilde{D},\tilde{A})\delta_{\ell \ell''}\delta_{m m''}
+ *  \nonumber \\
+ *  &- (-1)^{m+m''} (-1)^{\delta(\tilde{D},\mathbf{e}_y)}
+ *  \delta(\ell,\ell'')
+ *  \sum_{\ell'=\ell_{\mathrm{cut}}^-}^{\ell_{\mathrm{max}}+1}
+ *  \frac{2\ell'+1}{2} g(\ell') \nonumber \\
+ *  &\times \sum_{j,p,m'} k_j(\tilde{D})k_p(\tilde{A})
+ *    \left(\begin{array}{rrr}
+ *     \ell&\ell'&1\cr
+ *      -m''&m'&m_j(\tilde{D})
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     \ell&\ell'&1\cr
+ *      -m&m'&m_p(\tilde{A})
+ *    \end{array}\right),
+ * \end{align}
+ * where
+ * \begin{align}
+ *  g(\ell') &=
+ *  \left\{\begin{array}{lr}
+ *      1-f(\ell') & \ell' \leq \ell_{\mathrm{cut}}^+,\\
+ *      1 & \ell' > \ell_{\mathrm{cut}}^+.
+ *  \end{array}\right.
+ * \end{align}
+ *
+ * For second-rank tensors, the expression for
+ * $F_{l m \tilde{D}}^{\ell'' m''\tilde{A}}$ is
+ * \begin{align}
+ *  F_{l m \tilde{D}}^{\ell'' m''\tilde{A}}
+ *  &=
+ *  \delta(\tilde{D},\tilde{A})\delta_{\ell \ell''}\delta_{m m''}
+ * \nonumber \\
+ * &-
+ *  \frac{1}{4}
+ * (-1)^{\delta(\tilde{D}_1,\mathbf{e}_y)}
+ * (-1)^{\delta(\tilde{D}_2,\mathbf{e}_y)}
+ *  \delta_{\ell \ell''}
+ * \nonumber \\
+ * &\times
+ * \sum_{\ell'=\ell_{\mathrm{cut}}^-}^{\ell_{\mathrm{max}}+2}
+ * (2\ell'+1) g(\ell')
+ * \sum_{u,v,p,q,\bar{\ell},\tilde{m},\bar{m},\mpr}
+ * (2 \bar{\ell}+1)
+ * k_u(\tilde{D}_1) k_v(\tilde{D}_2)
+ * k_p(\tilde{A}_1) k_q(\tilde{A}_2)
+ * \nonumber \\
+ * &\times
+ *    \left(\begin{array}{rrr}
+ *     \ell&\ell'&\bar{\ell}\cr
+ *      -m&m'&\bar{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *      m_p(\tilde{A}_1)&{m_q(\tilde{A}_2)&-\bar{m}
+ *    \end{array}\right)
+ * \nonumber \\
+ * &\times
+ *    \left(\begin{array}{rrr}
+ *     \ell'&\ell&\bar{\ell}\cr
+ *      -m'&m''&\tilde{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *      m_u(\tilde{D}_1)&m_v(\tilde{D}_2)&\tilde{m}
+ *    \end{array}\right).
+ *  \label{eq:RankTwoTransformWithCut}
+ * \end{align}
+ *
+ * For a symmetric 2nd-rank spatial tensor, we store only half of the
+ * off-diagonal components, and we sum over only the components we have
+ * stored. In this case, we write
+ * \begin{align}
+ *   T^{\tilde A}_{\ell m}{}^{\hbox{filtered}}
+ *   &= \sum_{\ell'' m'' \tilde{D_1}\geq\tilde{D_2}}
+ *                  \breve{F}_{\ell m\tilde{D}}^{\ell'' m'' \tilde{A}}
+ *                  T^{\tilde D}_{\ell'' m''},
+ * \end{align}
+ * where the sum over tensor components goes over only half the off-diagonal
+ * components, and where
+ * \begin{align}
+ *  \breve{F}_{l m \tilde{D}}^{\ell'' m''\tilde{A}}
+ *  &=
+ *  \delta(\tilde{D},\tilde{A})\delta_{\ell \ell''}\delta_{m m''}\nonumber\\
+ *  &-\sum_{\tilde{D_1}\geq \tilde{D_2}}
+ *  (\hbox{Last term in Eq.~(\ref{eq:RankTwoTransformWithCut})})
+ *  (1+(-1)^{\bar{\ell}})
+ *  \frac{2-\delta(\tilde{D_1},\tilde{D_2})}{2}.
+ *\end{align}
+ *
  * \tparam TensorStructure A Tensor_detail::Structure
  *
  * \param matrix The CompressedMatrix to fill

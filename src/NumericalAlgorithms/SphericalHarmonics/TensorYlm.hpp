@@ -34,6 +34,20 @@
  * (These values are the spin weights of the complex conjugates
  * of the basis vectors.)
  *
+ * To make things easier, we define two auxiliary quantities $k_j$ and $m_j$
+ * that are functions of the Cartesian basis vectors:
+ * \begin{align}
+ *  k_j(\mathbf{e}_x) &= -j,\\
+ *  k_j(\mathbf{e}_y) &=  i,\\
+ *  k_j(\mathbf{e}_z) &= 1/\sqrt{2},\\
+ *  m_j(\mathbf{e}_x) &= j,\\
+ *  m_j(\mathbf{e}_y) &= j,\\
+ *  m_j(\mathbf{e}_z) &= 0,
+ * \end{align}
+ * where the $i$ above is the imaginary unit $i=\sqrt{-1}$.
+ * These quantities will be used in explicit formulas for transformations
+ * between expansion coefficients.
+ *
  * We can define the following transformations between the expansion
  * coefficients $T^A_{\ell m}$ and $T^{\tilde A}_{\ell m}$:
  * \begin{align}

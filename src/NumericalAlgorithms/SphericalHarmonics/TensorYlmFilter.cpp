@@ -38,46 +38,46 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
       if (msrc > 0) {
         // Main term.
         // ReRe
-        iter_src.Reset(ell, msrc, SpherepackIterator::a);
-        iter_dest.Reset(ell, mdest, SpherepackIterator::a);
+        iter_src.set(ell, msrc, SpherepackIterator::a);
+        iter_dest.set(ell, mdest, SpherepackIterator::a);
         add_element(correction.real());
 
         // ReIm
-        iter_src.Reset(ell, msrc, SpherepackIterator::b);
-        iter_dest.Reset(ell, mdest, SpherepackIterator::a);
+        iter_src.set(ell, msrc, SpherepackIterator::b);
+        iter_dest.set(ell, mdest, SpherepackIterator::a);
         add_element(-correction.imag());
 
         // ImIm
-        iter_src.Reset(ell, msrc, SpherepackIterator::b);
-        iter_dest.Reset(ell, mdest, SpherepackIterator::b);
+        iter_src.set(ell, msrc, SpherepackIterator::b);
+        iter_dest.set(ell, mdest, SpherepackIterator::b);
         add_element(correction.real());
 
         // ImRe
-        iter_src.Reset(ell, msrc, SpherepackIterator::a);
-        iter_dest.Reset(ell, mdest, SpherepackIterator::b);
+        iter_src.set(ell, msrc, SpherepackIterator::a);
+        iter_dest.set(ell, mdest, SpherepackIterator::b);
         add_element(correction.imag());
       } else {
         // We are multiplying by Tlmsrc but we should be
         // multiplying by (Tlmsrc)^star (-1)^msrc
         const double sign = (msrc % 2 == 0 ? 1.0 : -1.0);
         // ReRe
-        iter_src.Reset(ell, -msrc, SpherepackIterator::a);
-        iter_dest.Reset(ell, mdest, SpherepackIterator::a);
+        iter_src.set(ell, -msrc, SpherepackIterator::a);
+        iter_dest.set(ell, mdest, SpherepackIterator::a);
         add_element(sign * correction.real());
 
         // ReIm
-        iter_src.Reset(ell, -msrc, SpherepackIterator::b);
-        iter_dest.Reset(ell, mdest, SpherepackIterator::a);
+        iter_src.set(ell, -msrc, SpherepackIterator::b);
+        iter_dest.set(ell, mdest, SpherepackIterator::a);
         add_element(sign * correction.imag());
 
         // ImRe
-        iter_src.Reset(ell, -msrc, SpherepackIterator::a);
-        iter_dest.Reset(ell, mdest, SpherepackIterator::b);
+        iter_src.set(ell, -msrc, SpherepackIterator::a);
+        iter_dest.set(ell, mdest, SpherepackIterator::b);
         add_element(sign * correction.imag());
 
         // ImIm
-        iter_src.Reset(ell, -msrc, SpherepackIterator::b);
-        iter_dest.Reset(ell, mdest, SpherepackIterator::b);
+        iter_src.set(ell, -msrc, SpherepackIterator::b);
+        iter_dest.set(ell, mdest, SpherepackIterator::b);
         add_element(-sign * correction.real());
       }
     }
@@ -141,44 +141,44 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                 if (m_src > 0) {
                   // Main term.
                   // ReRe
-                  iter_src.Reset(l_dest, m_src, SpherepackIterator::a);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::a);
+                  iter_src.set(l_dest, m_src, SpherepackIterator::a);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::a);
                   add_element(correction.real());
 
                   // ReIm
-                  iter_src.Reset(l_dest, m_src, SpherepackIterator::b);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::a);
+                  iter_src.set(l_dest, m_src, SpherepackIterator::b);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::a);
                   add_element(-correction.imag());
 
                   // ImIm
-                  iter_src.Reset(l_dest, m_src, SpherepackIterator::b);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::b);
+                  iter_src.set(l_dest, m_src, SpherepackIterator::b);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::b);
                   add_element(correction.real());
 
                   // ImRe
-                  iter_src.Reset(l_dest, m_src, SpherepackIterator::a);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::b);
+                  iter_src.set(l_dest, m_src, SpherepackIterator::a);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::b);
                   add_element(correction.imag());
                 } else {
                   const double sign = (m_src % 2 == 0 ? 1.0 : -1.0);
                   // ReRe
-                  iter_src.Reset(l_dest, -m_src, SpherepackIterator::a);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::a);
+                  iter_src.set(l_dest, -m_src, SpherepackIterator::a);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::a);
                   add_element(sign * correction.real());
 
                   // ReIm
-                  iter_src.Reset(l_dest, -m_src, SpherepackIterator::b);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::a);
+                  iter_src.set(l_dest, -m_src, SpherepackIterator::b);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::a);
                   add_element(sign * correction.imag());
 
                   // ImRe
-                  iter_src.Reset(l_dest, -m_src, SpherepackIterator::a);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::b);
+                  iter_src.set(l_dest, -m_src, SpherepackIterator::a);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::b);
                   add_element(sign * correction.imag());
 
                   // ImIm
-                  iter_src.Reset(l_dest, -m_src, SpherepackIterator::b);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::b);
+                  iter_src.set(l_dest, -m_src, SpherepackIterator::b);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::b);
                   add_element(-sign * correction.real());
                 }
               }
@@ -279,38 +279,38 @@ void inner_loops_three(
                 if (m_src > 0) {
                   // Main term.
                   // ReRe
-                  iter_src.Reset(l_dest, m_src, SpherepackIterator::a);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::a);
+                  iter_src.set(l_dest, m_src, SpherepackIterator::a);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::a);
                   add_element(correction.real());
 
                   // ReIm
-                  iter_src.Reset(l_dest, m_src, SpherepackIterator::b);
+                  iter_src.set(l_dest, m_src, SpherepackIterator::b);
                   add_element(-correction.imag());
 
                   // ImIm
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::b);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::b);
                   add_element(correction.real());
 
                   // ImRe
-                  iter_src.Reset(l_dest, m_src, SpherepackIterator::a);
+                  iter_src.set(l_dest, m_src, SpherepackIterator::a);
                   add_element(correction.imag());
                 } else {
                   const double sign = (m_src % 2 == 0 ? 1.0 : -1.0);
                   // ReRe
-                  iter_src.Reset(l_dest, -m_src, SpherepackIterator::a);
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::a);
+                  iter_src.set(l_dest, -m_src, SpherepackIterator::a);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::a);
                   add_element(sign * correction.real());
 
                   // ReIm
-                  iter_src.Reset(l_dest, -m_src, SpherepackIterator::b);
+                  iter_src.set(l_dest, -m_src, SpherepackIterator::b);
                   add_element(sign * correction.imag());
 
                   // ImIm
-                  iter_dest.Reset(l_dest, m_dest, SpherepackIterator::b);
+                  iter_dest.set(l_dest, m_dest, SpherepackIterator::b);
                   add_element(-sign * correction.real());
 
                   // ImRe
-                  iter_src.Reset(l_dest, -m_src, SpherepackIterator::a);
+                  iter_src.set(l_dest, -m_src, SpherepackIterator::a);
                   add_element(sign * correction.imag());
                 }
               }

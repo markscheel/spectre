@@ -150,7 +150,7 @@ void inner_loops_two(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                        std::max(
                            static_cast<size_t>(abs(static_cast<int>(lprime) -
                                                    static_cast<int>(lbar))),
-                           abs(mprime + mbar)),
+                           static_cast<size_t>(abs(mprime + mbar))),
                        static_cast<size_t>(
                            std::max(abs(mtilde - mprime), m_dest)));
                    l_dest <= std::min(lprime + lbar, ell_max); ++l_dest) {

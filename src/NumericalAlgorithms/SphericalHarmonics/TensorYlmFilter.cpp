@@ -555,6 +555,10 @@ void FillFilter(
               }
             }
           } else if constexpr (rank == 3) {
+            const double sign_coef3j =
+                (src_bvs[0] == helpers::BasisVector::y ? -1.0 : 1.0) *
+                (src_bvs[1] == helpers::BasisVector::y ? -1.0 : 1.0) *
+                (src_bvs[2] == helpers::BasisVector::y ? -1.0 : 1.0);
             for (size_t lhat = 0; lhat <= 3; ++lhat) {
               for (int mhat = -static_cast<int>(lhat);
                    mhat <= static_cast<int>(lhat); ++mhat) {

@@ -260,26 +260,26 @@ void inner_loops_three(
   size_t mtilde_indx = 0;
   for (int u = -1; u <= 1; u += 2) {
     for (int v = -1; v <= 1; v += 2, ++mtilde_indx) {
-      for (size_t lbar =
-               std::max(abs(mbars[mbar_indx]), abs(mtildes[mtilde_indx]));
+      for (size_t lbar = static_cast<size_t>(
+               std::max(abs(mbars[mbar_indx]), abs(mtildes[mtilde_indx])));
            lbar <= 2; ++lbar) {
         for (int w = -1; w <= 1; w += 2) {
-          const int mw = helpers::bv_to_m(src_bv[0], w);
+          const int mw = helpers::bv_to_m(src_bvs[0], w);
           if (mtildes[mtilde_indx] - mw == mhat and
-              lhat >= std::max(abs(lbar - 1),
-                               std::max(abs(mr + mbars[mbar_indx]),
-                                        abs(mw - mtildes[mtilde_indx]))) and
+              lhat >= static_cast<size_t>(std::max(
+                          abs(static_cast<int>(lbar) - 1),
+                          std::max(abs(mr + mbars[mbar_indx]),
+                                   abs(mw - mtildes[mtilde_indx])))) and
               lhat <= lbar + 1) {
             const int m_src = mprime - mhat;
-            const double SymmFactor = [&src_multiplicity]() {
+            const double SymmFactor = [src_multiplicity, lbar]() {
               if constexpr (std::is_same_v<Symmetry<0, 1, 2>, Symm>) {
                 // "abc" symmetry
                 (void)src_multiplicity;
                 return 1.0;
               } else {
                 // any other symmetry
-                return (src_multiplicity / 2.0) *
-                       (1 + (lbar % 2 == 0 ? 1.0 : -1.0));
+                return (src_multiplicity / 2.0) * (lbar % 2 == 0 ? 2.0 : 0.0);
               }
             }();
             const double sign_mtilde =

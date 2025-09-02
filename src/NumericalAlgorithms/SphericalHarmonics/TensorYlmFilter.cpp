@@ -11,6 +11,7 @@
 #include "NumericalAlgorithms/SphericalHarmonics/SpherepackIterator.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/TensorYlmHelpers.hpp"
 #include "NumericalAlgorithms/SphericalHarmonics/WignerThreeJ.hpp"
+#include "DataStructures/Tensor/TypeAliases.hpp"
 
 namespace ylm::TensorYlm {
 

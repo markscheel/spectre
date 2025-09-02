@@ -267,6 +267,25 @@ void inner_loops_three(
       for (size_t lbar = static_cast<size_t>(
                std::max(abs(mbars[mbar_indx]), abs(mtildes[mtilde_indx])));
            lbar <= 2; ++lbar) {
+        static_assert(std::is_same_v<Symmetry<3, 2, 1>, Symm> or
+                          std::is_same_v<Symmetry<2, 1, 1>, Symm>,
+                      "Unimplemented symmetry");
+        const double SymmFactor = [src_multiplicity, lbar]() {
+          if constexpr (std::is_same_v<Symmetry<3, 2, 1>, Symm>) {
+            // "abc" symmetry
+            (void)src_multiplicity;
+            (void)lbar;
+            return 1.0;
+          } else {
+            // "abb" symmetry
+            return (src_multiplicity / 2.0) * (lbar % 2 == 0 ? 2.0 : 0.0);
+          }
+        }();
+        if(SymmFactor == 0.0) {
+          // In this case we don't add any matrix elements so
+          // just return here.
+          return;
+        }
         for (int w = -1; w <= 1; w += 2) {
           const int mw = helpers::bv_to_m(src_bvs[0], w);
           if (mtildes[mtilde_indx] - mw == mhat and
@@ -276,17 +295,6 @@ void inner_loops_three(
                                    abs(mw - mtildes[mtilde_indx])))) and
               lhat <= lbar + 1) {
             const int m_src = mprime - mhat;
-            const double SymmFactor = [src_multiplicity, lbar]() {
-              if constexpr (std::is_same_v<Symmetry<3, 2, 1>, Symm>) {
-                // "abc" symmetry
-                (void)src_multiplicity;
-                (void)lbar;
-                return 1.0;
-              } else {
-                // any other symmetry
-                return (src_multiplicity / 2.0) * (lbar % 2 == 0 ? 2.0 : 0.0);
-              }
-            }();
             const double sign_mtilde =
                 ((mtildes[mtilde_indx] - mbars[mbar_indx]) % 2 == 0 ? 1.0
                                                                     : -1.0);
@@ -542,19 +550,21 @@ void FillFilter(
                   return (src_multiplicity / 2.0) * (lbar % 2 == 0 ? 2.0 : 0.0);
                 }
               }();
-              const double coeflbar = 0.5 * (2 * lbar + 1);
-              for (int mbar = -static_cast<int>(lbar);
-                   mbar <= static_cast<int>(lbar); ++mbar) {
-                WignerThreeJ threej_lbar(lprime, mprime, lbar, mbar);
-                for (int mtilde = -static_cast<int>(lbar);
-                     mtilde <= static_cast<int>(lbar); ++mtilde) {
-                  WignerThreeJ threej_ltilde(lprime, -mprime, lbar, mtilde);
-                  inner_loops_two(filler, iter_src, iter_dest, src_comp_index,
-                                  dest_comp_index, ell_max, lprime, mprime,
-                                  lbar, mbar, mtilde, coeflbar, coeflprime,
-                                  threej_lbar, threej_ltilde, mbars, mtildes,
-                                  src_bvs, dest_bvs, SymmFactor, sign_y,
-                                  threej_pqs, threej_uvs);
+              if(Symmfactor != 0.0) {
+                const double coeflbar = 0.5 * (2 * lbar + 1);
+                for (int mbar = -static_cast<int>(lbar);
+                     mbar <= static_cast<int>(lbar); ++mbar) {
+                  WignerThreeJ threej_lbar(lprime, mprime, lbar, mbar);
+                  for (int mtilde = -static_cast<int>(lbar);
+                       mtilde <= static_cast<int>(lbar); ++mtilde) {
+                    WignerThreeJ threej_ltilde(lprime, -mprime, lbar, mtilde);
+                    inner_loops_two(filler, iter_src, iter_dest, src_comp_index,
+                                    dest_comp_index, ell_max, lprime, mprime,
+                                    lbar, mbar, mtilde, coeflbar, coeflprime,
+                                    threej_lbar, threej_ltilde, mbars, mtildes,
+                                    src_bvs, dest_bvs, SymmFactor, sign_y,
+                                    threej_pqs, threej_uvs);
+                  }
                 }
               }
             }

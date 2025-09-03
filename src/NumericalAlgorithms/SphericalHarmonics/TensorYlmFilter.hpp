@@ -111,6 +111,16 @@ namespace ylm::TensorYlm {
  * \nonumber \\
  * &\times
  *    \left(\begin{array}{rrr}
+ *     \ell&\ell'&\bar{\ell}\cr
+ *      -m&m'&\bar{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *      m_p(\tilde{A}_1)&m_q(\tilde{A}_2)&-\bar{m}
+ *    \end{array}\right)
+ * \nonumber \\
+ * &\times
+ *    \left(\begin{array}{rrr}
  *     \ell'&\ell&\bar{\ell}\cr
  *      -m'&m''&\tilde{m}
  *    \end{array}\right)

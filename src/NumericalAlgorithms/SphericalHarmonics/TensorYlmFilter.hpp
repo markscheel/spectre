@@ -21,7 +21,7 @@ namespace ylm::TensorYlm {
  * Assumes that $T^{\tilde A}_{\ell' m'}$ is stored in a
  * Tensor<DataVector>.  Multiplying the resulting
  * blaze::CompressedMatrix by the Tensor<DataVector> is equivalent to
- * evaluating the right-hand side of Eq.~(\ref{eq:Filter}).
+ * evaluating the right-hand side of Eq. $(\ref{eq:Filter})$.
  *
  * Assumes that the components of the Tensor<DataVector> are stored
  * contiguous in memory, in order of the storage_index of the Tensor.

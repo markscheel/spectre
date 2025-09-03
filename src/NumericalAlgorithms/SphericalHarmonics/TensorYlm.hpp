@@ -94,7 +94,7 @@
  * \end{align}
  *
  * The functions FillCartToSphere and FillSphereToCart fill
- * sparse matrices that encode Eqs.~$(\ref{eq:C2S})$ and
+ * sparse matrices that encode Eqs. $(\ref{eq:C2S})$ and
  * $(\ref{eq:S2C})$.
  *
  * ## Filtering
@@ -151,6 +151,6 @@
  *                 (-1)^{m'}.
  * \end{align}
  *
- * The function FillFilter encapsulates Eq.~$(\ref{eq:Filter})$.
+ * The function FillFilter encapsulates Eq. $(\ref{eq:Filter})$.
  */
 namespace ylm::TensorYlm {}  // namespace ylm::TensorYlm

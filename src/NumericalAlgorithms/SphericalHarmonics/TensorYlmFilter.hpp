@@ -108,6 +108,26 @@ namespace ylm::TensorYlm {
  * (2 \bar{\ell}+1)
  * k_u(\tilde{D}_1) k_v(\tilde{D}_2)
  * k_p(\tilde{A}_1) k_q(\tilde{A}_2)
+ * \nonumber \\
+ * &\times
+ *    \left(\begin{array}{rrr}
+ *     \ell&\ell'&\bar{\ell}\cr
+ *      -m&m'&\bar{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *      m_p(\tilde{A}_1)&{m_q(\tilde{A}_2)&-\bar{m}
+ *    \end{array}\right)
+ * \nonumber \\
+ * &\times
+ *    \left(\begin{array}{rrr}
+ *     \ell'&\ell&\bar{\ell}\cr
+ *      -m'&m''&\tilde{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *      m_u(\tilde{D}_1)&m_v(\tilde{D}_2)&\tilde{m}
+ *    \end{array}\right).
  *  \label{eq:RankTwoTransformWithCut}
  * \end{align}
  *
@@ -147,8 +167,8 @@ namespace ylm::TensorYlm {
  *  \delta_{\ell \ell''}
  *  \nonumber \\
  *  &\times
- *  \sum_{\ell'=\ell_{\mathrm{cut}}+1}^{\ell_{\mathrm{max}}+3}
- *  (2\ell'+1)
+ *  \sum_{\ell'=\ell_{\mathrm{cut}}^-}^{\ell_{\mathrm{max}}+3}
+ *  (2\ell'+1) g(\ell')
  *  \sum_{u,v,w,p,q,r,\tilde{m},\bar{\ell},\bar{m},
  *  \hat{\ell},\hat{m},\check{m},m'}
  *  (2 \bar{\ell}+1)

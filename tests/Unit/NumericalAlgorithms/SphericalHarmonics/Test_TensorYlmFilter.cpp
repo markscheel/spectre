@@ -94,15 +94,17 @@ void test_tensorylm_filter_vs_spec(const std::optional<size_t> half_power) {
   // }
 
   // loop over matrix elements and make sure all the nonzero ones agree.
+  size_t count  =0;
   for (size_t row = 0; row < matrix.rows(); ++row) {
     for (blaze::CompressedMatrix<double, blaze::rowMajor>::Iterator it =
              matrix.begin(row);
-         it != matrix.end(row); ++it) {
+         it != matrix.end(row); ++it,++count) {
       const auto i = it->index();
       // CHECK(it->value() == approx(spec_matrix_elements[i]));
       std::cout << it->value() << " , indx = " << row << ", " << i << std::endl;
     }
   }
+  std::cout << "Count = " << count << std::endl;
 }
 }  // namespace
 

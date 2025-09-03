@@ -108,6 +108,27 @@ namespace ylm::TensorYlm {
  * (2 \bar{\ell}+1)
  * k_u(\tilde{D}_1) k_v(\tilde{D}_2)
  * k_p(\tilde{A}_1) k_q(\tilde{A}_2)
+ * \nonumber \\
+ * &\times
+ *    \left(\begin{array}{rrr}
+ *     \ell&\ell'&\bar{\ell}\cr
+ *      -m&m'&\bar{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *      m_p(\tilde{A}_1)&{m_q(\tilde{A}_2)&-\bar{m}
+ *    \end{array}\right)
+ * \nonumber \\
+ * &\times
+ *    \left(\begin{array}{rrr}
+ *     \ell'&\ell&\bar{\ell}\cr
+ *      -m'&m''&\tilde{m}
+ *    \end{array}\right)
+ *    \left(\begin{array}{rrr}
+ *     1&1&\bar{\ell}\cr
+ *      m_u(\tilde{D}_1)&m_v(\tilde{D}_2)&\tilde{m}
+ *    \end{array}\right).
+ *  \label{eq:RankTwoTransformWithCut}
  * \end{align}
  *
  * For a symmetric 2nd-rank spatial tensor, we store only half of the
@@ -126,7 +147,7 @@ namespace ylm::TensorYlm {
  *  &=
  *  \delta(\tilde{D},\tilde{A})\delta_{\ell \ell''}\delta_{m m''}\nonumber\\
  *  &-\sum_{\tilde{D_1}\geq \tilde{D_2}}
- *  (\hbox{Last term in Eq.~(\ref{eq:RankTwoTransformWithCut})})
+ *  (\hbox{Last term in Eq. (\ref{eq:RankTwoTransformWithCut})})
  *  (1+(-1)^{\bar{\ell}})
  *  \frac{2-\delta(\tilde{D_1},\tilde{D_2})}{2}.
  * \end{align}
@@ -197,7 +218,7 @@ namespace ylm::TensorYlm {
  *  &=
  *  \delta(\tilde{D},\tilde{A})\delta_{\ell \ell''}\delta_{m m''}\nonumber\\
  *  &-\sum_{\tilde{D_2}\geq \tilde{D_3}}
- *  (\hbox{Last term in Eq.~(\ref{eq:RankThreeTransformWithCut})})
+ *  (\hbox{Last term in Eq. (\ref{eq:RankThreeTransformWithCut})})
  *  (1+(-1)^{\bar{\ell}})
  *  \frac{2-\delta(\tilde{D_2},\tilde{D_3})}{2}.
  * \end{align}

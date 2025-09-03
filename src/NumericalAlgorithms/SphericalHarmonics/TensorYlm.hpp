@@ -29,13 +29,15 @@
  * where ${}_sY_{\ell m}$ are the spin-weighted harmonics,
  * $A$ is a multi-index $A=(a_1,a_2,a_3,\ldots)$, where each of the
  * $a_i$ refer to either $\mathbf{l}$,$\mathbf{m}$, or $\mathbf{\bar{m}}$,
- * and $s(\!A\!)$ is a sum of terms where each
- * $\mathbf{l}$ adds the value zero, each $\mathbf{m}$
+ * and $s(\!A\!)$ is the spin weight, which is a function of
+ * $A$: each $\mathbf{l}$ in $A$ adds the value zero, each $\mathbf{m}$
  * adds the value -1, and each $\mathbf{\bar{m}}$ adds the value +1.
  * (These values are the spin weights of the complex conjugates
  * of the basis vectors.)
  *
- * To make things easier, we define two auxiliary quantities $k_j$ and $m_j$
+ * To allow for a compact notation where we don't need to write different
+ * equations for different combinations of basis vectors,
+ * we define two auxiliary quantities $k_j$ and $m_j$
  * that are functions of the Cartesian basis vectors:
  * \begin{align}
  *  k_j(\mathbf{e}_x) &= -j,\\

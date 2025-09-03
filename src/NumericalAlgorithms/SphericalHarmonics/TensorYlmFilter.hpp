@@ -100,7 +100,14 @@ namespace ylm::TensorYlm {
  * (-1)^{\delta(\tilde{D}_1,\mathbf{e}_y)}
  * (-1)^{\delta(\tilde{D}_2,\mathbf{e}_y)}
  *  \delta_{\ell \ell''}
- *  \label{eq:RankTwoTransformWithCut}
+ * \nonumber \\
+ * &\times
+ * \sum_{\ell'=\ell_{\mathrm{cut}}^-}^{\ell_{\mathrm{max}}+2}
+ * (2\ell'+1) g(\ell')
+ * \sum_{u,v,p,q,\bar{\ell},\tilde{m},\bar{m},\mpr}
+ * (2 \bar{\ell}+1)
+ * k_u(\tilde{D}_1) k_v(\tilde{D}_2)
+ * k_p(\tilde{A}_1) k_q(\tilde{A}_2)
  * \end{align}
  *
  * For a symmetric 2nd-rank spatial tensor, we store only half of the

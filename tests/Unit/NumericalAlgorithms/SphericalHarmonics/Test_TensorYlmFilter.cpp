@@ -100,7 +100,7 @@ void test_tensorylm_filter_vs_spec(const std::optional<size_t> half_power) {
          it != matrix.end(row); ++it) {
       const auto i = it->index();
       // CHECK(it->value() == approx(spec_matrix_elements[i]));
-      std::cout << it->value() << " , indx = " << row << ", " << it->indx()
+      std::cout << it->value() << " , indx = " << row << ", " << it->index()
                 << std::endl;
     }
   }

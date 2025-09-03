@@ -100,34 +100,6 @@ namespace ylm::TensorYlm {
  * (-1)^{\delta(\tilde{D}_1,\mathbf{e}_y)}
  * (-1)^{\delta(\tilde{D}_2,\mathbf{e}_y)}
  *  \delta_{\ell \ell''}
- * \nonumber \\
- * &\times
- * \sum_{\ell'=\ell_{\mathrm{cut}}^-}^{\ell_{\mathrm{max}}+2}
- * (2\ell'+1) g(\ell')
- * \sum_{u,v,p,q,\bar{\ell},\tilde{m},\bar{m},\mpr}
- * (2 \bar{\ell}+1)
- * k_u(\tilde{D}_1) k_v(\tilde{D}_2)
- * k_p(\tilde{A}_1) k_q(\tilde{A}_2)
- * \nonumber \\
- * &\times
- *    \left(\begin{array}{rrr}
- *     \ell&\ell'&\bar{\ell}\cr
- *      -m&m'&\bar{m}
- *    \end{array}\right)
- *    \left(\begin{array}{rrr}
- *     1&1&\bar{\ell}\cr
- *      m_p(\tilde{A}_1)&{m_q(\tilde{A}_2)&-\bar{m}
- *    \end{array}\right)
- * \nonumber \\
- * &\times
- *    \left(\begin{array}{rrr}
- *     \ell'&\ell&\bar{\ell}\cr
- *      -m'&m''&\tilde{m}
- *    \end{array}\right)
- *    \left(\begin{array}{rrr}
- *     1&1&\bar{\ell}\cr
- *      m_u(\tilde{D}_1)&m_v(\tilde{D}_2)&\tilde{m}
- *    \end{array}\right).
  *  \label{eq:RankTwoTransformWithCut}
  * \end{align}
  *
@@ -135,7 +107,7 @@ namespace ylm::TensorYlm {
  * off-diagonal components, and we sum over only the components we have
  * stored. In this case, we write
  * \begin{align}
- *   T^{\tilde A}_{\ell m}{}^{\hbox{filtered}}
+ *   T^{\tilde A}_{\ell m}{}^{\hbox{(filtered)}}
  *   &= \sum_{\ell'' m'' \tilde{D_1}\geq\tilde{D_2}}
  *                  \breve{F}_{\ell m\tilde{D}}^{\ell'' m'' \tilde{A}}
  *                  T^{\tilde D}_{\ell'' m''},
@@ -206,8 +178,8 @@ namespace ylm::TensorYlm {
  *    \end{array}\right)
  *    \left(\begin{array}{rrr}
  *     1&\bar{\ell}&\hat{\ell}\cr
- *     m_w(\tilde{D}_1)&-\tilde{m}&\hat{m}.
- *    \end{array}\right)
+ *     m_w(\tilde{D}_1)&-\tilde{m}&\hat{m}
+ *    \end{array}\right).
  *    \label{eq:RankThreeTransformWithCut}
  * \end{align}
  *

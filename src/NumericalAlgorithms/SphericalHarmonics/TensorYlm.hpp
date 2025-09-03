@@ -92,8 +92,8 @@
  * \end{align}
  *
  * The functions FillCartToSphere and FillSphereToCart fill
- * sparse matrices that encode Eqs.(\ref{eq:C2S}) and
- * (\ref{eq:S2C}).
+ * sparse matrices that encode Eqs.~$(\ref{eq:C2S})$ and
+ * $(\ref{eq:S2C})$.
  *
  * ## Filtering
  *
@@ -128,7 +128,7 @@
  * where $\alpha$ is a parameter we choose to be 36, $\sigma$ is an integer
  * parameter typically between 28 and 32, and
  * $\epsilon$ is machine roundoff.
- * Note that the filter remains smooth at $\lpr = \ell_{\mathrm{cut}}^-$ and
+ * Note that the filter remains smooth at $\ell' = \ell_{\mathrm{cut}}^-$ and
  * it reduces to the simple filter as $\sigma \to \infty$.
  *
  * As with the other cases, we sum over only nonnegative $m$, so we can
@@ -149,6 +149,6 @@
  *                 (-1)^{m'}.
  * \end{align}
  *
- * The function FillFilter encapsulates Eq.~\ref{eq:Filter}.
+ * The function FillFilter encapsulates Eq.~$(\ref{eq:Filter})$.
  */
 namespace ylm::TensorYlm {}  // namespace ylm::TensorYlm

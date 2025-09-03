@@ -83,8 +83,8 @@ void test_tensorylm_filter_vs_spec(const std::optional<size_t> half_power) {
       34, 34, 35, 25, 26, 27, 28, 29, 31, 32, 33, 34, 35};
 
   blaze::CompressedMatrix<double, blaze::rowMajor> matrix;
-  ylm::TensorYlm::FillFilter(make_not_null(&matrix), ell_max,
-                             number_of_ell_modes_to_kill, half_power);
+  ylm::TensorYlm::FillFilter<TensorStructure>(
+      make_not_null(&matrix), ell_max, number_of_ell_modes_to_kill, half_power);
 
   // loop over spec_matrix_elements and make sure all the nonzero ones agree.
   for (size_t i = 0; i < spec_matrix_elements.size(); ++i) {

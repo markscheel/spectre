@@ -71,6 +71,9 @@ void inner_loops_one(SparseMatrixFiller& filler, SpherepackIterator& iter_src,
                       SpherepackIterator::CoefficientArray::b);
         add_element(correction.imag());
       } else {
+        ASSERT(msrc!=0,"Msrc is zero, corr = " << correction);
+        ASSERT(mdest!=0,"Mdest is zero, corr = " << correction);
+
         // We are multiplying by Tlmsrc but we should be
         // multiplying by (Tlmsrc)^star (-1)^msrc
         const double sign = (msrc % 2 == 0 ? 1.0 : -1.0);

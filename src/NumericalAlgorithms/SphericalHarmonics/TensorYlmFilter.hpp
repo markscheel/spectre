@@ -128,7 +128,6 @@ namespace ylm::TensorYlm {
  *     1&1&\bar{\ell}\cr
  *      m_u(\tilde{D}_1)&m_v(\tilde{D}_2)&\tilde{m}
  *    \end{array}\right).
- *  \label{eq:RankTwoTransformWithCut}
  * \end{align}
  *
  * For a symmetric 2nd-rank spatial tensor, we store only half of the

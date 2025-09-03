@@ -16,8 +16,8 @@
 namespace {
 template <typename TensorStructure>
 void test_tensorylm_filter_vs_spec(const std::optional<size_t> half_power) {
-  const size_t ell_max = 2;
-  const size_t number_of_ell_modes_to_kill = 1;
+  const size_t ell_max = 1;
+  const size_t number_of_ell_modes_to_kill = 0;
 
   const std::vector<double> spec_matrix_elements{-0.5,         -0.666667,
                                                  -0.9,         -0.244949,

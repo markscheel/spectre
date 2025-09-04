@@ -139,7 +139,7 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
               -0.0752923252421042744, -0.291605921759902076,
               -0.76190476190476164,   -0.999999999999999445};
     } else if (ell_max == 3 and number_of_ell_modes_to_kill == 1 and
-               not half_power.value_or(0) == 28) {
+               half_power.value_or(0) == 28) {
       return {-2.47834636146748721e-09, 3.50491103664533359e-09,
               -3.30446181528998336e-09, -1.65223090764499189e-09,
               -1.16830367888177759e-09, -0.400000002478346384,
@@ -264,7 +264,7 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
               79, 88, 24, 26, 40, 42, 89, 25, 41, 90, 92, 28, 30, 44, 46, 93,
               29, 31, 45, 47, 94, 95};
     } else if (ell_max == 3 and number_of_ell_modes_to_kill == 1 and
-               not half_power.value_or(0) == 28) {
+               half_power.value_or(0) == 28) {
       return {4,  69, 5,  53, 68, 8,  10, 58, 73, 9,  57, 72, 74, 8,  10,
               56, 58, 73, 12, 14, 62, 77, 13, 15, 61, 63, 76, 78, 12, 14,
               60, 62, 77, 13, 15, 61, 63, 78, 20, 21, 37, 84, 24, 25, 41,
@@ -305,7 +305,7 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
               79, 88, 89, 89, 89, 89, 89, 90, 90, 90, 92, 93, 93, 93, 93, 93,
               94, 94, 94, 94, 94, 95};
     } else if (ell_max == 3 and number_of_ell_modes_to_kill == 1 and
-               not half_power.value_or(0) == 28) {
+               half_power.value_or(0) == 28) {
       return {4,  4,  5,  5,  5,  8,  8,  8,  8,  9,  9,  9,  9,  10, 10,
               10, 10, 10, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 14, 14,
               14, 14, 14, 15, 15, 15, 15, 15, 20, 21, 21, 21, 24, 25, 25,

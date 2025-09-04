@@ -26,11 +26,11 @@ void test_tensorylm_filter_vs_spec(const std::optional<size_t> half_power) {
       -0.471405, 0.471405,  -0.666667, 0.353553,  -0.353553, -0.5,
       0.666667,  -0.353553, -0.353553, -0.5};
 
-  const std::vector<double> spec_src_indices{
+  const std::vector<size_t> spec_src_indices{
       2,  19, 3,  15, 18, 6,  7,  11, 22, 10, 23, 7, 11, 22,
       14, 3,  15, 18, 3,  15, 18, 2,  14, 19, 22, 6, 10, 23};
 
-  conststd::vector<double> spec_dest_indices{
+  conststd::vector<size_t> spec_dest_indices{
       2,  2,  3,  3,  3,  6,  7,  7,  7,  10, 10, 11, 11, 11,
       14, 15, 15, 15, 18, 18, 18, 19, 19, 19, 22, 23, 23, 23};
 

@@ -136,7 +136,6 @@ void test_tensorylm_filter_vs_spec(const std::optional<size_t> half_power) {
     for (blaze::CompressedMatrix<double, blaze::rowMajor>::Iterator it =
              matrix.begin(row);
          it != matrix.end(row); ++it, ++count) {
-      const auto column = it->index();
       CHECK(it->value() == approx(spec_matrix_elements[count]));
     }
   }

@@ -107,5 +107,5 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
 SPECTRE_TEST_CASE("Unit.SphericalHarmonics.TensorYlmFilter",
                   "[NumericalAlgorithms][Unit]") {
   test_tensorylm_filter_vs_spec<typename tnsr::i<DataVector, 3>::structure>(
-      std::nullopt);
+      1, 0, std::nullopt);
 }

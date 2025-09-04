@@ -28,7 +28,7 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
   // Otherwise, it tests a random subset of the matrix elements vs
   // SpEC here (the random numbers being previously determined by
   // SpEC), using inlined values, which is done in CI.
-  constexpr bool test_all_elements = true;
+  constexpr bool test_all_elements = false;
 
   std::vector<double> spec_matrix_elements;
   std::vector<size_t> spec_src_indices;

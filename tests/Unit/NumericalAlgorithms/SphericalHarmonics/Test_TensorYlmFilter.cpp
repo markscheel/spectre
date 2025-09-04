@@ -62,16 +62,15 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
     const std::string filename = "TensorYlmCoefs_" + spec_symm_string + "_" +
                                  std::to_string(half_power.value_or(0)) +
                                  ".txt";
-    std::cout << "path is " << std::filesystem::current_path() << std::endl;
-    std::cout << "Filename=" << filename << std::endl;
-    std::ifstream file;
-    file.open(filename, std::ios::in);
-    std::string tmp;
+    // Declare a few variables that will be read from the file
+    std::string header;
     size_t num_indices;
     size_t unsigned_value;
     double double_value;
-    std::getline(file,tmp); // This is the string at the beginning of the file
-    std::cout << "Temp" << tmp << std::endl;
+
+    std::ifstream file;
+    file.open(filename, std::ios::in);
+    std::getline(file, header);
     file >> num_indices;
     for (size_t i = 0; i < num_indices; ++i) {
       file >> double_value;

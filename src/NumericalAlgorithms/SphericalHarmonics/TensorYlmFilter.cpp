@@ -250,8 +250,10 @@ void inner_loops_three(
     const std::array<helpers::BasisVector, 3>& src_bvs,
     const std::array<helpers::BasisVector, 3>& dest_bvs,
     const size_t src_multiplicity, std::vector<WignerThreeJ>& threej_pqs,
-    std::vector<WignerThreeJ>& threej_uvs, std::vector<WignerThreeJ>& threej_ws,
-    std::vector<WignerThreeJ>& threej_rs, const double sign_coef3j) {
+    std::vector<WignerThreeJ>& threej_uvs,
+    std::vector<std::optional<WignerThreeJ>>& threej_ws,
+    std::vector<std::optional<WignerThreeJ>>& threej_rs,
+    const double sign_coef3j) {
   auto add_element = [&filler, &iter_src, &iter_dest, src_comp_index,
                       dest_comp_index](const double element) {
     const size_t indx_dest =
@@ -324,10 +326,10 @@ void inner_loops_three(
                     threej_uvs[static_cast<size_t>((v + 1) / 2 + u + 1)](lbar);
                 const double threej_r = threej_rs[static_cast<size_t>(
                     static_cast<int>(lbar) + (r + 1) * 3 / 2 +
-                    6 * ((q + 1) / 2 + p + 1))](lhat);
+                    6 * ((q + 1) / 2 + p + 1))].value()(lhat);
                 const double threej_w = threej_ws[static_cast<size_t>(
                     static_cast<int>(lbar) + (w + 1) * 3 / 2 +
-                    6 * ((v + 1) / 2 + u + 1))](lhat);
+                    6 * ((v + 1) / 2 + u + 1))].value()(lhat);
                 const std::complex<double> correction =
                     coef3j * threej_pq * threej_uv * threej_r * threej_w *
                     threej_mhat(l_dest) * threej_mcheck(l_dest) * sign_lhat *
@@ -468,15 +470,19 @@ void FillFilter(
         (void)mtildes;
       }
 
-      std::vector<WignerThreeJ> threej_rs;
-      std::vector<WignerThreeJ> threej_ws;
+      std::vector<std::optional<WignerThreeJ>> threej_rs;
+      std::vector<std::optional<WignerThreeJ>> threej_ws;
       if constexpr (rank > 2) {
         threej_rs.reserve(24);
         for (int mbar : mbars) {
           for (int r = -1; r <= 1; r += 2) {
             const int mr = helpers::bv_to_m(dest_bvs[0], r);
-            for (int lbar = 0; lbar <= 2; ++lbar) {
-              threej_rs.emplace_back(1, mr, lbar, mbar);
+            for (size_t lbar = 0; lbar <= 2; ++lbar) {
+              if(abs(mbar) <= static_cast<int>(lbar)) {
+                threej_rs.push_back(WignerThreeJ(1, mr, lbar, mbar));
+              } else {
+                threej_rs.push_back(std::nullopt);
+              }
             }
           }
         }
@@ -484,8 +490,12 @@ void FillFilter(
         for (int mtilde : mtildes) {
           for (int w = -1; w <= 1; w += 2) {
             const int mw = helpers::bv_to_m(src_bvs[0], w);
-            for (int lbar = 0; lbar <= 2; ++lbar) {
-              threej_ws.emplace_back(1, mw, lbar, -mtilde);
+            for (size_t lbar = 0; lbar <= 2; ++lbar) {
+              if(abs(mtilde) <= static_cast<int>(lbar)) {
+                threej_ws.push_back(WignerThreeJ(1, mw, lbar, -mtilde));
+              } else {
+                threej_ws.push_back(std::nullopt);
+              }
             }
           }
         }

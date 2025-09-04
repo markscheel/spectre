@@ -59,6 +59,11 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
       }
       return "";
     }();
+    // File has a simple binary format:
+    //   size (a size_t)
+    //   matrix_elements (a vector of doubles of length size)
+    //   src_indices (a vector of size_t of length size)
+    //   dest_indices (a vector of size_t of length size)
     const std::string filename = "TensorYlmCoefs_" + spec_symm_string + "_" +
                                  std::to_string(half_power.value_or(0)) +
                                  ".txt";

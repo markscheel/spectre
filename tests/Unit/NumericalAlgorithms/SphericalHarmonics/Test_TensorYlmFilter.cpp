@@ -124,11 +124,11 @@ void test_tensorylm_filter_vs_spec(const std::optional<size_t> half_power) {
   ylm::TensorYlm::FillFilter<TensorStructure>(
       make_not_null(&matrix), ell_max, number_of_ell_modes_to_kill, half_power);
 
-  // // loop over spec_matrix_elements and make sure all the nonzero ones agree.
-  // for (size_t i = 0; i < spec_matrix_elements.size(); ++i) {
-  //   CHECK(matrix(spec_dest_indices[i], spec_src_indices[i]) ==
-  //         approx(spec_matrix_elements[i]));
-  // }
+  // loop over spec_matrix_elements and make sure all the nonzero ones agree.
+  for (size_t i = 0; i < spec_matrix_elements.size(); ++i) {
+    CHECK(matrix(spec_dest_indices[i], spec_src_indices[i]) ==
+          approx(spec_matrix_elements[i]));
+  }
 
   // loop over matrix elements and make sure all the nonzero ones agree.
   size_t count = 0;
@@ -138,11 +138,8 @@ void test_tensorylm_filter_vs_spec(const std::optional<size_t> half_power) {
          it != matrix.end(row); ++it, ++count) {
       const auto column = it->index();
       CHECK(it->value() == approx(spec_matrix_elements[count]));
-      std::cout << it->value() << " , indx = " << row << ", " << column
-                << std::endl;
     }
   }
-  std::cout << "Count = " << count << std::endl;
 }
 }  // namespace
 

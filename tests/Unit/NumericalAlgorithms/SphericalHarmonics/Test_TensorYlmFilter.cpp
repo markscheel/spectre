@@ -54,6 +54,7 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
               -0.3535533905932737,
               -0.4999999999999999};
     }
+    return {};
   }();
 
   const std::vector<size_t> spec_src_indices =
@@ -66,6 +67,7 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
       return {2,  19, 3,  15, 18, 6,  7,  11, 22, 10, 23, 7, 11, 22,
               14, 3,  15, 18, 3,  15, 18, 2,  14, 19, 22, 6, 10, 23};
     }
+    return {};
   }();
 
   const std::vector<size_t> spec_dest_indices =
@@ -78,6 +80,7 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
       return {2,  2,  3,  3,  3,  6,  7,  7,  7,  10, 10, 11, 11, 11,
               14, 15, 15, 15, 18, 18, 18, 19, 19, 19, 22, 23, 23, 23};
     }
+    return {};
   }();
 
   blaze::CompressedMatrix<double, blaze::rowMajor> matrix;

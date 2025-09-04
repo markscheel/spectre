@@ -80,9 +80,11 @@ void SparseMatrixFiller::fill(
   }
 
   // Remove all the zero elements.
-  data.erase(std::remove_if(
-                 data.begin(), data.end(),
-                 [](const SparseMatrixElement& x) { return x.value == 0.0; }),
+  data.erase(std::remove_if(data.begin(), data.end(),
+                            [](const SparseMatrixElement& x) {
+                              return std::abs(x.value) <
+                                     std::numeric_limits<double>::epsilon();
+                            }),
              data.end());
 
   // Now sort the data by row and column, so we can fill in required order.

@@ -83,7 +83,8 @@ void SparseMatrixFiller::fill(
   data.erase(std::remove_if(data.begin(), data.end(),
                             [](const SparseMatrixElement& x) {
                               return std::abs(x.value) <
-                                     std::numeric_limits<double>::epsilon();
+                                     10 *
+                                         std::numeric_limits<double>::epsilon();
                             }),
              data.end());
 

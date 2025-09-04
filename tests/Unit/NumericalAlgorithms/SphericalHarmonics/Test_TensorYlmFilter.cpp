@@ -62,28 +62,19 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
     const std::string filename = "TensorYlmCoefs_" + spec_symm_string + "_" +
                                  std::to_string(half_power.value_or(0)) +
                                  ".txt";
-    // Declare a few variables that will be read from the file
-    std::string header;
-    size_t num_indices;
-    size_t unsigned_value;
-    double double_value;
-
     std::ifstream file;
-    file.open(filename, std::ios::in);
-    std::getline(file, header);
-    file >> num_indices;
-    for (size_t i = 0; i < num_indices; ++i) {
-      file >> double_value;
-      spec_matrix_elements.push_back(double_value);
-    }
-    for (size_t i = 0; i < num_indices; ++i) {
-      file >> unsigned_value;
-      spec_src_indices.push_back(unsigned_value);
-    }
-    for (size_t i = 0; i < num_indices; ++i) {
-      file >> unsigned_value;
-      spec_dest_indices.push_back(unsigned_value);
-    }
+    file.open(filename, std::ios::in | std::ios::binary);
+    size_t num_indices;
+    file.read(reinterpret_cast<char*>(&num_indices), sizeof(size_t));
+    spec_matrix_elements.resize(num_indices);
+    spec_src_indices.resize(num_indices);
+    spec_dest_indices.resize(num_indices);
+    file.read(reinterpret_cast<char*>(spec_matrix_elements.data()),
+              static_cast<std::streamsize>(sizeof(double) * num_indices));
+    file.read(reinterpret_cast<char*>(spec_src_indices.data()),
+              static_cast<std::streamsize>(sizeof(size_t) * num_indices));
+    file.read(reinterpret_cast<char*>(spec_dest_indices.data()),
+              static_cast<std::streamsize>(sizeof(size_t) * num_indices));
   } else {
     if constexpr (std::is_same_v<typename TensorStructure::symmetry,
                                  Symmetry<1>>) {

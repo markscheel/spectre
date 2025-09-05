@@ -479,7 +479,11 @@ void FillFilter(
        dest_comp_index++) {
     const auto dest_indices = tensor_index_list[dest_comp_index];
     const auto dest_bvs = helpers::to_cart_basis_vector(dest_indices);
-
+    if constexpr (rank==3) {
+      std::cout << "dest_indices = " << dest_indices[0] << ","
+                << dest_indices[1] << "," << dest_indices[2] << std::endl;
+    }
+    
     std::vector<WignerThreeJ> threej_pqs;
     std::vector<int> mbars;
     if constexpr (rank > 1) {
@@ -506,6 +510,10 @@ void FillFilter(
       const size_t src_multiplicity =
           TensorStructure::multiplicity(src_comp_index);
 
+      if constexpr (rank == 3) {
+        std::cout << "src_indices = " << src_indices[0] << "," << src_indices[1]
+                  << "," << src_indices[2] << std::endl;
+      }
       std::vector<WignerThreeJ> threej_uvs;
       std::vector<int> mtildes;
       if constexpr (rank > 1) {

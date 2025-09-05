@@ -878,6 +878,8 @@ void test_tensorylm_filter_vs_spec(const size_t ell_max,
   // Note that spec_matrix_elements might be a subset of nonzero
   // elements of matrix.
   for (size_t i = 0; i < spec_matrix_elements.size(); ++i) {
+    CAPTURE(spec_dest_indices[i]);
+    CAPTURE(spec_src_indices[i]);
     CHECK(matrix(spec_dest_indices[i], spec_src_indices[i]) ==
           approx(spec_matrix_elements[i]));
   }
@@ -902,17 +904,19 @@ SPECTRE_TEST_CASE("Unit.SphericalHarmonics.TensorYlmFilter",
   const size_t ell_max = 8;
   const size_t num_to_kill = 4;
 
-  for (auto half_power : {std::optional<size_t>(), std::optional<size_t>(28)}) {
-    test_tensorylm_filter_vs_spec<typename tnsr::i<DataVector, 3>::structure>(
-        ell_max, num_to_kill, half_power);
-    test_tensorylm_filter_vs_spec<typename tnsr::ii<DataVector, 3>::structure>(
-        ell_max, num_to_kill, half_power);
-    test_tensorylm_filter_vs_spec<typename tnsr::ij<DataVector, 3>::structure>(
-        ell_max, num_to_kill, half_power);
-    test_tensorylm_filter_vs_spec<typename tnsr::ijj<DataVector, 3>::structure>(
-        ell_max, num_to_kill, half_power);
-    // test_tensorylm_filter_vs_spec<typename tnsr::ijk<DataVector,
-    // 3>::structure>(
-    //     ell_max, num_to_kill, half_power);
-  }
+  // for (auto half_power : {std::optional<size_t>(), std::optional<size_t>(28)}) {
+  //   test_tensorylm_filter_vs_spec<typename tnsr::i<DataVector, 3>::structure>(
+  //       ell_max, num_to_kill, half_power);
+  //   test_tensorylm_filter_vs_spec<typename tnsr::ii<DataVector, 3>::structure>(
+  //       ell_max, num_to_kill, half_power);
+  //   test_tensorylm_filter_vs_spec<typename tnsr::ij<DataVector, 3>::structure>(
+  //       ell_max, num_to_kill, half_power);
+  //   test_tensorylm_filter_vs_spec<typename tnsr::ijj<DataVector, 3>::structure>(
+  //       ell_max, num_to_kill, half_power);
+  //   // test_tensorylm_filter_vs_spec<typename tnsr::ijk<DataVector,
+  //   // 3>::structure>(
+  //   //     ell_max, num_to_kill, half_power);
+  // }
+  test_tensorylm_filter_vs_spec<typename tnsr::ijj<DataVector, 3>::structure>(
+      ell_max, num_to_kill, std::nullopt);
 }

@@ -6,6 +6,7 @@
 #include <blaze/math/CompressedMatrix.h>
 #include <complex>
 #include <optional>
+#include <iostream>
 
 #include "DataStructures/SparseMatrixFiller.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
@@ -334,6 +335,45 @@ void inner_loops_three(
                     coef3j * threej_pq * threej_uv * threej_r * threej_w *
                     threej_mhat(l_dest) * threej_mcheck(l_dest) * sign_lhat *
                     sign_mtilde * SymmFactor;
+                auto print_if = [&]() {
+                  const size_t spec_dest_index =
+                      iter_dest() +
+                      dest_comp_index * iter_dest.spherepack_array_size();
+                  const size_t spec_src_index =
+                      iter_src() +
+                      src_comp_index * iter_src.spherepack_array_size();
+                  if (spec_dest_index == 1597 and spec_src_index == 1433) {
+                    std::cout << std::setprecision(18);
+                    std::cout << "lbar = " << lbar << std::endl;
+                    std::cout << "u = " << u << std::endl;
+                    std::cout << "v = " << v << std::endl;
+                    std::cout << "w = " << w << std::endl;
+                    std::cout << "r = " << r << std::endl;
+                    std::cout << "p = " << p << std::endl;
+                    std::cout << "q = " << q << std::endl;
+                    std::cout << "mprime = " << mprime << std::endl;
+                    std::cout << "mhat = " << mhat << std::endl;
+                    std::cout << "lprime = " << lprime << std::endl;
+                    std::cout << "lhat = " << lhat << std::endl;
+                    std::cout << "mcheck = " << mcheck << std::endl;
+                    std::cout << "spec_dest_index = " << spec_dest_index
+                              << std::endl;
+                    std::cout << "spec_src_index = " << spec_src_index
+                              << std::endl;
+                    std::cout << "l_dest=" << l_dest << std::endl;
+                    std::cout << "m_src = " << m_src << std::endl;
+                    std::cout << "m_dest = " << m_dest << std::endl;
+                    std::cout << "dest_comp_index = " << dest_comp_index
+                              << std::endl;
+                    std::cout << "src_comp_index = " << src_comp_index
+                              << std::endl;
+                    std::cout << "correction = " << correction << std::endl;
+                    std::cout << "threej_pq = " << threej_pq << std::endl;
+                    std::cout << "threej_uv = " << threej_uv << std::endl;
+                    std::cout << "threej_r = " << threej_r << std::endl;
+                    std::cout << "threej_w = " << threej_w << std::endl;
+                  }
+                };
                 if (m_src > 0) {
                   // Main term.
                   // ReRe
@@ -341,21 +381,25 @@ void inner_loops_three(
                                SpherepackIterator::CoefficientArray::a);
                   iter_dest.set(l_dest, static_cast<size_t>(m_dest),
                                 SpherepackIterator::CoefficientArray::a);
+                  print_if();
                   add_element(correction.real());
 
                   // ReIm
                   iter_src.set(l_dest, static_cast<size_t>(m_src),
                                SpherepackIterator::CoefficientArray::b);
+                  print_if();
                   add_element(-correction.imag());
 
                   // ImIm
                   iter_dest.set(l_dest, static_cast<size_t>(m_dest),
                                 SpherepackIterator::CoefficientArray::b);
+                  print_if();
                   add_element(correction.real());
 
                   // ImRe
                   iter_src.set(l_dest, static_cast<size_t>(m_src),
                                SpherepackIterator::CoefficientArray::a);
+                  print_if();
                   add_element(correction.imag());
                 } else {
                   const double sign = (m_src % 2 == 0 ? 1.0 : -1.0);
@@ -364,21 +408,25 @@ void inner_loops_three(
                                SpherepackIterator::CoefficientArray::a);
                   iter_dest.set(l_dest, static_cast<size_t>(m_dest),
                                 SpherepackIterator::CoefficientArray::a);
+                  print_if();
                   add_element(sign * correction.real());
 
                   // ReIm
                   iter_src.set(l_dest, static_cast<size_t>(-m_src),
                                SpherepackIterator::CoefficientArray::b);
+                  print_if();
                   add_element(sign * correction.imag());
 
                   // ImIm
                   iter_dest.set(l_dest, static_cast<size_t>(m_dest),
                                 SpherepackIterator::CoefficientArray::b);
+                  print_if();
                   add_element(-sign * correction.real());
 
                   // ImRe
                   iter_src.set(l_dest, static_cast<size_t>(-m_src),
                                SpherepackIterator::CoefficientArray::a);
+                  print_if();
                   add_element(sign * correction.imag());
                 }
               }

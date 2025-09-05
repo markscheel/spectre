@@ -250,7 +250,9 @@ void inner_loops_three(
     const std::vector<int>& mtildes,
     const std::array<helpers::BasisVector, 3>& src_bvs,
     const std::array<helpers::BasisVector, 3>& dest_bvs,
-    const size_t src_multiplicity, std::vector<WignerThreeJ>& threej_pqs,
+    const std::array<size_t, 3>& src_comps,
+    const std::array<size_t, 3>& dest_comps, const size_t src_multiplicity,
+    std::vector<WignerThreeJ>& threej_pqs,
     std::vector<WignerThreeJ>& threej_uvs,
     std::vector<std::optional<WignerThreeJ>>& threej_ws,
     std::vector<std::optional<WignerThreeJ>>& threej_rs,
@@ -356,6 +358,12 @@ void inner_loops_three(
                     std::cout << "lprime = " << lprime << std::endl;
                     std::cout << "lhat = " << lhat << std::endl;
                     std::cout << "mcheck = " << mcheck << std::endl;
+                    std::cout << "src_comps = " << src_comps[0] << ","
+                              << src_comps[1] << "," << src_comps[2]
+                              << std::endl;
+                    std::cout << "dest_comps = " << dest_comps[0] << ","
+                              << dest_comps[1] << "," << dest_comps[2]
+                              << std::endl;
                     std::cout << "spec_dest_index = " << spec_dest_index
                               << std::endl;
                     std::cout << "spec_src_index = " << spec_src_index
@@ -650,9 +658,9 @@ void FillFilter(
                               dest_comp_index, ell_max, lprime, coeflprime,
                               mprime, lhat, mhat, threej_mhat, mcheck,
                               threej_mcheck, mbar_indx, p, q, r, mr, mbars,
-                              mtildes, src_bvs, dest_bvs, src_multiplicity,
-                              threej_pqs, threej_uvs, threej_ws, threej_rs,
-                              sign_coef3j);
+                              mtildes, src_bvs, dest_bvs, src_indices,
+                              dest_indices, src_multiplicity, threej_pqs,
+                              threej_uvs, threej_ws, threej_rs, sign_coef3j);
                         }
                       }
                     }

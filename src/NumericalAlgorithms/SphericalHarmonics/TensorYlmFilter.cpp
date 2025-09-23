@@ -390,6 +390,162 @@ void inner_loops_three(
     }
   }
 }
+
+template <typename Symm>
+void inner_loops_three_v2(
+    SparseMatrixFiller& filler, SpherepackIterator& iter_src,
+    SpherepackIterator& iter_dest, const size_t src_comp_index,
+    const size_t dest_comp_index, const size_t ell_max, const size_t lprime,
+    const double coeflprime, const int mprime, const size_t lhat,
+    const int mhat, WignerThreeJ& threej_mhat, const int mcheck,
+    WignerThreeJ& threej_mcheck, const size_t mbar_indx, const int p,
+    const int q, const int r, const int mr, const std::vector<int>& mbars,
+    const std::vector<int>& mtildes,
+    const std::array<helpers::BasisVector, 3>& src_bvs,
+    const std::array<helpers::BasisVector, 3>& dest_bvs,
+    const size_t src_multiplicity, std::vector<WignerThreeJ>& threej_pqs,
+    std::vector<WignerThreeJ>& threej_uvs,
+    std::vector<std::optional<WignerThreeJ>>& threej_ws,
+    std::vector<std::optional<WignerThreeJ>>& threej_rs, const double sign_y) {
+  const auto add_element = [&filler, &iter_src, &iter_dest, src_comp_index,
+                            dest_comp_index](const double element) {
+    const size_t indx_dest =
+        iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
+    const size_t indx_src =
+        iter_src() + src_comp_index * iter_src.spherepack_array_size();
+    filler.add(element, indx_dest, indx_src);
+  };
+  size_t mbar_indx = 0;
+  for (int p = -1; p <= 1; p += 2) {
+    for (int q = -1; q <= 1; q += 2, ++mbar_indx) {
+      for (int r = -1; r <= 1; r += 2) {
+        const int mr = helpers::bv_to_m(dest_bvs[0], r);
+        if (mcheck == mr + mbars[mbar_indx]) {
+          size_t mtilde_indx = 0;
+          for (int u = -1; u <= 1; u += 2) {
+            for (int v = -1; v <= 1; v += 2, ++mtilde_indx) {
+              for (size_t lbar = static_cast<size_t>(std::max(
+                       abs(mbars[mbar_indx]), abs(mtildes[mtilde_indx])));
+                   lbar <= 2; ++lbar) {
+                const double symm_factor =
+                    helpers::get_symm_factor<Symm>(src_multiplicity, lbar);
+                if (symm_factor != 0.0) {
+                  for (int w = -1; w <= 1; w += 2) {
+                    const int mw = helpers::bv_to_m(src_bvs[0], w);
+                    if (mtildes[mtilde_indx] - mw == mhat and
+                        lhat >=
+                            static_cast<size_t>(std::max(
+                                abs(static_cast<int>(lbar) - 1),
+                                std::max(abs(mr + mbars[mbar_indx]),
+                                         abs(mw - mtildes[mtilde_indx])))) and
+                        lhat <= lbar + 1) {
+                      const int m_src = mprime - mhat;
+                      const double sign_mtilde =
+                          ((mtildes[mtilde_indx] - mbars[mbar_indx]) % 2 == 0
+                               ? 1.0
+                               : -1.0);
+                      const double coeflhat =
+                          0.5 * static_cast<double>(2 * lhat + 1);
+                      const double coeflbar =
+                          0.5 * static_cast<double>(2 * lbar + 1);
+                      const std::complex<double> k_coefs =
+                          helpers::bv_to_k(src_bvs[1], u) *
+                          helpers::bv_to_k(dest_bvs[1], p) *
+                          helpers::bv_to_k(src_bvs[2], v) *
+                          helpers::bv_to_k(dest_bvs[2], q) *
+                          helpers::bv_to_k(dest_bvs[0], r) *
+                          helpers::bv_to_k(src_bvs[0], w);
+                      const std::complex<double> coef3j =
+                          -coeflprime * coeflbar * coeflhat * k_coefs * sign_y;
+                      // The division inside the index of the
+                      // following quantities is integer
+                      // division.  Note that q,v,r,w,v are
+                      // always odd.
+                      const double threej_pq =
+                          // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
+                          threej_pqs[static_cast<size_t>((q + 1) / 2 + p + 1)](
+                              lbar);
+                      const double threej_uv =
+                          // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
+                          threej_uvs[static_cast<size_t>((v + 1) / 2 + u + 1)](
+                              lbar);
+                      const double threej_r =
+                          // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
+                          threej_rs[static_cast<size_t>(
+                                        static_cast<int>(lbar) +
+                                        (r + 1) * 3 / 2 +
+                                        6 * ((q + 1) / 2 + p + 1))]
+                              .value()(lhat);
+                      const double threej_w =
+                          // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
+                          threej_ws[static_cast<size_t>(
+                                        static_cast<int>(lbar) +
+                                        (w + 1) * 3 / 2 +
+                                        6 * ((v + 1) / 2 + u + 1))]
+                              .value()(lhat);
+                      const std::complex<double> correction =
+                          threej_pq * threej_uv * threej_r * threej_w *
+                          threej_mhat(l_dest) * threej_mcheck(l_dest) *
+                          sign_lhat * sign_mtilde * symm_factor * coef3j;
+                      if (m_src > 0) {
+                        // Main term, first term in Eq. (18)
+                        if (iter_dest.coefficient_array() ==
+                            SpherepackIterator::CoefficientArray::a) {
+                          // ReRe
+                          iter_src.set(l_dest, static_cast<size_t>(m_src),
+                                       SpherepackIterator::CoefficientArray::a);
+                          add_element(correction.real());
+                          // ReIm
+                          iter_src.set(l_dest, static_cast<size_t>(m_src),
+                                       SpherepackIterator::CoefficientArray::b);
+                          add_element(-correction.imag());
+                        } else {
+                          // ImIm
+                          iter_src.set(l_dest, static_cast<size_t>(m_src),
+                                       SpherepackIterator::CoefficientArray::b);
+                          add_element(correction.real());
+                          // ImRe
+                          iter_src.set(l_dest, static_cast<size_t>(m_src),
+                                       SpherepackIterator::CoefficientArray::a);
+                          add_element(correction.imag());
+                        }
+                      } else {
+                        // Second term in Eq. (18)
+                        const double sign = (m_src % 2 == 0 ? 1.0 : -1.0);
+                        if (iter_dest.coefficient_array() ==
+                            SpherepackIterator::CoefficientArray::a) {
+                          // ReRe
+                          iter_src.set(l_dest, static_cast<size_t>(-m_src),
+                                       SpherepackIterator::CoefficientArray::a);
+                          add_element(sign * correction.real());
+
+                          // ReIm
+                          iter_src.set(l_dest, static_cast<size_t>(-m_src),
+                                       SpherepackIterator::CoefficientArray::b);
+                          add_element(sign * correction.imag());
+                        } else {
+                          // ImIm
+                          iter_src.set(l_dest, static_cast<size_t>(-m_src),
+                                       SpherepackIterator::CoefficientArray::b);
+                          add_element(-sign * correction.real());
+
+                          // ImRe
+                          iter_src.set(l_dest, static_cast<size_t>(-m_src),
+                                       SpherepackIterator::CoefficientArray::a);
+                          add_element(sign * correction.imag());
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 }  // namespace
 
 template <typename TensorStructure, typename SparseMatrixType>
@@ -551,6 +707,60 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
         }
       }
 
+      if constexpr (rank == 3) {
+        for (iter_dest.reset(); iter_dest; ++iter_dest) {
+          const auto l_dest = static_cast<size_t>(iter_dest.l());
+          // lbar goes from 0 to 2.  lhat goes from 0 to 3.
+          // lprime goes from lcutminus to ell_max + rank.
+          // From the 3J symbols, (l_dest, lprime, lhat) must obey a
+          // triangle relation so l_dest >= |lprime - lhat|
+          // meaning l_dest >= lcutminus - 3.
+          // So we can skip lots of loops below if we have an 'if' here
+          // to limit l_dest.
+          if (static_cast<int>(l_dest) >= static_cast<int>(lcutminus) - 3 and
+              l_dest <= ell_max) {
+            const auto m_dest = static_cast<int>(iter_dest.m());
+            for (size_t lprime = lcutminus; lprime <= ell_max + rank;
+                 ++lprime) {
+              // coeflprime is the factor (2 lprime+1) g(lprime)/2 that appears
+              // for all ranks.
+              const double coeflprime =
+                  half_power.has_value() and lprime <= lcutplus
+                      ? 0.5 * static_cast<double>(2 * lprime + 1) *
+                            (1.0 -
+                             exp(-alpha *
+                                 integer_pow(
+                                     double(lprime) / double(lcutplus + 1),
+                                     2 * static_cast<int>(half_power.value()))))
+                      : 0.5 * static_cast<double>(2 * lprime + 1);
+              for (int mprime = -static_cast<int>(lprime);
+                   mprime <= static_cast<int>(lprime); ++mprime) {
+                const int mcheck = m_dest - mprime;
+                for (size_t lhat = static_cast<size_t>(std::abs(
+                         static_cast<int>(l_dest) - static_cast<int>(lprime)));
+                     lhat <= l_dest + lprime; ++lhat) {
+                  const double sign_lhat =
+                      ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
+                  // The third 3J term in Eq. (24)
+                  WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);
+                  for (int mhat = -static_cast<int>(lhat);
+                       mhat <= static_cast<int>(lhat); ++mhat) {
+                    // The fourth 3J term in Eq. (24)
+                    WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
+                    inner_loops_three_v2<typename TensorStructure::symmetry>(
+                        filler, iter_src, iter_dest, src_comp_index,
+                        dest_comp_index, ell_max, lprime, coeflprime, mprime,
+                        lhat, mhat, threej_mhat, mcheck, threej_mcheck,
+                        mbar_indx, p, q, r, mr, mbars, mtildes, src_bvs,
+                        dest_bvs, src_multiplicity, threej_pqs, threej_uvs,
+                        threej_ws, threej_rs, sign_y);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else {
       for (size_t lprime = lcutminus; lprime <= ell_max + rank; ++lprime) {
         // coeflprime is the factor (2 lprime+1) g(lprime)/2 that appears
         // for all ranks.

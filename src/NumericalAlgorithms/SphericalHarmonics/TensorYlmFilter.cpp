@@ -735,8 +735,9 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
               for (int mprime = -static_cast<int>(lprime);
                    mprime <= static_cast<int>(lprime); ++mprime) {
                 const int mcheck = m_dest - mprime;
-                for (size_t lhat = static_cast<size_t>(std::abs(
-                         static_cast<int>(l_dest) - static_cast<int>(lprime)));
+                for (size_t lhat = static_cast<size_t>(
+                         std::max(mcheck, std::abs(static_cast<int>(l_dest) -
+                                                   static_cast<int>(lprime))));
                      lhat <= l_dest + lprime; ++lhat) {
                   const double sign_lhat =
                       ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);

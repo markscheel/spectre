@@ -6,6 +6,7 @@
 #include <blaze/math/CompressedMatrix.h>
 #include <complex>
 #include <optional>
+#include <iostream>
 
 #include "DataStructures/SimpleSparseMatrix.hpp"
 #include "DataStructures/SparseMatrixFiller.hpp"
@@ -333,6 +334,19 @@ void inner_loops_three(
                       coef3j * threej_pq * threej_uv * threej_r * threej_w *
                       threej_mhat(l_dest) * threej_mcheck(l_dest) * sign_lhat *
                       sign_mtilde * symm_factor;
+                  if(correction.real() == 0.0 or correction.imag() == 0.0) {
+                    std::cout
+                        << "Corr =" << correction << " l_dest=" << l_dest
+                        << " m_dest=" << m_dest << " m_src=" << m_src
+                        << " lbar=" << lbar << " lhat=" << lhat
+                        << " mprime=" << mprime << " mhat=" << mhat
+                        << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
+                        << " threej_mcheck(l_dest)=" << threej_mcheck(l_dest)
+                        << " threej_pq=" << threej_pq
+                        << " threej_uv=" << threej_uv
+                        << " threej_r=" << threej_r << " threej_w=" << threej_w
+                        << " coef3j" << coef3j << std::endl;
+                  }
                   if (m_src > 0) {
                     // Main term, first term in Eq. (18)
                     // ReRe

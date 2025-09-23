@@ -350,50 +350,66 @@ void inner_loops_three(
                   if (m_src > 0) {
                     // Main term, first term in Eq. (18)
                     // ReRe
-                    iter_src.set(l_dest, static_cast<size_t>(m_src),
-                                 SpherepackIterator::CoefficientArray::a);
-                    iter_dest.set(l_dest, static_cast<size_t>(m_dest),
-                                  SpherepackIterator::CoefficientArray::a);
-                    add_element(correction.real());
+                    if (correction.imag() == 0) {
+                      iter_src.set(l_dest, static_cast<size_t>(m_src),
+                                   SpherepackIterator::CoefficientArray::a);
+                      iter_dest.set(l_dest, static_cast<size_t>(m_dest),
+                                    SpherepackIterator::CoefficientArray::a);
+                      add_element(correction.real());
 
-                    // ReIm
-                    iter_src.set(l_dest, static_cast<size_t>(m_src),
-                                 SpherepackIterator::CoefficientArray::b);
-                    add_element(-correction.imag());
+                      // ImIm
+                      iter_src.set(l_dest, static_cast<size_t>(m_src),
+                                   SpherepackIterator::CoefficientArray::b);
+                      iter_dest.set(l_dest, static_cast<size_t>(m_dest),
+                                    SpherepackIterator::CoefficientArray::b);
+                      add_element(correction.real());
+                    } else {
+                      // ReIm
+                      iter_src.set(l_dest, static_cast<size_t>(m_src),
+                                   SpherepackIterator::CoefficientArray::b);
+                      iter_dest.set(l_dest, static_cast<size_t>(m_dest),
+                                    SpherepackIterator::CoefficientArray::a);
+                      add_element(-correction.imag());
 
-                    // ImIm
-                    iter_dest.set(l_dest, static_cast<size_t>(m_dest),
-                                  SpherepackIterator::CoefficientArray::b);
-                    add_element(correction.real());
-
-                    // ImRe
-                    iter_src.set(l_dest, static_cast<size_t>(m_src),
-                                 SpherepackIterator::CoefficientArray::a);
-                    add_element(correction.imag());
+                      // ImRe
+                      iter_src.set(l_dest, static_cast<size_t>(m_src),
+                                   SpherepackIterator::CoefficientArray::a);
+                      iter_dest.set(l_dest, static_cast<size_t>(m_dest),
+                                    SpherepackIterator::CoefficientArray::b);
+                      add_element(correction.imag());
+                    }
                   } else {
                     // Second term in Eq. (18)
                     const double sign = (m_src % 2 == 0 ? 1.0 : -1.0);
-                    // ReRe
-                    iter_src.set(l_dest, static_cast<size_t>(-m_src),
-                                 SpherepackIterator::CoefficientArray::a);
-                    iter_dest.set(l_dest, static_cast<size_t>(m_dest),
-                                  SpherepackIterator::CoefficientArray::a);
-                    add_element(sign * correction.real());
+                    if (correction.imag() == 0) {
+                      // ReRe
+                      iter_src.set(l_dest, static_cast<size_t>(-m_src),
+                                   SpherepackIterator::CoefficientArray::a);
+                      iter_dest.set(l_dest, static_cast<size_t>(m_dest),
+                                    SpherepackIterator::CoefficientArray::a);
+                      add_element(sign * correction.real());
 
-                    // ReIm
-                    iter_src.set(l_dest, static_cast<size_t>(-m_src),
-                                 SpherepackIterator::CoefficientArray::b);
-                    add_element(sign * correction.imag());
+                      // ImIm
+                      iter_src.set(l_dest, static_cast<size_t>(-m_src),
+                                   SpherepackIterator::CoefficientArray::b);
+                      iter_dest.set(l_dest, static_cast<size_t>(m_dest),
+                                    SpherepackIterator::CoefficientArray::b);
+                      add_element(-sign * correction.real());
+                    } else {
+                      // ReIm
+                      iter_src.set(l_dest, static_cast<size_t>(-m_src),
+                                   SpherepackIterator::CoefficientArray::b);
+                      iter_dest.set(l_dest, static_cast<size_t>(m_dest),
+                                    SpherepackIterator::CoefficientArray::a);
+                      add_element(sign * correction.imag());
 
-                    // ImIm
-                    iter_dest.set(l_dest, static_cast<size_t>(m_dest),
-                                  SpherepackIterator::CoefficientArray::b);
-                    add_element(-sign * correction.real());
-
-                    // ImRe
-                    iter_src.set(l_dest, static_cast<size_t>(-m_src),
-                                 SpherepackIterator::CoefficientArray::a);
-                    add_element(sign * correction.imag());
+                      // ImRe
+                      iter_src.set(l_dest, static_cast<size_t>(-m_src),
+                                   SpherepackIterator::CoefficientArray::a);
+                      iter_dest.set(l_dest, static_cast<size_t>(m_dest),
+                                    SpherepackIterator::CoefficientArray::b);
+                      add_element(sign * correction.imag());
+                    }
                   }
                 }
               }

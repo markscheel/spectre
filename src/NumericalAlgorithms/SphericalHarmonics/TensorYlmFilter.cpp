@@ -6,6 +6,7 @@
 #include <blaze/math/CompressedMatrix.h>
 #include <complex>
 #include <optional>
+#include <iostream>
 
 #include "DataStructures/SimpleSparseMatrix.hpp"
 #include "DataStructures/SparseMatrixFiller.hpp"
@@ -420,17 +421,20 @@ void inner_loops_three_v2(
       for (int r = -1; r <= 1; r += 2) {
         const int mr = helpers::bv_to_m(dest_bvs[0], r);
         if (mcheck == mr + mbars[mbar_indx]) {
+          //          std::cout << "TensorYlmFilter mcheck = " << mcheck << std::endl;
           size_t mtilde_indx = 0;
           for (int u = -1; u <= 1; u += 2) {
             for (int v = -1; v <= 1; v += 2, ++mtilde_indx) {
               for (size_t lbar = static_cast<size_t>(std::max(
                        abs(mbars[mbar_indx]), abs(mtildes[mtilde_indx])));
                    lbar <= 2; ++lbar) {
+                //                std::cout << "TensorYlmFilter lbar = " << lbar << std::endl;
                 const double symm_factor =
                     helpers::get_symm_factor<Symm>(src_multiplicity, lbar);
                 if (symm_factor != 0.0) {
                   for (int w = -1; w <= 1; w += 2) {
                     const int mw = helpers::bv_to_m(src_bvs[0], w);
+                    //                    std::cout << "TensorYlmFilter mw = " << mw << std::endl;
                     if (mtildes[mtilde_indx] - mw == mhat and
                         lhat >=
                             static_cast<size_t>(std::max(
@@ -439,6 +443,7 @@ void inner_loops_three_v2(
                                          abs(mw - mtildes[mtilde_indx])))) and
                         lhat <= lbar + 1) {
                       const int m_src = mprime - mhat;
+                      //                      std::cout << "TensorYlmFilter m_src = " << m_src << std::endl;
                       const double sign_mtilde =
                           ((mtildes[mtilde_indx] - mbars[mbar_indx]) % 2 == 0
                                ? 1.0
@@ -707,8 +712,10 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
       }
 
       if constexpr (rank == 3) {
+        //        std::cout <<  "TYlmFilter Rank 3 START" << std::endl;
         for (iter_dest.reset(); iter_dest; ++iter_dest) {
           const auto l_dest = static_cast<size_t>(iter_dest.l());
+          //          std::cout << "TYlmFilter Rank 3 l_dest =" << l_dest << std::endl;
           // lbar goes from 0 to 2.  lhat goes from 0 to 3.
           // lprime goes from lcutminus to ell_max + rank.
           // From the 3J symbols, (l_dest, lprime, lhat) must obey a
@@ -721,6 +728,7 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
             const auto m_dest = static_cast<int>(iter_dest.m());
             for (size_t lprime = lcutminus; lprime <= ell_max + rank;
                  ++lprime) {
+              //              std::cout << "TYlmFilter Rank 3 : lprime = " << lprime << std::endl;
               // coeflprime is the factor (2 lprime+1) g(lprime)/2 that appears
               // for all ranks.
               const double coeflprime =
@@ -734,17 +742,22 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
                       : 0.5 * static_cast<double>(2 * lprime + 1);
               for (int mprime = -static_cast<int>(lprime);
                    mprime <= static_cast<int>(lprime); ++mprime) {
+                //                std::cout << "TYlmFilter Rank 3 : mprime = " << mprime << std::endl;
                 const int mcheck = m_dest - mprime;
                 for (size_t lhat = static_cast<size_t>(std::max(
                          std::abs(mcheck), std::abs(static_cast<int>(l_dest) -
                                                     static_cast<int>(lprime))));
-                     lhat <= l_dest + lprime; ++lhat) {
+                     lhat <= static_cast<size_t>(std::min(
+                                 3, static_cast<int>(l_dest + lprime)));
+                     ++lhat) {
+                  //                  std::cout << "TYlmFilter Rank 3 : lhat = " << lhat << std::endl;
                   const double sign_lhat =
                       ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
                   // The third 3J term in Eq. (24)
                   WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);
                   for (int mhat = -static_cast<int>(lhat);
                        mhat <= static_cast<int>(lhat); ++mhat) {
+                    //                    std::cout << "TYlmFilter Rank 3 : mhat = " << mhat << std::endl;
                     // The fourth 3J term in Eq. (24)
                     WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
                     inner_loops_three_v2<typename TensorStructure::symmetry>(

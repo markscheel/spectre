@@ -759,99 +759,102 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
           }
         }
       } else {
-      for (size_t lprime = lcutminus; lprime <= ell_max + rank; ++lprime) {
-        // coeflprime is the factor (2 lprime+1) g(lprime)/2 that appears
-        // for all ranks.
-        const double coeflprime =
-            half_power.has_value() and lprime <= lcutplus
-                ? 0.5 * static_cast<double>(2 * lprime + 1) *
-                      (1.0 - exp(-alpha *
-                                 integer_pow(
-                                     double(lprime) / double(lcutplus + 1),
-                                     2 * static_cast<int>(half_power.value()))))
-                : 0.5 * static_cast<double>(2 * lprime + 1);
-        for (int mprime = -static_cast<int>(lprime);
-             mprime <= static_cast<int>(lprime); ++mprime) {
-          // Here is where the formulas differ for different ranks.
-          if constexpr (rank == 1) {
-            (void)src_multiplicity;  // Unused variable for rank 1.
-            for (int p = -1; p <= 1; p += 2) {
-              const int mdest = mprime + helpers::bv_to_m(dest_bvs[0], p);
-              if (mdest >= 0) {
-                // Fill only nonnegative m, since that is all we store.
+        for (size_t lprime = lcutminus; lprime <= ell_max + rank; ++lprime) {
+          // coeflprime is the factor (2 lprime+1) g(lprime)/2 that appears
+          // for all ranks.
+          const double coeflprime =
+              half_power.has_value() and lprime <= lcutplus
+                  ? 0.5 * static_cast<double>(2 * lprime + 1) *
+                        (1.0 -
+                         exp(-alpha *
+                             integer_pow(
+                                 double(lprime) / double(lcutplus + 1),
+                                 2 * static_cast<int>(half_power.value()))))
+                  : 0.5 * static_cast<double>(2 * lprime + 1);
+          for (int mprime = -static_cast<int>(lprime);
+               mprime <= static_cast<int>(lprime); ++mprime) {
+            // Here is where the formulas differ for different ranks.
+            if constexpr (rank == 1) {
+              (void)src_multiplicity;  // Unused variable for rank 1.
+              for (int p = -1; p <= 1; p += 2) {
+                const int mdest = mprime + helpers::bv_to_m(dest_bvs[0], p);
+                if (mdest >= 0) {
+                  // Fill only nonnegative m, since that is all we store.
 
-                // threej_p is the last 3J symbol in Eq. (20).
-                WignerThreeJ threej_p(lprime, mprime, 1,
-                                      helpers::bv_to_m(dest_bvs[0], p));
-                for (int j = -1; j <= 1; j += 2) {
-                  // threej_j is the first 3J symbol in Eq. (20).
-                  WignerThreeJ threej_j(lprime, mprime, 1,
-                                        helpers::bv_to_m(src_bvs[0], j));
-                  const int msrc = mprime + helpers::bv_to_m(src_bvs[0], j);
-                  // coefjp is all the factors other than the 3J symbols
-                  // that appears in Eq. (20).
-                  std::complex<double> coefjp =
-                      -coeflprime * helpers::bv_to_k(src_bvs[0], j) *
-                      helpers::bv_to_k(dest_bvs[0], p) * sign_y;
-                  if ((mdest + msrc) % 2 != 0) {
-                    coefjp *= -1.0;
-                  }
-                  inner_loops_one(filler, iter_src, iter_dest, src_comp_index,
-                                  dest_comp_index, ell_max, mdest, msrc, coefjp,
-                                  threej_j, threej_p);
-                }
-              }
-            }
-          } else if constexpr (rank == 2) {
-            for (size_t lbar = 0; lbar <= 2; ++lbar) {
-              const double symm_factor =
-                  helpers::get_symm_factor<typename TensorStructure::symmetry>(
-                      src_multiplicity, lbar);
-              if (symm_factor != 0.0) {
-                const double coeflbar = 0.5 * static_cast<double>(2 * lbar + 1);
-                for (int mbar = -static_cast<int>(lbar);
-                     mbar <= static_cast<int>(lbar); ++mbar) {
-                  // The first 3J term in Eq. (22)
-                  WignerThreeJ threej_lbar(lprime, mprime, lbar, mbar);
-                  for (int mtilde = -static_cast<int>(lbar);
-                       mtilde <= static_cast<int>(lbar); ++mtilde) {
-                    // The penultimate 3J term in Eq. (22)
-                    WignerThreeJ threej_ltilde(lprime, -mprime, lbar, mtilde);
-                    inner_loops_two(filler, iter_src, iter_dest, src_comp_index,
-                                    dest_comp_index, ell_max, lprime, mprime,
-                                    lbar, mbar, mtilde, coeflbar, coeflprime,
-                                    threej_lbar, threej_ltilde, mbars, mtildes,
-                                    src_bvs, dest_bvs, symm_factor, sign_y,
-                                    threej_pqs, threej_uvs);
+                  // threej_p is the last 3J symbol in Eq. (20).
+                  WignerThreeJ threej_p(lprime, mprime, 1,
+                                        helpers::bv_to_m(dest_bvs[0], p));
+                  for (int j = -1; j <= 1; j += 2) {
+                    // threej_j is the first 3J symbol in Eq. (20).
+                    WignerThreeJ threej_j(lprime, mprime, 1,
+                                          helpers::bv_to_m(src_bvs[0], j));
+                    const int msrc = mprime + helpers::bv_to_m(src_bvs[0], j);
+                    // coefjp is all the factors other than the 3J symbols
+                    // that appears in Eq. (20).
+                    std::complex<double> coefjp =
+                        -coeflprime * helpers::bv_to_k(src_bvs[0], j) *
+                        helpers::bv_to_k(dest_bvs[0], p) * sign_y;
+                    if ((mdest + msrc) % 2 != 0) {
+                      coefjp *= -1.0;
+                    }
+                    inner_loops_one(filler, iter_src, iter_dest, src_comp_index,
+                                    dest_comp_index, ell_max, mdest, msrc,
+                                    coefjp, threej_j, threej_p);
                   }
                 }
               }
-            }
-          } else if constexpr (rank == 3) {
-            for (size_t lhat = 0; lhat <= 3; ++lhat) {
-              for (int mhat = -static_cast<int>(lhat);
-                   mhat <= static_cast<int>(lhat); ++mhat) {
-                // The fourth 3J term in Eq. (24)
-                WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
-                for (int mcheck = -static_cast<int>(lhat);
-                     mcheck <= static_cast<int>(lhat); ++mcheck) {
-                  // The third 3J term in Eq. (24)
-                  WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);
-                  size_t mbar_indx = 0;
-                  for (int p = -1; p <= 1; p += 2) {
-                    for (int q = -1; q <= 1; q += 2, ++mbar_indx) {
-                      for (int r = -1; r <= 1; r += 2) {
-                        const int mr = helpers::bv_to_m(dest_bvs[0], r);
-                        if (mcheck == mr + mbars[mbar_indx] and
-                            mprime + mcheck >= 0) {
-                          inner_loops_three<typename TensorStructure::symmetry>(
-                              filler, iter_src, iter_dest, src_comp_index,
-                              dest_comp_index, ell_max, lprime, coeflprime,
-                              mprime, lhat, mhat, threej_mhat, mcheck,
-                              threej_mcheck, mbar_indx, p, q, r, mr, mbars,
-                              mtildes, src_bvs, dest_bvs, src_multiplicity,
-                              threej_pqs, threej_uvs, threej_ws, threej_rs,
-                              sign_y);
+            } else if constexpr (rank == 2) {
+              for (size_t lbar = 0; lbar <= 2; ++lbar) {
+                const double symm_factor = helpers::get_symm_factor<
+                    typename TensorStructure::symmetry>(src_multiplicity, lbar);
+                if (symm_factor != 0.0) {
+                  const double coeflbar =
+                      0.5 * static_cast<double>(2 * lbar + 1);
+                  for (int mbar = -static_cast<int>(lbar);
+                       mbar <= static_cast<int>(lbar); ++mbar) {
+                    // The first 3J term in Eq. (22)
+                    WignerThreeJ threej_lbar(lprime, mprime, lbar, mbar);
+                    for (int mtilde = -static_cast<int>(lbar);
+                         mtilde <= static_cast<int>(lbar); ++mtilde) {
+                      // The penultimate 3J term in Eq. (22)
+                      WignerThreeJ threej_ltilde(lprime, -mprime, lbar, mtilde);
+                      inner_loops_two(
+                          filler, iter_src, iter_dest, src_comp_index,
+                          dest_comp_index, ell_max, lprime, mprime, lbar, mbar,
+                          mtilde, coeflbar, coeflprime, threej_lbar,
+                          threej_ltilde, mbars, mtildes, src_bvs, dest_bvs,
+                          symm_factor, sign_y, threej_pqs, threej_uvs);
+                    }
+                  }
+                }
+              }
+            } else if constexpr (rank == 3) {
+              for (size_t lhat = 0; lhat <= 3; ++lhat) {
+                for (int mhat = -static_cast<int>(lhat);
+                     mhat <= static_cast<int>(lhat); ++mhat) {
+                  // The fourth 3J term in Eq. (24)
+                  WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
+                  for (int mcheck = -static_cast<int>(lhat);
+                       mcheck <= static_cast<int>(lhat); ++mcheck) {
+                    // The third 3J term in Eq. (24)
+                    WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);
+                    size_t mbar_indx = 0;
+                    for (int p = -1; p <= 1; p += 2) {
+                      for (int q = -1; q <= 1; q += 2, ++mbar_indx) {
+                        for (int r = -1; r <= 1; r += 2) {
+                          const int mr = helpers::bv_to_m(dest_bvs[0], r);
+                          if (mcheck == mr + mbars[mbar_indx] and
+                              mprime + mcheck >= 0) {
+                            inner_loops_three<
+                                typename TensorStructure::symmetry>(
+                                filler, iter_src, iter_dest, src_comp_index,
+                                dest_comp_index, ell_max, lprime, coeflprime,
+                                mprime, lhat, mhat, threej_mhat, mcheck,
+                                threej_mcheck, mbar_indx, p, q, r, mr, mbars,
+                                mtildes, src_bvs, dest_bvs, src_multiplicity,
+                                threej_pqs, threej_uvs, threej_ws, threej_rs,
+                                sign_y);
+                          }
                         }
                       }
                     }

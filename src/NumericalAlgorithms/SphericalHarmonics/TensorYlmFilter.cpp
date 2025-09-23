@@ -395,18 +395,17 @@ template <typename Symm>
 void inner_loops_three_v2(
     SparseMatrixFiller& filler, SpherepackIterator& iter_src,
     SpherepackIterator& iter_dest, const size_t src_comp_index,
-    const size_t dest_comp_index, const size_t ell_max, const size_t lprime,
-    const double coeflprime, const int mprime, const size_t lhat,
-    const int mhat, WignerThreeJ& threej_mhat, const int mcheck,
-    WignerThreeJ& threej_mcheck, const size_t mbar_indx, const int p,
-    const int q, const int r, const int mr, const std::vector<int>& mbars,
-    const std::vector<int>& mtildes,
+    const size_t dest_comp_index, const double coeflprime, const int mprime,
+    const size_t l_dest, const size_t lhat, const int mhat,
+    WignerThreeJ& threej_mhat, const int mcheck, WignerThreeJ& threej_mcheck,
+    const std::vector<int>& mbars, const std::vector<int>& mtildes,
     const std::array<helpers::BasisVector, 3>& src_bvs,
     const std::array<helpers::BasisVector, 3>& dest_bvs,
     const size_t src_multiplicity, std::vector<WignerThreeJ>& threej_pqs,
     std::vector<WignerThreeJ>& threej_uvs,
     std::vector<std::optional<WignerThreeJ>>& threej_ws,
-    std::vector<std::optional<WignerThreeJ>>& threej_rs, const double sign_y) {
+    std::vector<std::optional<WignerThreeJ>>& threej_rs, const double sign_y,
+    const int sign_lhat) {
   const auto add_element = [&filler, &iter_src, &iter_dest, src_comp_index,
                             dest_comp_index](const double element) {
     const size_t indx_dest =
@@ -749,11 +748,10 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
                     WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
                     inner_loops_three_v2<typename TensorStructure::symmetry>(
                         filler, iter_src, iter_dest, src_comp_index,
-                        dest_comp_index, ell_max, lprime, coeflprime, mprime,
-                        lhat, mhat, threej_mhat, mcheck, threej_mcheck,
-                        mbar_indx, p, q, r, mr, mbars, mtildes, src_bvs,
-                        dest_bvs, src_multiplicity, threej_pqs, threej_uvs,
-                        threej_ws, threej_rs, sign_y);
+                        dest_comp_index, coeflprime, mprime, l_dest, lhat, mhat,
+                        threej_mhat, mcheck, threej_mcheck, mbars, mtildes,
+                        src_bvs, dest_bvs, src_multiplicity, threej_pqs,
+                        threej_uvs, threej_ws, threej_rs, sign_y, sign_lhat);
                   }
                 }
               }

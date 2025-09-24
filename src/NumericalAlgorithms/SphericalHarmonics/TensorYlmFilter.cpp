@@ -343,7 +343,8 @@ void inner_loops_three(
                             << "Corr =" << correction << " l_dest=" << l_dest
                             << " m_dest=" << m_dest << " m_src=" << m_src
                             << " lbar=" << lbar << " lhat=" << lhat
-                            << " mprime=" << mprime << " mhat=" << mhat
+                            << " lprime=" << lprime << " mprime=" << mprime
+                            << " mhat=" << mhat
                             << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
                             << " threej_mcheck(l_dest)="
                             << threej_mcheck(l_dest)
@@ -371,7 +372,8 @@ void inner_loops_three(
                             << "Corr =" << correction << " l_dest=" << l_dest
                             << " m_dest=" << m_dest << " m_src=" << m_src
                             << " lbar=" << lbar << " lhat=" << lhat
-                            << " mprime=" << mprime << " mhat=" << mhat
+                            << " lprime=" << lprime << " mprime=" << mprime
+                            << " mhat=" << mhat
                             << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
                             << " threej_mcheck(l_dest)="
                             << threej_mcheck(l_dest)
@@ -404,7 +406,8 @@ void inner_loops_three(
                             << "Corr =" << correction << " l_dest=" << l_dest
                             << " m_dest=" << m_dest << " m_src=" << m_src
                             << " lbar=" << lbar << " lhat=" << lhat
-                            << " mprime=" << mprime << " mhat=" << mhat
+                            << " lprime=" << lprime << " mprime=" << mprime
+                            << " mhat=" << mhat
                             << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
                             << " threej_mcheck(l_dest)="
                             << threej_mcheck(l_dest)
@@ -433,7 +436,8 @@ void inner_loops_three(
                             << "Corr =" << correction << " l_dest=" << l_dest
                             << " m_dest=" << m_dest << " m_src=" << m_src
                             << " lbar=" << lbar << " lhat=" << lhat
-                            << " mprime=" << mprime << " mhat=" << mhat
+                            << " lprime=" << lprime << " mprime=" << mprime
+                            << " mhat=" << mhat
                             << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
                             << " threej_mcheck(l_dest)="
                             << threej_mcheck(l_dest)

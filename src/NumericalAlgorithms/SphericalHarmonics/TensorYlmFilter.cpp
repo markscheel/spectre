@@ -307,7 +307,14 @@ void inner_loops_three(
                 if (l_dest <= ell_max and static_cast<int>(l_dest) >= m_dest) {
                   const double threej_mhat_val = threej_mhat(l_dest);
                   const double threej_mcheck_val = threej_mcheck(l_dest);
-                  if (threej_mhat_val != 0.0 and threej_mcheck_val != 0.0) {
+                  const double threej_w =
+                      // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
+                      threej_ws[static_cast<size_t>(static_cast<int>(lbar) +
+                                                    (w + 1) * 3 / 2 +
+                                                    6 * ((v + 1) / 2 + u + 1))]
+                          .value()(lhat);
+                  if (threej_mhat_val != 0.0 and threej_mcheck_val != 0.0 and
+                      threej_w != 0.0) {
                     const double sign_lhat =
                         ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
                     // The division inside the index of the following
@@ -326,12 +333,6 @@ void inner_loops_three(
                         threej_rs[static_cast<size_t>(
                                       static_cast<int>(lbar) + (r + 1) * 3 / 2 +
                                       6 * ((q + 1) / 2 + p + 1))]
-                            .value()(lhat);
-                    const double threej_w =
-                        // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
-                        threej_ws[static_cast<size_t>(
-                                      static_cast<int>(lbar) + (w + 1) * 3 / 2 +
-                                      6 * ((v + 1) / 2 + u + 1))]
                             .value()(lhat);
                     const std::complex<double> correction =
                         coef3j * threej_pq * threej_uv * threej_r * threej_w *

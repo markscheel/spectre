@@ -33,11 +33,12 @@ void test_wigner_three_j() {
   CHECK(coefb(3) == approx(-sqrt(2.0 / 21.0)));
   CHECK(coefb(4) == 0.0);  // Triangle condition violated, return 0 no error.
 
-  // Intentionally pass |m| > l to get error.
-  CHECK_THROWS_WITH(WignerThreeJ(3, 4, 4, -3),
-                    Catch::Matchers::ContainsSubstring("m2 is 4 but l2 is 3"));
-  CHECK_THROWS_WITH(WignerThreeJ(3, 3, 4, -5),
-                    Catch::Matchers::ContainsSubstring("m3 is -5 but l3 is 4"));
+  WignerThreeJ coefc(3, 4, 4, -3); // m2,l2 condition violated, no error.
+  // All coefs should return zero now.
+  CHECK(coefc(0) == 0.0);
+  WignerThreeJ coefd(3, 3, 4, -5); // m3,l3 condition violated, no error.
+  // All coefs should return zero now.
+  CHECK(coefd(0) == 0.0);
 }
 }  // namespace
 

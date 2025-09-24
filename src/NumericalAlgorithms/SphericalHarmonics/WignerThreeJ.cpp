@@ -25,14 +25,16 @@ WignerThreeJ::WignerThreeJ(const size_t l2, const int m2, const size_t l3,
                    std::abs(m2 + m3)))),
       l1_max_(l2 + l3),
       up_to_date_(false),
-      coefs_(l1_max_ - l1_min_ + 1) {
-  if (UNLIKELY(std::abs(m2) > static_cast<int>(l2))) {
-    ERROR("WignerThreeJ: Must have |m2| <= l2. m2 is " << m2 << " but l2 is "
-                                                       << l2);
-  }
-  if (UNLIKELY(std::abs(m3) > static_cast<int>(l3))) {
-    ERROR("WignerThreeJ: Must have |m3| <= l3. m3 is " << m3 << " but l3 is "
-                                                       << l3);
+      coefs_() {
+  if (std::abs(m2) > static_cast<int>(l2) or
+      std::abs(m3) > static_cast<int>(l3) or l1_max_ < l1_min_) {
+    // For the values passed into the constructor, all Wigner3J coefs are zero.
+    // Set l1_min_ so that operator() returns zero, and
+    // flag as up-to-date so that we don't try to allocate any space.
+    l1_min_ = std::numeric_limits<size_t>::max();
+    up_to_date_ = true;
+  } else {
+    coefs_.resize(l1_max_ - l1_min_ + 1);
   }
 }
 

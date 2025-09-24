@@ -306,7 +306,8 @@ void inner_loops_three(
                    l_dest <= lprime + lhat; ++l_dest) {
                 if (l_dest <= ell_max and static_cast<int>(l_dest) >= m_dest) {
                   const double threej_mhat_val = threej_mhat(l_dest);
-                  if (threej_mhat_val != 0.0) {
+                  const double threej_mcheck_val = threej_mcheck(l_dest);
+                  if (threej_mhat_val != 0.0 and threej_mcheck_val != 0.0) {
                     const double sign_lhat =
                         ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
                     // The division inside the index of the following
@@ -334,7 +335,7 @@ void inner_loops_three(
                             .value()(lhat);
                     const std::complex<double> correction =
                         coef3j * threej_pq * threej_uv * threej_r * threej_w *
-                        threej_mhat_val * threej_mcheck(l_dest) * sign_lhat *
+                        threej_mhat_val * threej_mcheck_val * sign_lhat *
                         sign_mtilde * symm_factor;
                     if (m_src > 0) {
                       // Main term, first term in Eq. (18)

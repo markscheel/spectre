@@ -283,7 +283,10 @@ void inner_loops_three(
                                             (r + 1) * 3 / 2 +
                                             6 * ((q + 1) / 2 + p + 1))]
                   .value()(lhat);
-          if (threej_r != 0.0) {
+          const double threej_uv =
+              // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
+              threej_uvs[static_cast<size_t>((v + 1) / 2 + u + 1)](lbar);
+          if (threej_r != 0.0 and threej_uvs != 0.0) {
             for (int w = -1; w <= 1; w += 2) {
               const int mw = helpers::bv_to_m(src_bvs[0], w);
               if (mtildes[mtilde_indx] - mw == mhat and
@@ -331,10 +334,6 @@ void inner_loops_three(
                       const double threej_pq =
                           // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
                           threej_pqs[static_cast<size_t>((q + 1) / 2 + p + 1)](
-                              lbar);
-                      const double threej_uv =
-                          // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
-                          threej_uvs[static_cast<size_t>((v + 1) / 2 + u + 1)](
                               lbar);
                       const std::complex<double> correction =
                           coef3j * threej_pq * threej_uv * threej_r * threej_w *

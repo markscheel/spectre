@@ -348,6 +348,8 @@ void inner_loops_three(
                               << " lbar=" << lbar << " lhat=" << lhat
                               << " lprime=" << lprime << " mprime=" << mprime
                               << " mhat=" << mhat
+                              << " mtilde=" << mtildes[mtilde_indx]
+                              << " mbar=" << mbarss[mbar_indx]
                               << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
                               << " threej_mcheck(l_dest)="
                               << threej_mcheck(l_dest)
@@ -377,6 +379,8 @@ void inner_loops_three(
                               << " lbar=" << lbar << " lhat=" << lhat
                               << " lprime=" << lprime << " mprime=" << mprime
                               << " mhat=" << mhat
+                              << " mtilde=" << mtildes[mtilde_indx]
+                              << " mbar=" << mbarss[mbar_indx]
                               << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
                               << " threej_mcheck(l_dest)="
                               << threej_mcheck(l_dest)
@@ -411,6 +415,8 @@ void inner_loops_three(
                               << " lbar=" << lbar << " lhat=" << lhat
                               << " lprime=" << lprime << " mprime=" << mprime
                               << " mhat=" << mhat
+                              << " mtilde=" << mtildes[mtilde_indx]
+                              << " mbar=" << mbarss[mbar_indx]
                               << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
                               << " threej_mcheck(l_dest)="
                               << threej_mcheck(l_dest)
@@ -441,6 +447,8 @@ void inner_loops_three(
                               << " lbar=" << lbar << " lhat=" << lhat
                               << " lprime=" << lprime << " mprime=" << mprime
                               << " mhat=" << mhat
+                              << " mtilde=" << mtildes[mtilde_indx]
+                              << " mbar=" << mbarss[mbar_indx]
                               << " threej_mhat(l_dest)=" << threej_mhat(l_dest)
                               << " threej_mcheck(l_dest)="
                               << threej_mcheck(l_dest)

@@ -277,6 +277,12 @@ void inner_loops_three(
         const double symm_factor =
             helpers::get_symm_factor<Symm>(src_multiplicity, lbar);
         if (symm_factor != 0.0) {
+          // The division inside the index of the following
+          // quantities is integer division.  Note that
+          // q,v,r,w,v are always odd.
+          const double threej_pq =
+              // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
+              threej_pqs[static_cast<size_t>((q + 1) / 2 + p + 1)](lbar);
           const double threej_r =
               // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
               threej_rs[static_cast<size_t>(static_cast<int>(lbar) +
@@ -286,7 +292,7 @@ void inner_loops_three(
           const double threej_uv =
               // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
               threej_uvs[static_cast<size_t>((v + 1) / 2 + u + 1)](lbar);
-          if (threej_r != 0.0 and threej_uv != 0.0) {
+          if (threej_r != 0.0 and threej_uv != 0.0 and threej_pq != 0.0) {
             for (int w = -1; w <= 1; w += 2) {
               const int mw = helpers::bv_to_m(src_bvs[0], w);
               if (mtildes[mtilde_indx] - mw == mhat and
@@ -328,13 +334,6 @@ void inner_loops_three(
                         threej_w != 0.0) {
                       const double sign_lhat =
                           ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
-                      // The division inside the index of the following
-                      // quantities is integer division.  Note that
-                      // q,v,r,w,v are always odd.
-                      const double threej_pq =
-                          // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
-                          threej_pqs[static_cast<size_t>((q + 1) / 2 + p + 1)](
-                              lbar);
                       const std::complex<double> correction =
                           coef3j * threej_pq * threej_uv * threej_r * threej_w *
                           threej_mhat_val * threej_mcheck_val * sign_lhat *

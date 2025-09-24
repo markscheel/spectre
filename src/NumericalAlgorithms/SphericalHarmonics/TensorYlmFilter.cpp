@@ -5,8 +5,8 @@
 
 #include <blaze/math/CompressedMatrix.h>
 #include <complex>
-#include <optional>
 #include <iostream>
+#include <optional>
 
 #include "DataStructures/SimpleSparseMatrix.hpp"
 #include "DataStructures/SparseMatrixFiller.hpp"
@@ -397,9 +397,10 @@ void inner_loops_three_v2(
     SparseMatrixFiller& filler, SpherepackIterator& iter_src,
     SpherepackIterator& iter_dest, const size_t src_comp_index,
     const size_t dest_comp_index, const double coeflprime, const int mprime,
-    const size_t l_dest, const size_t lhat, const int mhat,
-    WignerThreeJ& threej_mhat, const int mcheck, WignerThreeJ& threej_mcheck,
-    const std::vector<int>& mbars, const std::vector<int>& mtildes,
+    const size_t l_dest, const int m_src, const size_t lhat, const int mhat,
+    const double threej_mhat2_val, const int mcheck,
+    const double threej_mcheck2_val, const std::vector<int>& mbars,
+    const std::vector<int>& mtildes,
     const std::array<helpers::BasisVector, 3>& src_bvs,
     const std::array<helpers::BasisVector, 3>& dest_bvs,
     const size_t src_multiplicity, std::vector<WignerThreeJ>& threej_pqs,
@@ -421,20 +422,23 @@ void inner_loops_three_v2(
       for (int r = -1; r <= 1; r += 2) {
         const int mr = helpers::bv_to_m(dest_bvs[0], r);
         if (mcheck == mr + mbars[mbar_indx]) {
-          //          std::cout << "TensorYlmFilter mcheck = " << mcheck << std::endl;
+          //          std::cout << "TensorYlmFilter mcheck = " << mcheck <<
+          //          std::endl;
           size_t mtilde_indx = 0;
           for (int u = -1; u <= 1; u += 2) {
             for (int v = -1; v <= 1; v += 2, ++mtilde_indx) {
               for (size_t lbar = static_cast<size_t>(std::max(
                        abs(mbars[mbar_indx]), abs(mtildes[mtilde_indx])));
                    lbar <= 2; ++lbar) {
-                //                std::cout << "TensorYlmFilter lbar = " << lbar << std::endl;
+                //                std::cout << "TensorYlmFilter lbar = " << lbar
+                //                << std::endl;
                 const double symm_factor =
                     helpers::get_symm_factor<Symm>(src_multiplicity, lbar);
                 if (symm_factor != 0.0) {
                   for (int w = -1; w <= 1; w += 2) {
                     const int mw = helpers::bv_to_m(src_bvs[0], w);
-                    //                    std::cout << "TensorYlmFilter mw = " << mw << std::endl;
+                    //                    std::cout << "TensorYlmFilter mw = "
+                    //                    << mw << std::endl;
                     if (mtildes[mtilde_indx] - mw == mhat and
                         lhat >=
                             static_cast<size_t>(std::max(
@@ -442,8 +446,8 @@ void inner_loops_three_v2(
                                 std::max(abs(mr + mbars[mbar_indx]),
                                          abs(mw - mtildes[mtilde_indx])))) and
                         lhat <= lbar + 1) {
-                      const int m_src = mprime - mhat;
-                      //                      std::cout << "TensorYlmFilter m_src = " << m_src << std::endl;
+                      //                      std::cout << "TensorYlmFilter
+                      //                      m_src = " << m_src << std::endl;
                       const double sign_mtilde =
                           ((mtildes[mtilde_indx] - mbars[mbar_indx]) % 2 == 0
                                ? 1.0
@@ -460,7 +464,7 @@ void inner_loops_three_v2(
                           helpers::bv_to_k(dest_bvs[0], r) *
                           helpers::bv_to_k(src_bvs[0], w);
                       const std::complex<double> coef3j =
-                          -coeflprime * coeflbar * coeflhat * k_coefs * sign_y;
+                          -coeflprime * coeflbar * coeflhat * sign_y * k_coefs;
                       // The division inside the index of the
                       // following quantities is integer
                       // division.  Note that q,v,r,w,v are
@@ -489,8 +493,8 @@ void inner_loops_three_v2(
                               .value()(lhat);
                       const std::complex<double> correction =
                           threej_pq * threej_uv * threej_r * threej_w *
-                          threej_mhat(l_dest) * threej_mcheck(l_dest) *
-                          sign_lhat * sign_mtilde * symm_factor * coef3j;
+                          threej_mhat2_val * threej_mcheck2_val * sign_lhat *
+                          sign_mtilde * symm_factor * coef3j;
                       if (m_src > 0) {
                         // Main term, first term in Eq. (18)
                         if (iter_dest.coefficient_array() ==
@@ -715,7 +719,8 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
         //        std::cout <<  "TYlmFilter Rank 3 START" << std::endl;
         for (iter_dest.reset(); iter_dest; ++iter_dest) {
           const auto l_dest = static_cast<size_t>(iter_dest.l());
-          //          std::cout << "TYlmFilter Rank 3 l_dest =" << l_dest << std::endl;
+          //          std::cout << "TYlmFilter Rank 3 l_dest =" << l_dest <<
+          //          std::endl;
           // lbar goes from 0 to 2.  lhat goes from 0 to 3.
           // lprime goes from lcutminus to ell_max + rank.
           // From the 3J symbols, (l_dest, lprime, lhat) must obey a
@@ -725,47 +730,60 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
           // to limit l_dest.
           if (static_cast<int>(l_dest) >= static_cast<int>(lcutminus) - 3 and
               l_dest <= ell_max) {
+            // m_dest is m in the notes
+            // m_src is m'' in the notes
             const auto m_dest = static_cast<int>(iter_dest.m());
-            for (size_t lprime = lcutminus; lprime <= ell_max + rank;
-                 ++lprime) {
-              //              std::cout << "TYlmFilter Rank 3 : lprime = " << lprime << std::endl;
-              // coeflprime is the factor (2 lprime+1) g(lprime)/2 that appears
-              // for all ranks.
-              const double coeflprime =
-                  half_power.has_value() and lprime <= lcutplus
-                      ? 0.5 * static_cast<double>(2 * lprime + 1) *
-                            (1.0 -
-                             exp(-alpha *
-                                 integer_pow(
-                                     double(lprime) / double(lcutplus + 1),
-                                     2 * static_cast<int>(half_power.value()))))
-                      : 0.5 * static_cast<double>(2 * lprime + 1);
-              for (int mprime = -static_cast<int>(lprime);
-                   mprime <= static_cast<int>(lprime); ++mprime) {
-                //                std::cout << "TYlmFilter Rank 3 : mprime = " << mprime << std::endl;
-                const int mcheck = m_dest - mprime;
-                for (size_t lhat = static_cast<size_t>(std::max(
-                         std::abs(mcheck), std::abs(static_cast<int>(l_dest) -
-                                                    static_cast<int>(lprime))));
-                     lhat <= static_cast<size_t>(std::min(
-                                 3, static_cast<int>(l_dest + lprime)));
-                     ++lhat) {
-                  //                  std::cout << "TYlmFilter Rank 3 : lhat = " << lhat << std::endl;
-                  const double sign_lhat =
-                      ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
+            for (int m_src = -static_cast<int>(l_dest);
+                 m_src <= static_cast_int(l_dest); ++m_src) {
+              for (size_t lprime = lcutminus; lprime <= ell_max + rank;
+                   ++lprime) {
+                //              std::cout << "TYlmFilter Rank 3 : lprime = " <<
+                //              lprime << std::endl;
+                // coeflprime is the factor (2 lprime+1) g(lprime)/2 that
+                // appears for all ranks.
+                const double coeflprime =
+                    half_power.has_value() and lprime <= lcutplus
+                        ? 0.5 * static_cast<double>(2 * lprime + 1) *
+                              (1.0 -
+                               exp(-alpha *
+                                   integer_pow(
+                                       double(lprime) / double(lcutplus + 1),
+                                       2 * static_cast<int>(
+                                               half_power.value()))))
+                        : 0.5 * static_cast<double>(2 * lprime + 1);
+                for (int mprime = -static_cast<int>(lprime);
+                     mprime <= static_cast<int>(lprime); ++mprime) {
+                  //                std::cout << "TYlmFilter Rank 3 : mprime = "
+                  //                << mprime << std::endl;
+                  const int mcheck = m_dest - mprime;
+                  const int mhat = m_prime - m_src;
                   // The third 3J term in Eq. (24)
-                  WignerThreeJ threej_mcheck(lprime, mprime, lhat, mcheck);
-                  for (int mhat = -static_cast<int>(lhat);
-                       mhat <= static_cast<int>(lhat); ++mhat) {
-                    //                    std::cout << "TYlmFilter Rank 3 : mhat = " << mhat << std::endl;
-                    // The fourth 3J term in Eq. (24)
-                    WignerThreeJ threej_mhat(lprime, -mprime, lhat, mhat);
-                    inner_loops_three_v2<typename TensorStructure::symmetry>(
-                        filler, iter_src, iter_dest, src_comp_index,
-                        dest_comp_index, coeflprime, mprime, l_dest, lhat, mhat,
-                        threej_mhat, mcheck, threej_mcheck, mbars, mtildes,
-                        src_bvs, dest_bvs, src_multiplicity, threej_pqs,
-                        threej_uvs, threej_ws, threej_rs, sign_y, sign_lhat);
+                  WignerThreeJ threej_mcheck2(l_dest, -m_dest, lprime, mprime);
+                  // The fourth 3J term in Eq. (24)
+                  WignerThreeJ threej_mhat2(l_dest, m_src, lprime, -mprime);
+                  for (size_t lhat = static_cast<size_t>(
+                           std::max(std::abs(mcheck),
+                                    std::abs(mhat),
+                                    std::abs(static_cast<int>(l_dest) -
+                                             static_cast<int>(lprime))));
+                       lhat <= static_cast<size_t>(std::min(
+                                   3, static_cast<int>(l_dest + lprime)));
+                       ++lhat) {
+                    const double threej_mcheck2_val = threej_mcheck2(lhat);
+                    const double threej_mhat2_val = threej_mhat2(lhat);
+                    //                  std::cout << "TYlmFilter Rank 3 : lhat =
+                    //                  " << lhat << std::endl;
+                    if(threej_mcheck2_val != 0.0 and threej_mhat2_val != 0.0) {
+                      const double sign_lhat =
+                          ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
+                      inner_loops_three_v2<typename TensorStructure::symmetry>(
+                          filler, iter_src, iter_dest, src_comp_index,
+                          dest_comp_index, coeflprime, mprime, l_dest, m_src,
+                          mhat, threej_mhat2_val, mcheck, threej_mcheck2_val,
+                          mbars, mtildes, src_bvs, dest_bvs, src_multiplicity,
+                          threej_pqs, threej_uvs, threej_ws, threej_rs, sign_y,
+                          sign_lhat);
+                    }
                   }
                 }
               }

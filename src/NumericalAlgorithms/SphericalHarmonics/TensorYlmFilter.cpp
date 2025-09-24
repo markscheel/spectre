@@ -286,7 +286,7 @@ void inner_loops_three(
           const double threej_uv =
               // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
               threej_uvs[static_cast<size_t>((v + 1) / 2 + u + 1)](lbar);
-          if (threej_r != 0.0 and threej_uvs != 0.0) {
+          if (threej_r != 0.0 and threej_uv != 0.0) {
             for (int w = -1; w <= 1; w += 2) {
               const int mw = helpers::bv_to_m(src_bvs[0], w);
               if (mtildes[mtilde_indx] - mw == mhat and

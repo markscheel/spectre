@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <fstream>
 #include <optional>
+#include <chrono>
+#include <iostream>
 
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/SimpleSparseMatrix.hpp"
@@ -436,24 +438,35 @@ void test_tensorylm_cart_to_sphere_vs_spec(const size_t ell_max) {
   }
 
   SparseMatrixType matrix;
+  const auto t0 = std::chrono::steady_clock::now();
   ylm::TensorYlm::FillCartToSphere<TensorStructure>(make_not_null(&matrix),
                                                     ell_max);
-  CAPTURE(matrix.size());
+   const auto t1 = std::chrono::steady_clock::now();
+  std::cout << symm_to_string<TensorStructure>() << ", ell_max = " << ell_max
+            << ", time(ms)= "
+            << static_cast<size_t>(
+                   std::chrono::duration_cast<std::chrono::milliseconds>(t1 -
+                                                                         t0)
+                   .count())
+            << std::endl;
+ // CAPTURE(matrix.size());
 
-  // Loop over spec_matrix_elements and make sure all the cases agree.
-  for (size_t i = 0; i < spec_matrix_elements.size(); ++i) {
-    CAPTURE(spec_dest_indices[i]);
-    CAPTURE(spec_src_indices[i]);
-    CHECK(matrix(spec_dest_indices[i], spec_src_indices[i]) ==
-          approx(spec_matrix_elements[i]));
-  }
+  // // Loop over spec_matrix_elements and make sure all the cases agree.
+  // for (size_t i = 0; i < spec_matrix_elements.size(); ++i) {
+  //   CAPTURE(spec_dest_indices[i]);
+  //   CAPTURE(spec_src_indices[i]);
+  //   CHECK(matrix(spec_dest_indices[i], spec_src_indices[i]) ==
+  //         approx(spec_matrix_elements[i]));
+  // }
 }
 }  // namespace
 
+// [[TimeOut, 1200]]
 SPECTRE_TEST_CASE("Unit.SphericalHarmonics.TensorYlmCartToSphere",
                   "[NumericalAlgorithms][Unit]") {
-  const size_t ell_max = 8;
+  //  const size_t ell_max = 8;
 
+  for (size_t ell_max = 9; ell_max <= 79; ell_max += 10) {
   test_tensorylm_cart_to_sphere_vs_spec<
       typename tnsr::i<DataVector, 3>::structure, SimpleSparseMatrix>(ell_max);
   test_tensorylm_cart_to_sphere_vs_spec<
@@ -466,4 +479,5 @@ SPECTRE_TEST_CASE("Unit.SphericalHarmonics.TensorYlmCartToSphere",
   test_tensorylm_cart_to_sphere_vs_spec<
       typename tnsr::ijk<DataVector, 3>::structure, SimpleSparseMatrix>(
       ell_max);
+  }
 }

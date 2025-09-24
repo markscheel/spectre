@@ -396,7 +396,7 @@ template <typename Symm>
 void inner_loops_three_v2(
     SparseMatrixFiller& filler, SpherepackIterator& iter_src,
     SpherepackIterator& iter_dest, const size_t src_comp_index,
-    const size_t dest_comp_index, const double coeflprime, const int mprime,
+    const size_t dest_comp_index, const double coeflprime,
     const size_t l_dest, const int m_src, const size_t lhat, const int mhat,
     const double threej_mhat2_val, const int mcheck,
     const double threej_mcheck2_val, const std::vector<int>& mbars,
@@ -734,7 +734,8 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
             // m_src is m'' in the notes
             const auto m_dest = static_cast<int>(iter_dest.m());
             for (int m_src = -static_cast<int>(l_dest);
-                 m_src <= static_cast_int(l_dest); ++m_src) {
+                 m_src <= static_cast<int>(l_dest); ++m_src) {
+              //              std::array<double, 4> elem_to_add{0.0, 0.0, 0.0, 0.0};
               for (size_t lprime = lcutminus; lprime <= ell_max + rank;
                    ++lprime) {
                 //              std::cout << "TYlmFilter Rank 3 : lprime = " <<
@@ -756,14 +757,14 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
                   //                std::cout << "TYlmFilter Rank 3 : mprime = "
                   //                << mprime << std::endl;
                   const int mcheck = m_dest - mprime;
-                  const int mhat = m_prime - m_src;
+                  const int mhat = mprime - m_src;
                   // The third 3J term in Eq. (24)
                   WignerThreeJ threej_mcheck2(l_dest, -m_dest, lprime, mprime);
                   // The fourth 3J term in Eq. (24)
                   WignerThreeJ threej_mhat2(l_dest, m_src, lprime, -mprime);
                   for (size_t lhat = static_cast<size_t>(
-                           std::max(std::abs(mcheck),
-                                    std::abs(mhat),
+                           std::max(std::max(std::abs(mcheck),
+                                             std::abs(mhat)),
                                     std::abs(static_cast<int>(l_dest) -
                                              static_cast<int>(lprime))));
                        lhat <= static_cast<size_t>(std::min(
@@ -778,15 +779,16 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
                           ((lprime + l_dest + lhat) % 2 == 0 ? 1.0 : -1.0);
                       inner_loops_three_v2<typename TensorStructure::symmetry>(
                           filler, iter_src, iter_dest, src_comp_index,
-                          dest_comp_index, coeflprime, mprime, l_dest, m_src,
-                          mhat, threej_mhat2_val, mcheck, threej_mcheck2_val,
-                          mbars, mtildes, src_bvs, dest_bvs, src_multiplicity,
-                          threej_pqs, threej_uvs, threej_ws, threej_rs, sign_y,
-                          sign_lhat);
+                          dest_comp_index, coeflprime, l_dest, m_src,
+                          lhat, mhat, threej_mhat2_val, mcheck,
+                          threej_mcheck2_val, mbars, mtildes, src_bvs, dest_bvs,
+                          src_multiplicity, threej_pqs, threej_uvs, threej_ws,
+                          threej_rs, sign_y, sign_lhat);
                     }
                   }
                 }
               }
+              //            here_is_where_we_add_element;
             }
           }
         }

@@ -259,12 +259,10 @@ void inner_loops_three(
     std::vector<WignerThreeJ>& threej_uvs,
     std::vector<std::optional<WignerThreeJ>>& threej_ws,
     std::vector<std::optional<WignerThreeJ>>& threej_rs, const double sign_y) {
-  const auto add_element = [&filler, &iter_src, &iter_dest, src_comp_index,
-                            dest_comp_index](const double element) {
-    const size_t indx_dest =
-        iter_dest() + dest_comp_index * iter_dest.spherepack_array_size();
-    const size_t indx_src =
-        iter_src() + src_comp_index * iter_src.spherepack_array_size();
+  const auto add_element = [&filler, &iter_src,
+                            &iter_dest](const double element) {
+    const size_t indx_dest = iter_dest();
+    const size_t indx_src = iter_src();
     filler.add(element, indx_dest, indx_src);
   };
   const int m_dest = mprime + mcheck;
@@ -597,6 +595,9 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
 
     for (size_t src_comp_index = 0; src_comp_index < num_independent_components;
          src_comp_index++) {
+      SparseMatrixFiller fillersmall(
+          iter_src.spherepack_array_size() * iter_dest.spherepack_array_size(),
+          true, 1.0);
       const auto src_indices = tensor_index_list[src_comp_index];
       const auto src_bvs = helpers::to_cart_basis_vector(src_indices);
       const size_t src_multiplicity =
@@ -761,9 +762,12 @@ void FillFilter(const gsl::not_null<SparseMatrixType*> matrix,
           }
         }
       }
+      fillersmall.fill(matrix);
     }
   }
-  filler.fill(matrix);
+  if constexpr (rank < 3) {
+    filler.fill(matrix);
+  }
 }
 
 // Explicit instantiations

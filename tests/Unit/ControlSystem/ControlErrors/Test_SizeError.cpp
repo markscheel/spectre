@@ -101,7 +101,8 @@ void test_size_error_horizon_higher_res_than_excision() {
 
   intrp::ZeroCrossingPredictor predictor_char_speed;
   intrp::ZeroCrossingPredictor predictor_comoving_char_speed;
-  intrp::ZeroCrossingPredictor predictor_delta_radius;
+  intrp::ZeroCrossingPredictor predictor_delta_radius_shrinking;
+  intrp::ZeroCrossingPredictor predictor_delta_radius_growing;
   intrp::ZeroCrossingPredictor predictor_drift_limit_char_speed;
   intrp::ZeroCrossingPredictor predictor_drift_limit_delta_radius;
 
@@ -132,13 +133,14 @@ void test_size_error_horizon_higher_res_than_excision() {
       control_system::size::control_error(
           make_not_null(&info), make_not_null(&predictor_char_speed),
           make_not_null(&predictor_comoving_char_speed),
-          make_not_null(&predictor_delta_radius),
+          make_not_null(&predictor_delta_radius_shrinking),
+          make_not_null(&predictor_delta_radius_growing),
           make_not_null(&predictor_drift_limit_char_speed),
           make_not_null(&predictor_drift_limit_delta_radius), 0.0, 0.0,
           std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
-          horizon.coefficients()[0], 0.0, horizon, excision_boundary, lapse,
-          frame_components_of_grid_shift, spatial_metric,
-          inverse_spatial_metric, deriv_comoving_char_speed),
+          std::nullopt, horizon.coefficients()[0], 0.0, horizon,
+          excision_boundary, lapse, frame_components_of_grid_shift,
+          spatial_metric, inverse_spatial_metric, deriv_comoving_char_speed),
       Catch::Matchers::ContainsSubstring(
           "excision boundary resolution is at least as high"));
 }
@@ -148,7 +150,10 @@ void test_size_error_one_step(
     const gsl::not_null<intrp::ZeroCrossingPredictor*> predictor_char_speed,
     const gsl::not_null<intrp::ZeroCrossingPredictor*>
         predictor_comoving_char_speed,
-    const gsl::not_null<intrp::ZeroCrossingPredictor*> predictor_delta_radius,
+    const gsl::not_null<intrp::ZeroCrossingPredictor*>
+        predictor_delta_radius_shrinking,
+    const gsl::not_null<intrp::ZeroCrossingPredictor*>
+        predictor_delta_radius_growing,
     const gsl::not_null<intrp::ZeroCrossingPredictor*>
         predictor_drift_limit_char_speed,
     const gsl::not_null<intrp::ZeroCrossingPredictor*>
@@ -168,6 +173,7 @@ void test_size_error_one_step(
   const double initial_damping_time = 0.1;
   const double initial_target_drift_velocity = 0.0;
   const double initial_suggested_time_scale = 0.0;
+  const std::optional<double> approx_max_relative_delta_r{};
   // Set max_allowed_radial_distance so that State::DeltaRDriftOutward
   // does not transition to DeltaR with the chosen radial_distance of 0.5
   // below. This is fine-tuned.
@@ -296,14 +302,15 @@ void test_size_error_one_step(
 
   auto error = control_system::size::control_error(
       make_not_null(&info), predictor_char_speed, predictor_comoving_char_speed,
-      predictor_delta_radius, predictor_drift_limit_char_speed,
-      predictor_drift_limit_delta_radius, time, control_error_delta_r,
-      control_error_delta_r_outward, max_allowed_radial_distance,
-      inward_drift_velocity, min_allowed_radial_distance,
-      min_allowed_char_speed, horizon.coefficients()[0],
-      time_deriv_horizon.coefficients()[0], horizon, excision_boundary, lapse,
-      shifty_quantity, spatial_metric, inverse_spatial_metric,
-      deriv_comoving_char_speed);
+      predictor_delta_radius_shrinking, predictor_delta_radius_growing,
+      predictor_drift_limit_char_speed, predictor_drift_limit_delta_radius,
+      time, control_error_delta_r, control_error_delta_r_outward,
+      approx_max_relative_delta_r,
+      max_allowed_radial_distance, inward_drift_velocity,
+      min_allowed_radial_distance, min_allowed_char_speed,
+      horizon.coefficients()[0], time_deriv_horizon.coefficients()[0], horizon,
+      excision_boundary, lapse, shifty_quantity, spatial_metric,
+      inverse_spatial_metric, deriv_comoving_char_speed);
 
   // Check error and parts of info.
   //
@@ -455,14 +462,16 @@ void test_size_error(const double grid_excision_boundary_radius,
 
   intrp::ZeroCrossingPredictor predictor_char_speed;
   intrp::ZeroCrossingPredictor predictor_comoving_char_speed;
-  intrp::ZeroCrossingPredictor predictor_delta_radius;
+  intrp::ZeroCrossingPredictor predictor_delta_radius_shrinking;
+  intrp::ZeroCrossingPredictor predictor_delta_radius_growing;
   intrp::ZeroCrossingPredictor predictor_drift_limit_char_speed;
   intrp::ZeroCrossingPredictor predictor_drift_limit_delta_radius;
 
   test_size_error_one_step<InitialState, FinalState>(
       make_not_null(&predictor_char_speed),
       make_not_null(&predictor_comoving_char_speed),
-      make_not_null(&predictor_delta_radius),
+      make_not_null(&predictor_delta_radius_shrinking),
+      make_not_null(&predictor_delta_radius_growing),
       make_not_null(&predictor_drift_limit_char_speed),
       make_not_null(&predictor_drift_limit_delta_radius), initial_time,
       grid_excision_boundary_radius, distorted_excision_boundary_radius_initial,

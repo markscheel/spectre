@@ -30,9 +30,9 @@ std::string Initial::update(const gsl::not_null<Info*> info,
       crossing_time_info.t_char_speed.value_or(
           std::numeric_limits<double>::infinity()) < info->damping_time;
   const bool delta_radius_is_in_danger =
-      crossing_time_info.horizon_will_hit_excision_boundary_first and
-      crossing_time_info.t_delta_radius.value_or(
-          std::numeric_limits<double>::infinity()) < info->damping_time and
+      (crossing_time_info.horizon_will_hit_excision_boundary_first and
+       crossing_time_info.t_delta_radius_shrinking.value_or(
+           std::numeric_limits<double>::infinity()) < info->damping_time) and
       not char_speed_is_in_danger;
 
   // This factor is present in SpEC, but it probably isn't necessary
@@ -60,11 +60,11 @@ std::string Initial::update(const gsl::not_null<Info*> info,
           "AhSpeed.\n";
     ss << " Target char speed = " << info->target_char_speed << "\n";
     ss << " Suggested timescale = " << info->suggested_time_scale;
-  } else if (delta_radius_is_in_danger
-             or update_args.min_comoving_char_speed > 0.0) {
+  } else if (delta_radius_is_in_danger or
+             update_args.min_comoving_char_speed > 0.0) {
     info->discontinuous_change_has_occurred = true;
     if (delta_radius_is_in_danger) {
-      info->suggested_time_scale = crossing_time_info.t_delta_radius;
+      info->suggested_time_scale = crossing_time_info.t_delta_radius_shrinking;
     }
     const bool drift_inward = should_activate_inward_drift(update_args);
     if (drift_inward) {

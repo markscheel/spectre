@@ -275,18 +275,33 @@ void test_apply_filter(const size_t num_to_kill) {
             for (it.reset(); it; ++it) {
               // If num_to_kill is zero, then all the coefs
               // should agree with the originals.
-              // If num_to_kill is nonzero, then all the modes
+              // If num_to_kill is nonzero, then:
+              //  - lcut is the largest mode that is LEFT ALONE
+              //    in the Spin-weighted basis.  So lcut=lmax-num_to_kill
+              //  - In the Cartesian basis, lcut+rank+1 is the smallest
+              //    mode that is zeroed.  This is lmax-num_to_kill+rank+1.
+              //  - In the Cartesian basis, lcut-rank is the largest mode
+              //    that is unaffected. This is lmax-num_to_kill-rank.
+              // Therefore all coefs
               // with (ell <= ell_max - num_to_kill - rank) should agree
-              // with the originals because they have not been affected,
-              // and all the modes with (ell >= ell_max - num_to_kill + rank-1)
+              // with the originals because they have not been affected, and
+              // all the modes with (ell >= ell_max - num_to_kill + rank+1)
               // should be zero because they have been killed by the filter.
               // For modes between those cases, they are modified in some
               // complicated way that we do not check here.
               if (num_to_kill == 0 or
                   it.l() <= ell_max - num_to_kill - tensor_b.rank()) {
+                CAPTURE(ell_max);
+                CAPTURE(it.l());
+                CAPTURE(num_to_kill);
+                CAPTURE(tensor_b.rank());
                 CHECK(a[it() + offset] == approx(b[it() + offset]));
               } else if (it.l() >=
-                         ell_max - num_to_kill + tensor_b.rank() - 1) {
+                         ell_max - num_to_kill + tensor_b.rank() + 1) {
+                CAPTURE(ell_max);
+                CAPTURE(it.l());
+                CAPTURE(num_to_kill);
+                CAPTURE(tensor_b.rank());
                 CHECK(0.0 == approx(b[it() + offset]));
               }
             }
@@ -303,7 +318,7 @@ SPECTRE_TEST_CASE("Unit.SphericalHarmonics.ApplyTensorYlmFilter",
   test_transform_spatial_tensors_to_different_frame();
   test_modal_nodal_invertibility();
   test_apply_filter(0);
-  test_apply_filter(2);
+  test_apply_filter(3);
 }
 }  // namespace
 }  // namespace ylm::TensorYlm

@@ -439,7 +439,7 @@ void apply_tensor_ylm_filter(
                                     gh_vars, ylm, radial_extents);
 
   std::cout << "Diagnostics coming again" << std::endl;
-  tmpl::for_each<filter_detail::gh_spacetime_vars_list<Frame::Grid>>(
+  tmpl::for_each<filter_detail::gh_spacetime_vars_list>(
       [&gh_spatial_spectral_vars, &ell_max,
        &radial_extents]<class Tag>(const tmpl::type_<Tag> /*meta*/) {
         ylm::SpherepackIterator it(ell_max, ell_max, radial_extents, true);

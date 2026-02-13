@@ -375,6 +375,7 @@ void apply_tensor_ylm_filter(
         constexpr size_t num_independent_components =
             Tag::type::structure::size();
         const auto& tensor_b = get<Tag>(gh_spatial_spectral_vars);
+        std::cout << "Testing for tensor " << Tag::name() << std::endl;
         for (size_t storage_index = 0;
              storage_index < num_independent_components; ++storage_index) {
           const auto& b = tensor_b[storage_index];

@@ -432,6 +432,57 @@ void apply_tensor_ylm_filter(
   // dest: gh_vars
   filter_detail::assemble_spacetime_vars_from_spatial_pieces(gh_vars,
                                                              gh_spatial_vars);
+
+  Variables<filter_detail::gh_spacetime_vars_list> temp_gh_spectral_vars(
+      temp_storage->data(), temp_storage->size());
+  filter_detail::nodal_to_modal_ylm(make_not_null(&temp_gh_spectral_vars),
+                                    gh_vars, ylm, radial_extents);
+
+  std::cout << "Diagnostics coming again" << std::endl;
+  tmpl::for_each<filter_detail::gh_spacetime_vars_list<Frame::Grid>>(
+      [&gh_spatial_spectral_vars, &ell_max,
+       &radial_extents]<class Tag>(const tmpl::type_<Tag> /*meta*/) {
+        ylm::SpherepackIterator it(ell_max, ell_max, radial_extents, true);
+        constexpr size_t num_independent_components =
+            Tag::type::structure::size();
+        const auto& tensor_b = get<Tag>(temp_gh_spectral_vars);
+        for (size_t storage_index = 0;
+             storage_index < num_independent_components; ++storage_index) {
+          const auto& b = tensor_b[storage_index];
+          for (size_t offset = 0; offset < radial_extents; ++offset) {
+            for (it.reset(); it; ++it) {
+              const size_t num_to_kill = 5;
+              // If num_to_kill is zero, then all the coefs
+              // should agree with the originals.
+              // If num_to_kill is nonzero, then:
+              //  - lcut is the largest mode that is LEFT ALONE
+              //    in the Spin-weighted basis.  So lcut=lmax-num_to_kill
+              //  - In the Cartesian basis, lcut+rank+1 is the smallest
+              //    mode that is zeroed.  This is lmax-num_to_kill+rank+1.
+              //  - In the Cartesian basis, lcut-rank is the largest mode
+              //    that is unaffected. This is lmax-num_to_kill-rank.
+              // Therefore all coefs
+              // with (ell <= ell_max - num_to_kill - rank) should agree
+              // with the originals because they have not been affected, and
+              // all the modes with (ell >= ell_max - num_to_kill + rank+1)
+              // should be zero because they have been killed by the filter.
+              // For modes between those cases, they are modified in some
+              // complicated way that we do not check here.
+              if (it.l() >= ell_max - num_to_kill + tensor_b.rank() + 1) {
+                if (abs(b[it() + offset]) > 1.e-12) {
+                  std::cout << "Err after filter: ell_max=" << ell_max
+                            << " it.l()=" << it.l()
+                            << " num_to_kill=" << num_to_kill
+                            << " tensor_b.rank()=" << tensor_b.rank()
+                            << " val = " << b[it() + offset] << std::endl;
+                } else {
+                  std::cout << "l=" << it.l() << " GOOD" << std::endl;
+                }
+              }
+            }
+          }
+        }
+      });
 }
 
 // Explicit instantiations

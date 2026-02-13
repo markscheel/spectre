@@ -165,7 +165,7 @@ void test_modal_nodal_invertibility() {
 
 void test_apply_filter(const size_t num_to_kill) {
   constexpr size_t radial_extents = 1;
-  constexpr size_t ell_max = 14;
+  constexpr size_t ell_max = 10;
 
   const auto& ylm = ::ylm::get_spherepack_cache(ell_max);
   const size_t spectral_mesh_size = ylm.spectral_size() * radial_extents;

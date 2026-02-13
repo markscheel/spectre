@@ -19,6 +19,7 @@
 #include "PointwiseFunctions/GeneralRelativity/Tags.hpp"
 #include "Utilities/Gsl.hpp"
 #include "Utilities/TMPL.hpp"
+#include "Utilities/PrettyType.hpp"
 
 namespace ylm::TensorYlm {
 namespace {
@@ -304,7 +305,8 @@ void test_apply_filter(const size_t num_to_kill) {
                 CAPTURE(it.l());
                 CAPTURE(num_to_kill);
                 CAPTURE(tensor_b.rank());
-                CAPTURE(Tag::name());
+                CAPTURE(storage_index);
+                CAPTURE(name(Tag::type));
                 CHECK(0.0 == approx(b[it() + offset]));
               }
             }

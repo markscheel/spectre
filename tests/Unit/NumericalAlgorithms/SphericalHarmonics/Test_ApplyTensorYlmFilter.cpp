@@ -297,12 +297,14 @@ void test_apply_filter(const size_t num_to_kill) {
                 CAPTURE(tensor_b.rank());
                 CHECK(a[it() + offset] == approx(b[it() + offset]));
               } else if (it.l() >=
-                         ell_max - num_to_kill + tensor_b.rank() + 1) {
+                         ell_max - num_to_kill + tensor_a.rank() + 1) {
+                // The two tensors have the same rank, so it doesn't matter
+                // whether we use tensor_a.rank() or tensor_b.rank() here.
                 CAPTURE(ell_max);
                 CAPTURE(it.l());
                 CAPTURE(num_to_kill);
-                CAPTURE(tensor_b.rank());
-                CHECK(0.0 == approx(b[it() + offset]));
+                CAPTURE(tensor_a.rank());
+                CHECK(0.0 == approx(a[it() + offset]));
               }
             }
           }

@@ -303,9 +303,9 @@ void test_apply_filter(const size_t num_to_kill) {
                 CAPTURE(ell_max);
                 CAPTURE(it.l());
                 CAPTURE(num_to_kill);
-                CAPTURE(tensor_b.rank());
+                CAPTURE(tensor_a.rank());
                 CAPTURE(storage_index);
-                CHECK(0.0 == approx(b[it() + offset]));
+                CHECK(0.0 == approx(a[it() + offset]));
               }
             }
           }

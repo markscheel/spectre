@@ -165,7 +165,7 @@ void test_modal_nodal_invertibility() {
 
 void test_apply_filter(const size_t num_to_kill) {
   constexpr size_t radial_extents = 2;
-  constexpr size_t ell_max = 7;
+  constexpr size_t ell_max = 12;
 
   const auto& ylm = ::ylm::get_spherepack_cache(ell_max);
   const size_t spectral_mesh_size = ylm.spectral_size() * radial_extents;
@@ -320,7 +320,7 @@ SPECTRE_TEST_CASE("Unit.SphericalHarmonics.ApplyTensorYlmFilter",
   test_transform_spatial_tensors_to_different_frame();
   test_modal_nodal_invertibility();
   test_apply_filter(0);
-  test_apply_filter(3);
+  test_apply_filter(5);
 }
 }  // namespace
 }  // namespace ylm::TensorYlm

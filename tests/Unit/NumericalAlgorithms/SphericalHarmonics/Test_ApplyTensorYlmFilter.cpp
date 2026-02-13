@@ -306,7 +306,7 @@ void test_apply_filter(const size_t num_to_kill) {
                 CAPTURE(num_to_kill);
                 CAPTURE(tensor_b.rank());
                 CAPTURE(storage_index);
-                CAPTURE(Tag::type::name());
+                CAPTURE(pretty_type::short_name<Tag::type>());
                 CHECK(0.0 == approx(b[it() + offset]));
               }
             }

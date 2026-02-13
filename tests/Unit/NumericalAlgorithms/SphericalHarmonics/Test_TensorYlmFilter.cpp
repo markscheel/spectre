@@ -173,10 +173,11 @@ void test_filter_vs_transforms(const size_t ell_max,
        ++storage_index) {
     const auto& d = tensor_d[storage_index];
     for (it.reset(); it; ++it) {
-      if (it.l() >= ell_max - num_to_kill + tensor_d.rank() + 1) {
+      if (it.l() >=
+          ell_max - number_of_ell_modes_to_kill + tensor_d.rank() + 1) {
         CAPTURE(ell_max);
         CAPTURE(it.l());
-        CAPTURE(num_to_kill);
+        CAPTURE(number_of_ell_modes_to_kill);
         CAPTURE(tensor_d.rank());
         CHECK(0.0 == approx(d[it()]));
       }

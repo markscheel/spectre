@@ -367,6 +367,7 @@ void apply_tensor_ylm_filter(
         get<Tag>(gh_spatial_spectral_vars) = get<Tag>(dest_tensor);
       });
 
+  std::cout <<"Diagnostics coming now" << std::endl;
   tmpl::for_each<filter_detail::gh_spatial_vars_list<Frame::Grid>>(
       [&gh_spatial_spectral_vars, &ell_max,
        &radial_extents]<class Tag>(const tmpl::type_<Tag> /*meta*/) {

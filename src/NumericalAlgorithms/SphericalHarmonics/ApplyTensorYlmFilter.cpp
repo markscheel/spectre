@@ -368,8 +368,8 @@ void apply_tensor_ylm_filter(
       });
 
   tmpl::for_each<gh_spatial_vars_list<Frame::Grid>>(
-      [&gh_spatial_spectral_vars, &ell_max, &num_to_kill,
-       &it]<class Tag>(const tmpl::type_<Tag> /*meta*/) {
+      [&gh_spatial_spectral_vars, &ell_max,
+       &radial_extents]<class Tag>(const tmpl::type_<Tag> /*meta*/) {
         ylm::SpherepackIterator it(ell_max, ell_max, radial_extents, true);
         constexpr size_t num_independent_components =
             Tag::type::structure::size();

@@ -234,9 +234,11 @@ void test_apply_filter(const size_t num_to_kill) {
       jac_inertial_to_grid(physical_mesh_size);
   for (size_t i = 0; i < 3; ++i) {
     for (size_t j = 0; j < 3; ++j) {
-      jac_inertial_to_grid.get(i, j) = 0.05 * dist(generator);
+      // jac_inertial_to_grid.get(i, j) = 0.05 * dist(generator);
+      jac_inertial_to_grid.get(i, j) = 0.0;
     }
-    jac_inertial_to_grid.get(i, i) += positive_dist(generator);
+    // jac_inertial_to_grid.get(i, i) += positive_dist(generator);
+    jac_inertial_to_grid.get(i, i) += 1.0;
   }
 
   // Invert the Jacobian

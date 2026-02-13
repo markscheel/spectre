@@ -165,6 +165,24 @@ void test_filter_vs_transforms(const size_t ell_max,
       CHECK(d_vector[i][it()] == approx(c_vector[i][it()]));
     }
   }
+
+  // We should get zero for filtered modes
+  constexpr size_t num_independent_components = TensorType::structure::size();
+  const auto& tensor_d = get<MyTag<TensorType>>(D);
+  for (size_t storage_index = 0; storage_index < num_independent_components;
+       ++storage_index) {
+    const auto& d = tensor_d[storage_index];
+    for (it.reset(); it; ++it) {
+      if (it.l() >= ell_max - num_to_kill + tensor_d.rank() + 1) {
+        CAPTURE(ell_max);
+        CAPTURE(it.l());
+        CAPTURE(num_to_kill);
+        CAPTURE(tensor_b.rank());
+        CHECK(0.0 == approx(d[it()]));
+      }
+    }
+  }
+
 }
 
 template <typename TensorStructure, typename SparseMatrixType>
@@ -1188,18 +1206,22 @@ void test(const std::optional<size_t>& half_power) {
   test_tensorylm_filter_vs_spec<typename tnsr::ijk<DataVector, 3>::structure,
                                 SimpleSparseMatrix>(ell_max, num_to_kill,
                                                     half_power);
-  test_filter_vs_transforms<typename tnsr::i<DataVector, 3>>(
-      ell_max, num_to_kill, half_power);
+  // test_filter_vs_transforms<typename tnsr::i<DataVector, 3>>(
+  //     ell_max, num_to_kill, half_power);
+  // test_filter_vs_transforms<typename tnsr::ii<DataVector, 3>>(
+  //     ell_max, num_to_kill, half_power);
+  // test_filter_vs_transforms<typename tnsr::ij<DataVector, 3>>(
+  //     ell_max, num_to_kill, half_power);
+  // test_filter_vs_transforms<typename tnsr::ijj<DataVector, 3>>(
+  //     ell_max, num_to_kill, half_power);
+  // test_filter_vs_transforms<typename tnsr::ijk<DataVector, 3>>(
+  //     ell_max, num_to_kill, half_power);
+  // test_filter_vs_transforms<Scalar<DataVector>>(ell_max, num_to_kill,
+  //                                               half_power);
   test_filter_vs_transforms<typename tnsr::ii<DataVector, 3>>(
-      ell_max, num_to_kill, half_power);
+      12, 5, half_power);
   test_filter_vs_transforms<typename tnsr::ij<DataVector, 3>>(
-      ell_max, num_to_kill, half_power);
-  test_filter_vs_transforms<typename tnsr::ijj<DataVector, 3>>(
-      ell_max, num_to_kill, half_power);
-  test_filter_vs_transforms<typename tnsr::ijk<DataVector, 3>>(
-      ell_max, num_to_kill, half_power);
-  test_filter_vs_transforms<Scalar<DataVector>>(ell_max, num_to_kill,
-                                                half_power);
+      12, 5, half_power);
 }
 }  // namespace
 

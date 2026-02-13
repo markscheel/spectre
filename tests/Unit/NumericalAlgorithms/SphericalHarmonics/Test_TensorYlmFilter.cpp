@@ -177,7 +177,7 @@ void test_filter_vs_transforms(const size_t ell_max,
         CAPTURE(ell_max);
         CAPTURE(it.l());
         CAPTURE(num_to_kill);
-        CAPTURE(tensor_b.rank());
+        CAPTURE(tensor_d.rank());
         CHECK(0.0 == approx(d[it()]));
       }
     }

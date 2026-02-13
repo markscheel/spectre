@@ -436,7 +436,7 @@ void apply_tensor_ylm_filter(
   Variables<filter_detail::gh_spacetime_vars_list> temp_gh_spectral_vars(
       temp_storage->data(), temp_storage->size());
   filter_detail::nodal_to_modal_ylm(make_not_null(&temp_gh_spectral_vars),
-                                    gh_vars, ylm, radial_extents);
+                                    *gh_vars, ylm, radial_extents);
 
   std::cout << "Diagnostics coming again" << std::endl;
   tmpl::for_each<filter_detail::gh_spacetime_vars_list>(

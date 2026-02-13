@@ -5,6 +5,8 @@
 
 #include <cstddef>
 
+#include <iostream>
+
 #include "DataStructures/DataVector.hpp"
 #include "DataStructures/Tags/TempTensor.hpp"
 #include "DataStructures/Tensor/Structure.hpp"
@@ -367,6 +369,7 @@ void apply_tensor_ylm_filter(
   tmpl::for_each<gh_spatial_vars_list<Frame::Grid>>(
       [&gh_spatial_spectral_vars, &ell_max, &num_to_kill,
        &it]<class Tag>(const tmpl::type_<Tag> /*meta*/) {
+        ylm::SpherepackIterator it(ell_max, ell_max, radial_extents, true);
         constexpr size_t num_independent_components =
             Tag::type::structure::size();
         const auto& tensor_b = get<Tag>(gh_spatial_spectral_vars);

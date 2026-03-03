@@ -84,7 +84,7 @@ struct CrossingTimeInfo {
   std::optional<double> t_delta_radius_shrinking;
   /// t_delta_radius_growing is the time (relative to the current time) when the
   /// distance between the horizon and the excision boundary is predicted to
-  /// exceed the threshold (or nullopt if the distance is shrinking).
+  /// exceed the approx threshold (or nullopt if the distance is shrinking).
   std::optional<double> t_delta_radius_growing;
   /// t_drift_limit_delta_radius is the time (relative to the current time) when
   /// the minimum distance between the horizon and the excision boundary is

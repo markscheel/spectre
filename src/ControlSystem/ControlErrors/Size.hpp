@@ -187,12 +187,13 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
         "Average timescale fraction for smoothing horizon measurements."};
   };
 
-  struct MaxRelativeDeltaR {
+  struct ApproxMaxRelativeDeltaR {
     using type = Options::Auto<double, Options::AutoLabel::None>;
     static constexpr Options::String help{
-        "The control system enforces that the difference between the horizon "
-        "and the excision surface remains within this fraction of the horizon "
-        "radius. Specify 'None' to disable this feature."};
+        "The control system encourages (but does not enforce) the difference "
+        "between the horizon and the excision surface to remain within this "
+        "fraction of the horizon radius. Specify 'None' to disable this "
+        "feature."};
   };
 
   struct SmootherTuner {
@@ -282,8 +283,8 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
 
   using options =
       tmpl::list<MaxNumTimesForZeroCrossingPredictor,
-                 SmoothAvgTimescaleFraction, MaxRelativeDeltaR, SmootherTuner,
-                 InitialState, DeltaRDriftOutwardOptions,
+                 SmoothAvgTimescaleFraction, ApproxMaxRelativeDeltaR,
+                 SmootherTuner, InitialState, DeltaRDriftOutwardOptions,
                  DeltaRDriftInwardOptions>;
   static constexpr Options::String help{
       "Computes the control error for size control. Will also write a "
@@ -310,7 +311,7 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
    * is moved inside this class.
    */
   Size(const int max_times, const double smooth_avg_timescale_frac,
-       const std::optional<double> max_relative_delta_r,
+       const std::optional<double> approx_max_relative_delta_r,
        TimescaleTuner<true> smoother_tuner,
        std::unique_ptr<size::State> initial_state,
        std::optional<DeltaRDriftOutwardOptions> delta_r_drift_outward_options,
@@ -558,7 +559,7 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
         make_not_null(&drift_limit_char_speed_predictor_),
         make_not_null(&drift_limit_delta_radius_predictor_), time,
         control_error_delta_r, control_error_delta_r_outward,
-        max_relative_delta_r_,
+        approx_max_relative_delta_r_,
         delta_r_drift_outward_options_.has_value()
             ? std::optional<double>(delta_r_drift_outward_options_.value()
                                         .max_allowed_radial_distance)
@@ -622,7 +623,7 @@ struct Size : tt::ConformsTo<protocols::ControlError> {
   TimescaleTuner<true> smoother_tuner_{};
   Averager<DerivOrder> horizon_coef_averager_{};
   size::Info info_{};
-  std::optional<double> max_relative_delta_r_{};
+  std::optional<double> approx_max_relative_delta_r_{};
   intrp::ZeroCrossingPredictor char_speed_predictor_{};
   intrp::ZeroCrossingPredictor comoving_char_speed_predictor_{};
   intrp::ZeroCrossingPredictor delta_radius_predictor_zero_{};

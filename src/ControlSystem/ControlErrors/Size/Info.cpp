@@ -85,15 +85,13 @@ CrossingTimeInfo::CrossingTimeInfo(
     if (t_delta_radius_shrinking.value_or(-1.0) > 0.0 and
         t_delta_radius_shrinking.value() <= t_char_speed.value()) {
       horizon_will_hit_excision_boundary_first = true;
-    } else if (t_delta_radius_growing.value_or(-1.0) > 0.0 and
-               t_delta_radius_growing.value() <= t_char_speed.value()) {
-      horizon_is_expanding_too_fast = true;
     } else {
       char_speed_will_hit_zero_first = true;
     }
   } else if (t_delta_radius_shrinking.value_or(-1.0) > 0.0) {
     horizon_will_hit_excision_boundary_first = true;
-  } else if (t_delta_radius_growing.value_or(-1.0) > 0.0) {
+  }
+  if (t_delta_radius_growing.value_or(-1.0) > 0.0) {
     horizon_is_expanding_too_fast = true;
   }
 }

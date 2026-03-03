@@ -47,7 +47,7 @@ ErrorDiagnostics control_error(
         predictor_drift_limit_delta_radius,
     const double time, const double control_error_delta_r,
     const std::optional<double> control_error_delta_r_outward,
-    const std::optional<double> max_relative_delta_r,
+    const std::optional<double> approx_max_relative_delta_r,
     const std::optional<double> max_allowed_radial_distance,
     const std::optional<double> inward_drift_velocity,
     const std::optional<double> min_allowed_radial_distance,
@@ -213,9 +213,9 @@ ErrorDiagnostics control_error(
                             get(characteristic_speed_on_excision_boundary));
   predictor_comoving_char_speed->add(time, get(comoving_char_speed));
   predictor_delta_radius_shrinking->add(time, get(radial_distance));
-  if (max_relative_delta_r.has_value()) {
+  if (approx_max_relative_delta_r.has_value()) {
     predictor_delta_radius_growing->add(
-        time, max_relative_delta_r.value() - get(radial_distance));
+        time, approx_max_relative_delta_r.value() - get(radial_distance));
   }
   if (min_allowed_char_speed.has_value()) {
     predictor_drift_limit_char_speed->add(
@@ -235,7 +235,7 @@ ErrorDiagnostics control_error(
   const std::optional<double> delta_radius_crossing_time_zero =
       predictor_delta_radius_shrinking->min_positive_zero_crossing_time(time);
   const std::optional<double> delta_radius_crossing_time_max =
-      max_relative_delta_r.has_value()
+      approx_max_relative_delta_r.has_value()
           ? predictor_delta_radius_growing->min_positive_zero_crossing_time(
                 time)
           : std::nullopt;
@@ -333,7 +333,7 @@ ErrorDiagnostics control_error(
           predictor_drift_limit_delta_radius,                                  \
       double time, double control_error_delta_r,                               \
       std::optional<double> control_error_delta_r_outward,                     \
-      std::optional<double> max_relative_delta_r,                              \
+      std::optional<double> approx_max_relative_delta_r,                       \
       std::optional<double> max_allowed_radial_distance,                       \
       std::optional<double> inward_drift_velocity,                             \
       std::optional<double> min_allowed_radial_distance,                       \

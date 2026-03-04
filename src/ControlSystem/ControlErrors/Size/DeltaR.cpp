@@ -56,9 +56,17 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
       crossing_time_info.t_char_speed.value_or(
           std::numeric_limits<double>::infinity()) < info->damping_time and
       not delta_radius_is_in_danger;
+
+  // spherepack_factor is needed because horizon_00 is a
+  // spherepack coefficient, not a spherical harmonic coefficient.
+  const double spherepack_factor = sqrt(0.5 * M_PI);
+  const double Y00 = 0.25 * M_2_SQRTPI;
+  const double horizon_average_radius =
+      spherepack_factor * update_args.horizon_00 * Y00;
+
   const bool delta_radius_expanding_too_fast =
       update_args.average_radial_distance >=
-          update_args.max_allowed_radial_distance or
+          update_args.approx_max_relative_delta_r * horizon_average_radius or
       (crossing_time_info.horizon_is_expanding_too_fast and
        crossing_time_info.t_delta_radius_growing.value_or(
            std::numeric_limits<double>::infinity()) <

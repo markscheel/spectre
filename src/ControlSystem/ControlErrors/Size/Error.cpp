@@ -281,7 +281,7 @@ ErrorDiagnostics control_error(
       info,
       StateUpdateArgs{min_char_speed, min_comoving_char_speed, horizon_00,
                       control_error_delta_r, average_radial_distance,
-                      max_allowed_radial_distance,
+                      max_allowed_radial_distance, approx_max_relative_delta_r,
                       avg_distorted_normal_dot_unit_coord_vector,
                       inward_drift_velocity, min_allowed_radial_distance,
                       min_allowed_char_speed,

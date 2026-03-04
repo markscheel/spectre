@@ -153,9 +153,9 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
     // switch to DeltaRDriftOutward (state 5) to decrease DeltaR.
     if (delta_radius_expanding_too_fast) {
       info->suggested_time_scale =
-          std::max(min_time_scale_for_delta_radius_expanding_too_fast,
-                   std::min(info->damping_time * delta_r_state_decrease_factor,
-                            crossing_time_info.t_delta_radius_growing));
+          std::min(std::max(min_time_scale_for_delta_radius_expanding_too_fast,
+                            crossing_time_info.t_delta_radius_growing),
+                   info->damping_time * delta_r_state_decrease_factor);
     } else {
       info->suggested_time_scale =
           info->damping_time * delta_r_state_decrease_factor;

@@ -159,20 +159,23 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
     // Therefore, for low spins it's probably enough to decrease the timescale
     // and try to keep DeltaR constant, whereas for high spins we may have to
     // switch to DeltaRDriftOutward (state 5) to decrease DeltaR.
-    if (delta_radius_expanding_too_fast) {
-      info->suggested_time_scale =
-          std::min(std::max(min_time_scale_for_delta_radius_expanding_too_fast,
-                            crossing_time_info.t_delta_radius_growing),
-                   info->damping_time * delta_r_state_decrease_factor);
-    } else {
-      info->suggested_time_scale =
-          info->damping_time * delta_r_state_decrease_factor;
-    }
+
     ss << "Current state DeltaR. Min comoving char speed "
        << update_args.min_comoving_char_speed
        << " > 0 and abs(control_error_delta_r) "
        << std::abs(update_args.control_error_delta_r) << " > threshold "
        << delta_r_control_error_threshold << ". Staying in DeltaR.\n";
+    if (delta_radius_expanding_too_fast) {
+      info->suggested_time_scale =
+          std::min(std::max(min_time_scale_for_delta_radius_expanding_too_fast,
+                            crossing_time_info.t_delta_radius_growing),
+                   info->damping_time * delta_r_state_decrease_factor);
+      ss << " delta_r expanding at rate "
+         << crossing_time_info.t_delta_radius_growing << ".\n";
+    } else {
+      info->suggested_time_scale =
+          info->damping_time * delta_r_state_decrease_factor;
+    }
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (should_transition_from_state_delta_r_to_inward_drift(
                  crossing_time_info.t_drift_limit, info->damping_time,

@@ -35,12 +35,12 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
   // Note that delta_radius_is_in_danger and char_speed_is_in_danger
   // can be different for different States.
 
-  // min_time_scale_for_delta_radius_expanding_too_fast might be
+  // time_scale_for_delta_radius_expanding_too_fast might be
   // made an input file option in the future.
   // The value 1.0 is chosen because we don't want the timescale to become
   // so small that it slows down the simulation, and timescales on the order
   // of unity should be good enough for the purposes here.
-  constexpr double min_time_scale_for_delta_radius_expanding_too_fast = 1.0;
+  constexpr double time_scale_for_delta_radius_expanding_too_fast = 1.0;
 
   // The value of 0.99 was chosen by trial and error in SpEC.
   // It should be slightly less than unity but nothing should be
@@ -56,21 +56,6 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
       crossing_time_info.t_char_speed.value_or(
           std::numeric_limits<double>::infinity()) < info->damping_time and
       not delta_radius_is_in_danger;
-
-  // spherepack_factor is needed because horizon_00 is a
-  // spherepack coefficient, not a spherical harmonic coefficient.
-  const double spherepack_factor = sqrt(0.5 * M_PI);
-  const double Y00 = 0.25 * M_2_SQRTPI;
-  const double horizon_average_radius =
-      spherepack_factor * update_args.horizon_00 * Y00;
-
-  const bool delta_radius_expanding_too_fast =
-      update_args.average_radial_distance >=
-          update_args.approx_max_relative_delta_r * horizon_average_radius or
-      (crossing_time_info.horizon_is_expanding_too_fast and
-       crossing_time_info.t_delta_radius_growing.value_or(
-           std::numeric_limits<double>::infinity()) <
-           info->damping_time * time_tolerance_for_delta_r_in_danger);
 
   // inward_drift_limit_in_danger means we are about
   // to cross the maximum allowed deltaR, and we are not in
@@ -165,16 +150,40 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
        << " > 0 and abs(control_error_delta_r) "
        << std::abs(update_args.control_error_delta_r) << " > threshold "
        << delta_r_control_error_threshold << ". Staying in DeltaR.\n";
-    if (delta_radius_expanding_too_fast) {
+
+    // spherepack_factor is needed because horizon_00 is a
+    // spherepack coefficient, not a spherical harmonic coefficient.
+    const double spherepack_factor = sqrt(0.5 * M_PI);
+    const double Y00 = 0.25 * M_2_SQRTPI;
+    const double horizon_average_radius =
+        spherepack_factor * update_args.horizon_00 * Y00;
+
+    if (update_args.approx_max_relative_delta_r.has_value() and
+        update_args.average_radial_distance >=
+            update_args.approx_max_relative_delta_r * horizon_average_radius) {
       info->suggested_time_scale =
-          std::min(std::max(min_time_scale_for_delta_radius_expanding_too_fast,
-                            crossing_time_info.t_delta_radius_growing),
+          std::min(time_scale_for_delta_radius_expanding_too_fast,
+                   info->damping_time * delta_r_state_decrease_factor);
+      ss << " rel delta_r "
+         << update_args.average_radial_distance / horizon_average_radius
+         << " is above approx_max_relative_delta_r "
+         << update_args.approx_max_relative_delta_r << ".\n";
+    } else if (crossing_time_info.horizon_is_expanding_too_fast and
+               crossing_time_info.t_delta_radius_growing.value_or(
+                   std::numeric_limits<double>::infinity()) <
+                   info->damping_time * time_tolerance_for_delta_r_in_danger) {
+      info->suggested_time_scale =
+          std::min(std::max(time_scale_for_delta_radius_expanding_too_fast,
+                            crossing_time_info.t_delta_radius_growing.value_or(
+                                std::numeric_limits<double>::infinity())),
                    info->damping_time * delta_r_state_decrease_factor);
       ss << " delta_r expanding at rate "
-         << crossing_time_info.t_delta_radius_growing << ".\n";
+         << crossing_time_info.t_delta_radius_growing.value_or(0.0) << ".\n";
     } else {
       info->suggested_time_scale =
           info->damping_time * delta_r_state_decrease_factor;
+      ss << " timescale decrease by factor of " << delta_r_state_decrease_factor
+         << ".\n";
     }
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (should_transition_from_state_delta_r_to_inward_drift(

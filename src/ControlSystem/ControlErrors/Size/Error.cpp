@@ -262,9 +262,13 @@ ErrorDiagnostics control_error(
   // average_radial_distance, but all the logic other than those
   // changes remains unchanged.
   // Such a change is possible to make, but we do not (yet) make it here.
+  //
+  // We also compute average_radial distance if approx_max_relative_delta_r
+  // has a value.
   const std::optional<double> average_radial_distance =
       (max_allowed_radial_distance.has_value() or
-       min_allowed_radial_distance.has_value())
+       min_allowed_radial_distance.has_value() or
+       approx_max_relative_delta_r.has_value())
           ? std::optional<double>(
                 gr::surfaces::surface_integral_of_scalar(
                     area_element, radial_distance, excision_boundary) /

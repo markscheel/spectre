@@ -35,6 +35,13 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
   // Note that delta_radius_is_in_danger and char_speed_is_in_danger
   // can be different for different States.
 
+  // min_time_scale_for_delta_radius_expanding_too_fast might be
+  // made an input file option in the future.
+  // The value 1.0 is chosen because we don't want the timescale to become
+  // so small that it slows down the simulation, and timescales on the order
+  // of unity should be good enough for the purposes here.
+  constexpr double min_time_scale_for_delta_radius_expanding_too_fast = 1.0;
+
   // The value of 0.99 was chosen by trial and error in SpEC.
   // It should be slightly less than unity but nothing should be
   // sensitive to small changes in this value.
@@ -43,16 +50,19 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
       (crossing_time_info.horizon_will_hit_excision_boundary_first and
        crossing_time_info.t_delta_radius_shrinking.value_or(
            std::numeric_limits<double>::infinity()) <
-           info->damping_time * time_tolerance_for_delta_r_in_danger) or
-      (crossing_time_info.horizon_is_expanding_too_fast and
-       crossing_time_info.t_delta_radius_growing.value_or(
-           std::numeric_limits<double>::infinity()) <
            info->damping_time * time_tolerance_for_delta_r_in_danger);
   const bool char_speed_is_in_danger =
       crossing_time_info.char_speed_will_hit_zero_first and
       crossing_time_info.t_char_speed.value_or(
           std::numeric_limits<double>::infinity()) < info->damping_time and
       not delta_radius_is_in_danger;
+  const bool delta_radius_expanding_too_fast =
+      update_args.average_radial_distance >=
+          update_args.max_allowed_radial_distance or
+      (crossing_time_info.horizon_is_expanding_too_fast and
+       crossing_time_info.t_delta_radius_growing.value_or(
+           std::numeric_limits<double>::infinity()) <
+           info->damping_time * time_tolerance_for_delta_r_in_danger);
 
   // inward_drift_limit_in_danger means we are about
   // to cross the maximum allowed deltaR, and we are not in
@@ -103,11 +113,7 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
     info->suggested_time_scale = crossing_time_info.t_char_speed;
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (delta_radius_is_in_danger) {
-    if (crossing_time_info.horizon_will_hit_excision_boundary_first) {
-      info->suggested_time_scale = crossing_time_info.t_delta_radius_shrinking;
-    } else {
-      info->suggested_time_scale = crossing_time_info.t_delta_radius_growing;
-    }
+    info->suggested_time_scale = crossing_time_info.t_delta_radius_shrinking;
     ss << "Current state DeltaR. Delta radius in danger. Staying in DeltaR.\n";
     ss << " Suggested timescale = " << info->suggested_time_scale;
   } else if (update_args.min_comoving_char_speed > 0.0 and
@@ -116,8 +122,9 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
     // delta_r_state_decrease_factor should be slightly less than unity.
     // The value of 0.99 below was chosen arbitrarily in SpEC and never
     // needed to be changed.
-    //
-    // Note that this state is used in SpEC to reduce the timescale when the
+    constexpr double delta_r_state_decrease_factor = 0.99;
+
+    // Note that this 'else if' is used in SpEC to reduce the timescale when the
     // control error grows too large, so the control system can react faster and
     // bring the control error down. This happens during plunge, for example,
     // when the horizon grows in the grid frame and the excision must follow
@@ -136,11 +143,7 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
     // control when the horizon is growing too quickly. Therefore, we added a
     // predictor similar to the zero-crossing predictor for a shrinking horizon
     // that estimates when the control error will exceed the threshold, and
-    // uses that to set the timescale. This happens in the
-    // `delta_radius_is_in_danger` block above. Therefore, this block here is
-    // only reached if the control error is currently too large, but the horizon
-    // is not predicted to cross the threshold within the damping time (unclear
-    // if this can actually happen).
+    // uses that to set the timescale.
     //
     // For low spins it's not super important that the excision
     // follows the horizon very closely, but for high spins it's more important
@@ -148,9 +151,15 @@ std::string DeltaR::update(const gsl::not_null<Info*> info,
     // Therefore, for low spins it's probably enough to decrease the timescale
     // and try to keep DeltaR constant, whereas for high spins we may have to
     // switch to DeltaRDriftOutward (state 5) to decrease DeltaR.
-    constexpr double delta_r_state_decrease_factor = 0.99;
-    info->suggested_time_scale =
-        info->damping_time * delta_r_state_decrease_factor;
+    if (delta_radius_expanding_too_fast) {
+      info->suggested_time_scale =
+          std::max(min_time_scale_for_delta_radius_expanding_too_fast,
+                   std::min(info->damping_time * delta_r_state_decrease_factor,
+                            crossing_time_info.t_delta_radius_growing));
+    } else {
+      info->suggested_time_scale =
+          info->damping_time * delta_r_state_decrease_factor;
+    }
     ss << "Current state DeltaR. Min comoving char speed "
        << update_args.min_comoving_char_speed
        << " > 0 and abs(control_error_delta_r) "
